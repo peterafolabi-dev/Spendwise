@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+
+# Node
+node_modules/
+package-lock.json
+
+# Django
+db.sqlite3
+media/
+static/css/output.css
+
+# OS
+.DS_Store
+Thumbs.db

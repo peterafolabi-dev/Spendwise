@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Budgets</h2>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700">
+                Create Budget
+            </button>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Groceries</h3>
+                <span class="text-sm text-gray-500">$350 / $500</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                <div class="bg-primary-600 h-2.5 rounded-full" style="width: 70%"></div>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">$150 remaining</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

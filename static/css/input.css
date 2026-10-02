@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669; /* Emerald Base */
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+  --color-primary-950: #022c22;
+  
+  --color-destructive-50: #fff1f2;
+  --color-destructive-100: #ffe4e6;
+  --color-destructive-200: #fecdd3;
+  --color-destructive-300: #fda4af;
+  --color-destructive-400: #fb7185;
+  --color-destructive-500: #f43f5e;
+  --color-destructive-600: #e11d48; /* Rose Base */
+  --color-destructive-700: #be123c;
+  --color-destructive-800: #9f1239;
+  --color-destructive-900: #881337;
+  --color-destructive-950: #4c0519;
+}
+
+/* Custom utilities */
+@layer utilities {
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
