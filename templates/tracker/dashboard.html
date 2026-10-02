@@ -1,190 +1,226 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="md:flex md:items-center md:justify-between mb-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+    <!-- Header & Quick Actions -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Dashboard</h2>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate tracking-tight">Dashboard</h2>
+        </div>
+        <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+            <!-- Time Range Selector -->
+            <div class="hidden md:flex bg-gray-100 dark:bg-slate-800/80 backdrop-blur-md p-1 rounded-lg border border-gray-200 dark:border-slate-700/80 shadow-sm">
+                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">7D</button>
+                <button class="px-4 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-slate-700 shadow-sm text-gray-900 dark:text-white transition-all">30D</button>
+                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">3M</button>
+                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">1Y</button>
+            </div>
+            
+            <button type="button" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-400 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                New Transaction
+            </button>
         </div>
     </div>
 
-    <!-- Total Balances (Cards) -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                        <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Balance</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900 dark:text-white truncate count-up" style="font-size: clamp(1.25rem, 2vw, 1.5rem);">$12,450.00</div>
-                            </dd>
-                        </dl>
-                    </div>
+    <!-- Total Balances (Cards) - KPI Row -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8 stagger-container">
+        <!-- Card 1 -->
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Total Balance</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$12,450.00</p>
                 </div>
+                <div class="flex-shrink-0 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="inline-flex items-center text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    +8.2% vs last month
+                </span>
             </div>
         </div>
         
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-destructive-100 rounded-md p-3">
-                        <svg class="h-6 w-6 text-destructive-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">This Month's Spend</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900 dark:text-white truncate count-up" style="font-size: clamp(1.25rem, 2vw, 1.5rem);">$2,340.50</div>
-                            </dd>
-                        </dl>
-                    </div>
+        <!-- Card 2 -->
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">This Month's Spend</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$2,340.50</p>
                 </div>
+                <div class="flex-shrink-0 bg-neutral-50 dark:bg-slate-800/80 rounded-xl p-3 border border-neutral-100 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="inline-flex items-center text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    14% below budget
+                </span>
             </div>
         </div>
         
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Savings Progress</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900 dark:text-white truncate count-up" style="font-size: clamp(1.25rem, 2vw, 1.5rem);">$5,000.00</div>
-                            </dd>
-                        </dl>
-                    </div>
+        <!-- Card 3 -->
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Savings Progress</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$5,000.00</p>
+                </div>
+                <div class="flex-shrink-0 bg-cyan-50 dark:bg-cyan-500/10 rounded-xl p-3 border border-cyan-100 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-end mb-1">
+                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">62% of $8,000 goal</span>
+                </div>
+                <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-cyan-500 h-1.5 rounded-full progress-fill" data-progress="0.625"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Charts Section (2 Column) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-container">
         <!-- Expenses Donut Chart -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">Expenses by Category</h3>
-            <div id="donut-chart-container" class="relative h-64 w-full flex items-center justify-center">
-                <!-- Skeleton Loader -->
-                <div id="donut-skeleton" class="animate-pulse flex items-center justify-center w-48 h-48 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <div class="w-32 h-32 rounded-full bg-white dark:bg-gray-800"></div>
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item flex flex-col">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Expenses by Category</h3>
+            <div class="flex-grow flex flex-col sm:flex-row items-center justify-between">
+                <!-- Donut SVG Area -->
+                <div id="donut-chart-container" class="relative h-48 w-48 flex items-center justify-center mb-6 sm:mb-0">
+                    <!-- Skeleton Loader -->
+                    <div id="donut-skeleton" class="animate-pulse flex items-center justify-center w-full h-full rounded-full border-8 border-gray-100 dark:border-slate-800"></div>
                 </div>
-                <!-- SVG Chart will be injected here -->
+                <!-- Custom Legend -->
+                <div id="donut-legend" class="w-full sm:w-1/2 space-y-3 pl-0 sm:pl-6">
+                    <!-- Populated by JS -->
+                </div>
             </div>
         </div>
 
         <!-- Trend Bar Chart -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">6-Month Trend</h3>
-            <div id="bar-chart-container" class="relative h-64 w-full flex items-end justify-between px-2 pt-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">6-Month Trend</h3>
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Income vs Expenses</span>
+            </div>
+            <div id="bar-chart-container" class="relative flex-grow min-h-[200px] w-full flex items-end justify-between px-2 pt-4 border-b border-gray-100 dark:border-slate-800">
                 <!-- Skeleton Loader -->
-                <div id="bar-skeleton" class="absolute inset-0 flex items-end justify-between px-4 pb-0 space-x-2 animate-pulse">
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-1/3 rounded-t-sm"></div>
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-1/2 rounded-t-sm"></div>
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-1/4 rounded-t-sm"></div>
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-3/4 rounded-t-sm"></div>
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-2/3 rounded-t-sm"></div>
-                    <div class="w-1/6 bg-gray-200 dark:bg-gray-700 h-full rounded-t-sm"></div>
+                <div id="bar-skeleton" class="absolute inset-0 flex items-end justify-between px-4 pb-0 space-x-3 animate-pulse">
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/3 rounded-t-md"></div>
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/2 rounded-t-md"></div>
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/4 rounded-t-md"></div>
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-3/4 rounded-t-md"></div>
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-2/3 rounded-t-md"></div>
+                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-full rounded-t-md"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Budgets & Recent Transactions -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Budgets & Recent Transactions (2 Column) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 stagger-container">
         
         <!-- Budget Progress Bars -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">Budget Progress</h3>
-            <div class="space-y-4">
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Progress</h3>
+                <a href="{% url 'budgets' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">Manage</a>
+            </div>
+            <div class="space-y-5">
                 <!-- Budget Item -->
                 <div>
-                    <div class="flex justify-between text-sm mb-1">
+                    <div class="flex justify-between text-sm mb-2">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Groceries</span>
-                        <span class="text-gray-500 dark:text-gray-400">$350 / $500</span>
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">$350 / <span class="text-gray-400 dark:text-gray-500">$500</span></span>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                        <div class="bg-primary-600 h-2.5 rounded-full" style="width: 70%"></div>
+                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full rounded-full progress-fill" data-progress="0.7"></div>
                     </div>
                 </div>
                 <!-- Budget Item -->
                 <div>
-                    <div class="flex justify-between text-sm mb-1">
+                    <div class="flex justify-between text-sm mb-2">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Entertainment</span>
-                        <span class="text-gray-500 dark:text-gray-400">$180 / $200</span>
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">$180 / <span class="text-gray-400 dark:text-gray-500">$200</span></span>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                        <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 90%"></div>
+                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div class="bg-amber-500 h-full rounded-full progress-fill animate-attention" data-progress="0.9"></div>
                     </div>
                 </div>
                 <!-- Budget Item -->
                 <div>
-                    <div class="flex justify-between text-sm mb-1">
+                    <div class="flex justify-between text-sm mb-2">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Dining Out</span>
-                        <span class="text-gray-500 dark:text-gray-400">$210 / $150</span>
+                        <span class="text-rose-600 dark:text-rose-400 font-medium">$210 / <span class="text-gray-400 dark:text-gray-500">$150</span></span>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                        <div class="bg-destructive-600 h-2.5 rounded-full" style="width: 100%"></div>
+                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div class="bg-rose-500 h-full rounded-full progress-fill" data-progress="1"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Recent Transactions -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Recent Transactions</h3>
-                <a href="{% url 'transactions' %}" class="text-sm font-medium text-primary-600 hover:text-primary-500">View all</a>
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
+                <a href="{% url 'transactions' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">View all</a>
             </div>
             <div class="flow-root">
-                <ul role="list" class="-my-5 divide-y divide-gray-200 dark:divide-gray-700">
-                    <li class="py-4">
+                <ul role="list" class="-my-4 divide-y divide-gray-100 dark:divide-slate-800/80">
+                    <li class="py-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-xl px-2 transition-colors -mx-2">
                         <div class="flex items-center space-x-4">
                             <div class="flex-shrink-0">
-                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
-                                    <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <span class="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20">
+                                    <svg class="h-5 w-5 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 </span>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Whole Foods Market</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">Oct 2 &bull; Groceries</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">Whole Foods Market</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">Oct 2 &bull; Groceries</p>
                             </div>
-                            <div>
-                                <span class="inline-flex items-center text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            <div class="text-right">
+                                <span class="block text-sm font-bold text-gray-900 dark:text-white truncate">
                                     -$84.50
                                 </span>
                             </div>
                         </div>
                     </li>
-                    <li class="py-4">
+                    <li class="py-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-xl px-2 transition-colors -mx-2">
                         <div class="flex items-center space-x-4">
                             <div class="flex-shrink-0">
-                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100">
-                                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <span class="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+                                    <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </span>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Salary</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">Oct 1 &bull; Income</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">Salary</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">Oct 1 &bull; Income</p>
                             </div>
-                            <div>
-                                <span class="inline-flex items-center text-sm font-semibold text-green-600 truncate">
+                            <div class="text-right">
+                                <span class="block text-sm font-bold text-emerald-600 dark:text-emerald-400 truncate">
                                     +$3,200.00
                                 </span>
                             </div>
@@ -201,52 +237,85 @@
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Simulate data fetch delay
+    // Simulate data fetch delay for charts
     setTimeout(() => {
         renderDonutChart();
         renderBarChart();
-    }, 800);
+    }, 600);
 
     function renderDonutChart() {
         const container = document.getElementById('donut-chart-container');
-        document.getElementById('donut-skeleton').remove();
+        const legend = document.getElementById('donut-legend');
+        document.getElementById('donut-skeleton')?.remove();
         
-        // Data for donut chart
+        // Fintech Palette
         const data = [
-            { label: 'Groceries', value: 350, color: '#3b82f6' }, // blue-500
-            { label: 'Dining', value: 210, color: '#f43f5e' }, // rose-500
-            { label: 'Transport', value: 120, color: '#10b981' }, // emerald-500
-            { label: 'Entertainment', value: 180, color: '#eab308' } // yellow-500
+            { label: 'Groceries', value: 850, color: '#10b981' }, // Emerald
+            { label: 'Housing', value: 1200, color: '#06b6d4' }, // Cyan
+            { label: 'Dining', value: 210, color: '#f43f5e' }, // Rose
+            { label: 'Transport', value: 120, color: '#8b5cf6' }, // Violet
+            { label: 'Entertainment', value: 180, color: '#f59e0b' } // Amber
         ];
         
-        const size = 200;
+        const size = 192; // 48 * 4 (h-48)
         const cx = size / 2;
         const cy = size / 2;
-        const radius = 80;
-        const strokeWidth = 30;
+        const radius = 75;
+        const strokeWidth = 24;
         let currentAngle = 0;
         const total = data.reduce((acc, d) => acc + d.value, 0);
         
-        let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="transform -rotate-90">`;
+        let svg = `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}">
+            <!-- Cutout total text -->
+            <text x="${cx}" y="${cy - 5}" text-anchor="middle" font-size="14" fill="currentColor" class="text-gray-500 dark:text-gray-400 font-medium">Total Spent</text>
+            <text x="${cx}" y="${cy + 15}" text-anchor="middle" font-size="18" fill="currentColor" class="text-gray-900 dark:text-white font-bold">$${total.toLocaleString()}</text>
+            <g class="transform -rotate-90 origin-center">
+        `;
         
+        let legendHTML = '';
+
         data.forEach(d => {
             const fraction = d.value / total;
             const angle = fraction * Math.PI * 2;
             const dasharray = radius * 2 * Math.PI;
             const dashoffset = dasharray - (fraction * dasharray);
+            const percentage = Math.round(fraction * 100);
             
-            svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="transparent" stroke="${d.color}" stroke-width="${strokeWidth}" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" style="transform-origin: ${cx}px ${cy}px; transform: rotate(${currentAngle}rad); transition: stroke-dashoffset 1s ease-out;"></circle>`;
+            // Generate Circle Path
+            svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="transparent" stroke="${d.color}" stroke-width="${strokeWidth}" stroke-dasharray="${dasharray}" stroke-dashoffset="${dasharray}" class="svg-draw-line hover:opacity-80 transition-opacity cursor-pointer" style="transform-origin: ${cx}px ${cy}px; transform: rotate(${currentAngle}rad); transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);"></circle>`;
             
+            // Generate Legend Row
+            legendHTML += `
+                <div class="flex items-center justify-between text-sm group cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 p-1.5 -mx-1.5 rounded-lg transition-colors">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full mr-3 shadow-sm" style="background-color: ${d.color}"></span>
+                        <span class="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">${d.label}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-gray-900 dark:text-white font-semibold">$${d.value}</span>
+                        <span class="text-gray-400 dark:text-gray-500 text-xs w-8 text-right">${percentage}%</span>
+                    </div>
+                </div>
+            `;
+
             currentAngle += angle;
         });
         
-        svg += `</svg>`;
+        svg += `</g></svg>`;
         container.innerHTML = svg;
+        legend.innerHTML = legendHTML;
+
+        // Trigger animations
+        setTimeout(() => {
+            container.querySelectorAll('.svg-draw-line').forEach((el, i) => {
+                setTimeout(() => el.classList.add('drawn'), i * 100);
+            });
+        }, 50);
     }
 
     function renderBarChart() {
         const container = document.getElementById('bar-chart-container');
-        document.getElementById('bar-skeleton').remove();
+        document.getElementById('bar-skeleton')?.remove();
         
         const data = [
             { label: 'May', value: 2100 },
@@ -259,24 +328,31 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const maxVal = Math.max(...data.map(d => d.value));
         
-        let svg = `<svg width="100%" height="100%" viewBox="0 0 300 150" preserveAspectRatio="none">`;
+        let svg = `<svg width="100%" height="100%" viewBox="0 0 300 160" preserveAspectRatio="none">`;
         
-        const barWidth = 30;
-        const spacing = 20;
+        const barWidth = 24;
+        const spacing = (300 - (data.length * barWidth)) / (data.length + 1);
         
         data.forEach((d, i) => {
             const height = (d.value / maxVal) * 120;
-            const x = i * (barWidth + spacing) + 10;
-            const y = 130 - height;
+            const x = (i + 1) * spacing + (i * barWidth);
+            const y = 135 - height;
             
+            // Bar with gradient-like solid emerald + rounded top
             svg += `
-                <rect x="${x}" y="${y}" width="${barWidth}" height="${height}" fill="#10b981" rx="2" class="opacity-80 hover:opacity-100 transition-opacity" />
-                <text x="${x + barWidth/2}" y="145" text-anchor="middle" font-size="10" fill="currentColor" class="text-gray-500 dark:text-gray-400">${d.label}</text>
+                <rect x="${x}" y="${y}" width="${barWidth}" height="${height}" fill="#10b981" rx="4" class="svg-grow-bar opacity-90 hover:opacity-100 transition-opacity cursor-pointer" />
+                <text x="${x + barWidth/2}" y="155" text-anchor="middle" font-size="11" fill="currentColor" class="text-gray-500 dark:text-gray-400 font-medium">${d.label}</text>
             `;
         });
         
         svg += `</svg>`;
         container.innerHTML = svg;
+
+        setTimeout(() => {
+            container.querySelectorAll('.svg-grow-bar').forEach((bar, i) => {
+                setTimeout(() => bar.classList.add('grown'), i * 80);
+            });
+        }, 50);
     }
 });
 </script>
