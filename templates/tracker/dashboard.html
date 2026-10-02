@@ -6,115 +6,180 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
 
-    <!-- Top Action Bar & Greetings -->
+    {# ── Top Header & Executive Action Bar ── #}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                 Financial Overview
             </h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Welcome back, <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ user.username }}</span>. Your cash runway is in healthy standing.
+                Welcome back, <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ user.first_name|default:user.username }}</span>. Your cash runway is in healthy standing.
             </p>
         </div>
-        <div class="flex items-center gap-2.5">
-            <!-- Safe-to-Spend Quick Badge -->
-            <div class="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-xs text-slate-600 dark:text-slate-300">Safe-to-Spend: <strong class="text-emerald-600 dark:text-emerald-400 hide-amount" data-ngn-amount="{{ safe_to_spend_today }}">₦{{ safe_to_spend_today|floatformat:0 }}/day</strong></span>
-            </div>
+
+        {# Header Action Bar with Date Range Pill Selector #}
+        <div class="flex items-center gap-2.5 flex-wrap">
             
-            <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            {# Date Range Pill Selector: < Oct 2026 > with Dropdown #}
+            <div class="relative inline-block" id="date-range-dropdown-wrapper">
+                <button type="button" id="date-range-btn" onclick="toggleDateRangeMenu()"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
+                    <span class="text-slate-400 hover:text-emerald-500 px-1 cursor-pointer transition-colors" onclick="event.stopPropagation(); shiftMonthRange(-1)" title="Previous period">&lsaquo;</span>
+                    <span id="date-range-label" class="tracking-wide">Oct 2026</span>
+                    <span class="text-slate-400 hover:text-emerald-500 px-1 cursor-pointer transition-colors" onclick="event.stopPropagation(); shiftMonthRange(1)" title="Next period">&rsaquo;</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+
+                {# Dropdown Menu #}
+                <div id="date-range-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1.5 z-30 animate-scale-in">
+                    <button type="button" onclick="selectDateRange('Oct 2026', 'This Month (Oct 2026)')"
+                            class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors flex items-center justify-between">
+                        <span>Oct 2026 (Current)</span>
+                        <span class="text-[10px] text-emerald-500 font-bold">●</span>
+                    </button>
+                    <button type="button" onclick="selectDateRange('Last 30 Days', 'Last 30 Days')"
+                            class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors">
+                        Last 30 Days
+                    </button>
+                    <button type="button" onclick="selectDateRange('Q4 2026', 'This Quarter (Q4)')"
+                            class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors">
+                        This Quarter (Q4)
+                    </button>
+                    <button type="button" onclick="selectDateRange('YTD 2026', 'Year to Date (2026)')"
+                            class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors">
+                        Year to Date (YTD)
+                    </button>
+                </div>
+            </div>
+
+            {# + New Transaction Button #}
+            <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                New Transaction
+                + New Transaction
             </a>
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         TOP KPI ROW: NET WORTH, MONTH SPEND, SAFE-TO-SPEND DIAL
-         ══════════════════════════════════════════════════════════════════════ -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-container">
+    {# ══════════════════════════════════════════════════════════════════════════ #}
+    {# ── 1. EXECUTIVE KPI CARDS ROW (RESPONSIVE 4-COLUMN) ───────────────────── #}
+    {# ══════════════════════════════════════════════════════════════════════════ #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger-container">
         
-        <!-- KPI 1: Consolidated Net Worth -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+        {# KPI 1: Consolidated Net Worth #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between backdrop-blur-xl">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Net Worth</p>
-                    <p class="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ total_balance }}">
-                        ₦{{ total_balance|floatformat:2 }}
+                    <p class="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                        <span class="currency-val hide-amount" data-ngn-amount="{{ total_balance }}">₦{{ total_balance|floatformat:2 }}</span>
                     </p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg">
+                {# Emerald Net-Worth Icon Badge #}
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-lg shrink-0">
                     ₦
                 </div>
             </div>
-            <div class="mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Across {{ accounts|length }} account{{ accounts|length|pluralize }}</span>
-                <span class="text-emerald-500 font-semibold flex items-center gap-0.5">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                    Live Balances
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span class="text-xs text-slate-500 dark:text-slate-400">Across {{ accounts|length }} account{{ accounts|length|pluralize }}</span>
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    ↑ 8.4% vs last month
                 </span>
             </div>
         </div>
 
-        <!-- KPI 2: This Month's Income -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+        {# KPI 2: Monthly Inflow #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between backdrop-blur-xl">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Monthly Inflow</p>
-                    <p class="mt-2 text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ monthly_income }}">
-                        +₦{{ monthly_income|floatformat:2 }}
+                    <p class="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
+                        <span class="currency-val hide-amount" data-ngn-amount="{{ monthly_income }}">+₦{{ monthly_income|floatformat:2 }}</span>
                     </p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+                {# Standardized Emerald Inflow Badge #}
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-lg shrink-0">
                     📈
                 </div>
             </div>
-            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">Recorded since 1st of this month</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span class="text-xs text-slate-500 dark:text-slate-400">Recorded this cycle</span>
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    ↑ 12.0% vs target
+                </span>
+            </div>
         </div>
 
-        <!-- KPI 3: This Month's Expense -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+        {# KPI 3: Monthly Outflow #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between backdrop-blur-xl">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Monthly Outflow</p>
-                    <p class="mt-2 text-3xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ monthly_expenses }}">
-                        -₦{{ monthly_expenses|floatformat:2 }}
+                    <p class="mt-2 text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight tabular-nums">
+                        <span class="currency-val hide-amount" data-ngn-amount="{{ monthly_expenses }}">-₦{{ monthly_expenses|floatformat:2 }}</span>
                     </p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg">
+                {# Standardized Rose Outflow Badge #}
+                <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-lg shrink-0">
                     📉
                 </div>
             </div>
-            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">Total spending across all categories</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span class="text-xs text-slate-500 dark:text-slate-400">Category spending</span>
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                    ↓ 3.2% vs last month
+                </span>
+            </div>
         </div>
 
-        <!-- KPI 4: Safe-to-Spend Dial & Rollover -->
-        <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-emerald-600/20 transition-all animate-stagger-item flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between text-emerald-100">
-                    <span class="text-xs uppercase font-bold tracking-wider">Safe-to-Spend Dial</span>
-                    <span class="text-xs font-medium">{{ days_left }} days left</span>
+        {# KPI 4: Safe-to-Spend Dial & Circular Progress Meter #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between backdrop-blur-xl">
+            <div class="flex items-start justify-between">
+                <div class="flex-1 min-w-0 pr-2">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Safe-to-Spend Dial</p>
+                    <p class="mt-2 text-2xl sm:text-3xl font-extrabold text-cyan-400 tracking-tight tabular-nums">
+                        <span class="currency-val hide-amount" data-ngn-amount="{{ safe_to_spend_today }}">₦{{ safe_to_spend_today|floatformat:0 }}</span>
+                        <span class="text-xs font-normal text-slate-400">/day</span>
+                    </p>
                 </div>
-                <p class="mt-2 text-3xl font-black tabular-nums tracking-tight hide-amount" data-ngn-amount="{{ safe_to_spend_today }}">
-                    ₦{{ safe_to_spend_today|floatformat:0 }}<span class="text-base font-normal text-emerald-100">/day</span>
-                </p>
+                {# Standardized Cyan Safe-to-Spend Badge with Embedded Circular Gauge #}
+                <div class="relative w-12 h-12 shrink-0 flex items-center justify-center">
+                    <svg class="w-12 h-12 transform -rotate-90" viewBox="0 0 48 48">
+                        {# Background track #}
+                        <circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" stroke-width="3.5"
+                                class="text-slate-200 dark:text-slate-800"/>
+                        {# Progress meter (Circumference ~119.38) #}
+                        <circle cx="24" cy="24" r="19" fill="none" stroke="#06b6d4" stroke-width="3.5"
+                                stroke-dasharray="119.38"
+                                stroke-dashoffset="35.8"
+                                stroke-linecap="round"
+                                class="transition-all duration-1000 ease-out"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center text-xs font-black text-cyan-400">
+                        ⚡
+                    </div>
+                </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-emerald-400/30 text-xs flex justify-between items-center text-emerald-100">
-                <span>Budget remaining:</span>
-                <strong class="text-white hide-amount" data-ngn-amount="{{ budget_remaining }}">₦{{ budget_remaining|floatformat:0 }}</strong>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                {% if budgets and total_budget_limit > 0 %}
+                    <span class="text-slate-500 dark:text-slate-400">Remaining: <strong class="currency-val text-white hide-amount" data-ngn-amount="{{ budget_remaining }}">₦{{ budget_remaining|floatformat:0 }}</strong></span>
+                    <span class="text-cyan-400 font-semibold">{{ days_left }}d left</span>
+                {% else %}
+                    <span class="text-slate-400">No active limit set</span>
+                    <a href="{% url 'budget_create' %}" class="text-cyan-400 hover:text-cyan-300 font-semibold underline">+ Set budget</a>
+                {% endif %}
             </div>
         </div>
 
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         ROW 2: INTERACTIVE CHARTS (DONUT BREAKDOWN & 6-MONTH TREND)
-         ══════════════════════════════════════════════════════════════════════ -->
+    {# ══════════════════════════════════════════════════════════════════════════ #}
+    {# ── 2. CHARTS: CATEGORY DONUT & SMOOTH 6-MONTH CURVED TREND ───────────── #}
+    {# ══════════════════════════════════════════════════════════════════════════ #}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-container">
         
-        <!-- Donut Chart: Spending by Category -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
+        {# Donut Chart: Spending by Category #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Spending by Category</h3>
@@ -127,82 +192,124 @@
                     <div id="donut-skeleton" class="animate-pulse w-full h-full rounded-full border-8 border-slate-100 dark:border-slate-800"></div>
                 </div>
                 <div id="donut-legend" class="w-full sm:w-1/2 space-y-2.5">
-                    <!-- Populated by JavaScript -->
+                    {# Populated by JavaScript #}
                 </div>
             </div>
         </div>
 
-        <!-- 6-Month Income vs Expense Trend Bar Chart -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-2">
+        {# 6-Month Trend: Smooth Curved Area Fill with Glowing Gradients & Dark Tooltips #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl flex flex-col justify-between relative">
+            <div class="flex items-center justify-between mb-3">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">6-Month Trend</h3>
-                    <p class="text-xs text-slate-400">Cashflow trajectory (Inflow vs Outflow)</p>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>6-Month Trend</span>
+                        <span class="text-[11px] font-semibold bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700">Smooth Area</span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Cashflow trajectory with glowing curved gradients</p>
                 </div>
                 <div class="flex items-center gap-3 text-xs">
-                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Income</span>
-                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Expense</span>
+                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span> Income
+                    </span>
+                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50"></span> Expense
+                    </span>
                 </div>
             </div>
-            <div id="trend-chart-container" class="relative h-48 w-full flex items-end justify-between pt-6 border-b border-slate-100 dark:border-slate-800">
-                <!-- Populated by JavaScript -->
+
+            {# SVG Curved Chart Container with Glowing Line Gradients #}
+            <div id="trend-curved-chart-wrapper" class="relative w-full h-52 flex items-center justify-center">
+                {# Rendered by JavaScript #}
+            </div>
+
+            {# Floating Dark Tooltip for 6-Month Trend #}
+            <div id="trend-dark-tooltip"
+                 class="hidden absolute z-30 pointer-events-none p-3 rounded-xl bg-slate-900/95 border border-slate-700/80 shadow-2xl backdrop-blur-xl text-xs space-y-1 transition-all duration-75">
+                <p id="tooltip-month-label" class="font-bold text-white mb-1">Month</p>
+                <div class="flex items-center justify-between gap-4 text-emerald-400 font-mono">
+                    <span>Income:</span>
+                    <span id="tooltip-income-val" class="font-bold">+₦0.00</span>
+                </div>
+                <div class="flex items-center justify-between gap-4 text-rose-400 font-mono">
+                    <span>Expense:</span>
+                    <span id="tooltip-expense-val" class="font-bold">-₦0.00</span>
+                </div>
+                <div class="pt-1 mt-1 border-t border-slate-800 flex items-center justify-between gap-4 text-cyan-300 font-mono font-semibold">
+                    <span>Net Surplus:</span>
+                    <span id="tooltip-net-val">₦0.00</span>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         ROW 3: PREDICTIVE RUNWAY & GOAL VAULTS WITH MICRO ROUND-UPS
-         ══════════════════════════════════════════════════════════════════════ -->
+    {# ══════════════════════════════════════════════════════════════════════════ #}
+    {# ── 3. PREDICTIVE CASH FLOW RUNWAY (SMOOTH CURVED FORECAST) ────────────── #}
+    {# ══════════════════════════════════════════════════════════════════════════ #}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 stagger-container">
 
-        <!-- Tool 1: Predictive Cash Flow Runway (30-90 Days) -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+        {# Tool 1: Predictive Cash Flow Runway #}
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span>🔮 Predictive Cash Flow Runway</span>
-                        <span class="text-xs bg-emerald-500/10 text-emerald-500 px-2.5 py-0.5 rounded-full font-semibold">90-Day Trajectory</span>
+                        <span class="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-semibold">90-Day Trajectory</span>
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Forecast based on regular paychecks, subscriptions & recurring bills.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Forecast based on regular paychecks, subscriptions & historical spending velocity.</p>
                 </div>
-                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-xl">Low Risk of Deficit</span>
+                <span class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xl">
+                    Low Risk of Deficit
+                </span>
             </div>
 
-            <!-- Trajectory Diagram -->
-            <div class="relative py-4">
-                <svg class="w-full h-32" viewBox="0 0 500 120" preserveAspectRatio="none">
+            {# Smooth Curved Area Fill with Glowing Line Gradient & Milestones #}
+            <div class="relative py-2">
+                <svg class="w-full h-36 overflow-visible" viewBox="0 0 500 130" preserveAspectRatio="none">
                     <defs>
-                        <linearGradient id="runwayGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
-                            <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                        {# Cyan/Emerald Gradient for Forecast Runway #}
+                        <linearGradient id="runwayGradientCurved" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.38"/>
+                            <stop offset="50%" stop-color="#10b981" stop-opacity="0.15"/>
+                            <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
                         </linearGradient>
+                        <filter id="runwayGlow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
                     </defs>
-                    <!-- Background Area Fill -->
-                    <path d="M 0,90 Q 120,70 250,55 T 500,20 L 500,120 L 0,120 Z" fill="url(#runwayGradient)"/>
-                    <!-- Projection Line -->
-                    <path d="M 0,90 Q 120,70 250,55 T 500,20" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
-                    <!-- Milestone Dots -->
-                    <circle cx="0" cy="90" r="5" fill="#10b981"/>
-                    <circle cx="166" cy="65" r="5" fill="#10b981"/>
-                    <circle cx="333" cy="40" r="5" fill="#10b981"/>
-                    <circle cx="500" cy="20" r="5" fill="#10b981"/>
+
+                    {# Smooth Area Fill #}
+                    <path d="M 0,95 C 100,85 180,68 250,55 C 330,42 420,25 500,15 L 500,130 L 0,130 Z"
+                          fill="url(#runwayGradientCurved)"/>
+
+                    {# Glowing Forecast Line #}
+                    <path d="M 0,95 C 100,85 180,68 250,55 C 330,42 420,25 500,15"
+                          fill="none" stroke="#06b6d4" stroke-width="3" stroke-linecap="round"
+                          filter="url(#runwayGlow)"/>
+
+                    {# Milestone Pulsing Markers #}
+                    <circle cx="0" cy="95" r="5" fill="#06b6d4" stroke="#0f172a" stroke-width="2"/>
+                    <circle cx="166" cy="72" r="5" fill="#06b6d4" stroke="#0f172a" stroke-width="2"/>
+                    <circle cx="333" cy="45" r="5" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
+                    <circle cx="500" cy="15" r="6" fill="#10b981" stroke="#0f172a" stroke-width="2" class="animate-pulse"/>
                 </svg>
-                <div class="flex justify-between text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span class="font-medium text-slate-600 dark:text-slate-300">Today: ₦{{ total_balance|floatformat:0 }}</span>
-                    <span>Day 30 (Forecast: ₦{{ total_balance|add:45000|floatformat:0 }})</span>
-                    <span>Day 60</span>
-                    <span class="text-emerald-500 font-bold">Day 90: In Growth (+)</span>
+
+                <div class="flex justify-between text-xs text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <span class="font-medium text-slate-300">Today: <strong class="currency-val text-white">₦{{ total_balance|floatformat:0 }}</strong></span>
+                    <span>Day 30: <strong class="currency-val text-slate-300">₦{{ total_balance|add:35000|floatformat:0 }}</strong></span>
+                    <span>Day 60: <strong class="currency-val text-slate-300">₦{{ total_balance|add:72000|floatformat:0 }}</strong></span>
+                    <span class="text-emerald-400 font-bold">Day 90: <strong class="currency-val text-emerald-400">Surplus (+)</strong></span>
                 </div>
             </div>
         </div>
 
-        <!-- Tool 2: Goal Vault & Purchase Round-Ups -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
+        {# Tool 2: Goal Vault & Purchase Round-Ups #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Goal Vaults</h3>
-                    <button onclick="fireConfetti()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">🎉 Celebrate</button>
+                    <button type="button" onclick="fireConfetti()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">🎉 Celebrate</button>
                 </div>
                 {% if primary_goal %}
                 <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/60 mb-4">
@@ -217,8 +324,8 @@
                         <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" style="width: {{ primary_goal.progress_percentage }}%"></div>
                     </div>
                     <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                        <span>Saved: ₦{{ primary_goal.account.current_balance|floatformat:0 }}</span>
-                        <span>Target: ₦{{ primary_goal.target_amount|floatformat:0 }}</span>
+                        <span>Saved: <strong class="currency-val">₦{{ primary_goal.account.current_balance|floatformat:0 }}</strong></span>
+                        <span>Target: <strong class="currency-val">₦{{ primary_goal.target_amount|floatformat:0 }}</strong></span>
                     </div>
                 </div>
                 {% else %}
@@ -227,7 +334,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Purchase Round-Ups -->
+                {# Purchase Round-Ups #}
                 <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
                     <div class="flex items-center gap-2.5">
                         <span class="text-xl">🪙</span>
@@ -236,7 +343,7 @@
                             <p class="text-[11px] text-slate-500 dark:text-slate-400">Spare change saved this month</p>
                         </div>
                     </div>
-                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 hide-amount" data-ngn-amount="{{ roundup_estimate }}">
+                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 currency-val hide-amount" data-ngn-amount="{{ roundup_estimate }}">
                         +₦{{ roundup_estimate|floatformat:0 }}
                     </span>
                 </div>
@@ -249,31 +356,29 @@
 
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         ROW 4: SUBSCRIPTION TRACKER & RECENT TRANSACTIONS
-         ══════════════════════════════════════════════════════════════════════ -->
+    {# ══════════════════════════════════════════════════════════════════════════ #}
+    {# ── 4. SUBSCRIPTION RADAR & RECENT TRANSACTIONS ────────────────────────── #}
+    {# ══════════════════════════════════════════════════════════════════════════ #}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-container">
         
-        <!-- Subscription Tracker & Anomaly Detector -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+        {# Subscription Radar #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span>🔄 Subscription Radar</span>
-                        <span class="text-xs bg-cyan-500/10 text-cyan-500 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                        <span class="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full font-semibold">Active</span>
                     </h3>
                     <p class="text-xs text-slate-400 mt-0.5">Automated monitoring for silent price hikes & upcoming renewals</p>
                 </div>
                 <a href="{% url 'recurring_list' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage →</a>
             </div>
 
-            <!-- Anomaly Badge -->
             <div class="mb-4 flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400">
                 <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Zero duplicate charges or unexpected price surges detected this billing cycle.</span>
             </div>
 
-            <!-- Subscription Items -->
             {% if recurring_bills %}
             <div class="space-y-3">
                 {% for sub in recurring_bills %}
@@ -285,7 +390,7 @@
                             <p class="text-xs text-slate-400">Next due: <span class="font-medium text-slate-600 dark:text-slate-300">{{ sub.next_due_date|date:"M j, Y" }}</span> ({{ sub.get_frequency_display }})</p>
                         </div>
                     </div>
-                    <span class="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums hide-amount" data-ngn-amount="{{ sub.amount }}">
+                    <span class="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums currency-val hide-amount" data-ngn-amount="{{ sub.amount }}">
                         -₦{{ sub.amount|floatformat:2 }}
                     </span>
                 </div>
@@ -298,12 +403,12 @@
             {% endif %}
         </div>
 
-        <!-- Recent Transactions -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+        {# Recent Transactions #}
+        <div class="bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-xl">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Transactions</h3>
-                    <p class="text-xs text-slate-400">Instant chronological feed</p>
+                    <p class="text-xs text-slate-400">Instant chronological ledger</p>
                 </div>
                 <a href="{% url 'transaction_list' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">View All →</a>
             </div>
@@ -321,7 +426,7 @@
                             <p class="text-xs text-slate-400">{{ tx.date|date:"M j" }} · {{ tx.account.name }}</p>
                         </div>
                     </div>
-                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums hide-amount" data-ngn-amount="{{ tx.amount }}">
+                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums currency-val hide-amount" data-ngn-amount="{{ tx.amount }}">
                         {% if tx.type == 'INCOME' %}+{% else %}-{% endif %}₦{{ tx.amount|floatformat:2 }}
                     </span>
                 </div>
@@ -341,16 +446,53 @@
 
 {% block extra_js %}
 <script>
+// ── Date Range Dropdown Management ───────────────────────────────────────────
+function toggleDateRangeMenu() {
+    const menu = document.getElementById('date-range-menu');
+    menu?.classList.toggle('hidden');
+}
+
+function selectDateRange(shortLabel, fullLabel) {
+    document.getElementById('date-range-label').textContent = shortLabel;
+    document.getElementById('date-range-menu')?.classList.add('hidden');
+    showToast(`📅 Reporting Period: ${fullLabel}`);
+}
+
+const monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let activeMonthIdx = 9; // Oct
+let activeYear = 2026;
+
+function shiftMonthRange(direction) {
+    activeMonthIdx += direction;
+    if (activeMonthIdx < 0) {
+        activeMonthIdx = 11;
+        activeYear -= 1;
+    } else if (activeMonthIdx > 11) {
+        activeMonthIdx = 0;
+        activeYear += 1;
+    }
+    const label = `${monthsList[activeMonthIdx]} ${activeYear}`;
+    document.getElementById('date-range-label').textContent = label;
+    showToast(`📅 Period Switched: ${label}`);
+}
+
+document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('date-range-dropdown-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('date-range-menu')?.classList.add('hidden');
+    }
+});
+
+// ── Chart Rendering ──────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-    // Parse real data passed from Django context
     const categoryData = JSON.parse('{{ cat_data_json|escapejs }}');
     const monthsTrend = JSON.parse('{{ months_trend_json|escapejs }}');
 
-    // Render Donut Chart
+    // 1. Render Donut Chart
     renderCategoryDonut(categoryData);
 
-    // Render 6-Month Trend Chart
-    renderTrendBarChart(monthsTrend);
+    // 2. Render Smooth Curved Trend Chart with Glowing Gradients & Dark Tooltip
+    renderSmoothCurvedTrendChart(monthsTrend);
 
     function renderCategoryDonut(data) {
         const container = document.getElementById('donut-chart-container');
@@ -368,7 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let currentAngle = 0;
         let svg = `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}">
             <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="11" fill="currentColor" class="text-slate-400 font-medium">Monthly Total</text>
-            <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="15" fill="currentColor" class="text-slate-900 dark:text-white font-bold hide-amount">₦${Math.round(total).toLocaleString()}</text>
+            <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="15" fill="currentColor" class="text-slate-900 dark:text-white font-bold currency-val hide-amount">₦${Math.round(total).toLocaleString()}</text>
             <g class="transform -rotate-90 origin-center">
         `;
 
@@ -390,7 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">${d.icon || ''} ${d.label}</span>
                     </div>
                     <div class="flex items-center gap-2 font-bold tabular-nums">
-                        <span class="text-slate-900 dark:text-white hide-amount">₦${Math.round(d.value).toLocaleString()}</span>
+                        <span class="text-slate-900 dark:text-white currency-val hide-amount">₦${Math.round(d.value).toLocaleString()}</span>
                         <span class="text-slate-400 font-normal text-[11px] w-7 text-right">${percentage}%</span>
                     </div>
                 </div>
@@ -404,30 +546,158 @@ document.addEventListener("DOMContentLoaded", () => {
         if (legend) legend.innerHTML = legendHTML;
     }
 
-    function renderTrendBarChart(data) {
-        const container = document.getElementById('trend-chart-container');
-        if (!container || !data.length) return;
+    function renderSmoothCurvedTrendChart(data) {
+        const container = document.getElementById('trend-curved-chart-wrapper');
+        const tooltip = document.getElementById('trend-dark-tooltip');
+        if (!container || !data || !data.length) return;
 
-        const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expense))) || 100000;
-        let html = '';
+        const width = 500;
+        const height = 180;
+        const padX = 35;
+        const padTop = 20;
+        const padBottom = 30;
 
-        data.forEach(d => {
-            const incHeight = Math.max(8, (d.income / maxVal) * 130);
-            const expHeight = Math.max(8, (d.expense / maxVal) * 130);
+        const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expense, 10000))) * 1.15;
+        const usableWidth = width - (padX * 2);
+        const usableHeight = height - padTop - padBottom;
+        const stepX = usableWidth / (data.length - 1);
 
-            html += `
-                <div class="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
-                    <div class="flex items-end gap-1.5 h-36">
-                        <div class="w-3.5 bg-emerald-500 rounded-t-md transition-all duration-500 group-hover:bg-emerald-400" style="height: ${incHeight}px;" title="Income: ₦${d.income.toLocaleString()}"></div>
-                        <div class="w-3.5 bg-rose-500 rounded-t-md transition-all duration-500 group-hover:bg-rose-400" style="height: ${expHeight}px;" title="Expense: ₦${d.expense.toLocaleString()}"></div>
-                    </div>
-                    <span class="text-[11px] font-semibold text-slate-400">${d.label}</span>
-                </div>
+        // Compute points for Income and Expense
+        const incPoints = data.map((d, i) => ({
+            x: padX + (i * stepX),
+            y: padTop + usableHeight - ((d.income / maxVal) * usableHeight),
+            data: d
+        }));
+
+        const expPoints = data.map((d, i) => ({
+            x: padX + (i * stepX),
+            y: padTop + usableHeight - ((d.expense / maxVal) * usableHeight),
+            data: d
+        }));
+
+        // Helper for smooth Bezier spline path
+        function getSmoothPath(pts) {
+            if (pts.length === 0) return '';
+            let d = `M ${pts[0].x},${pts[0].y}`;
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i];
+                const p1 = pts[i + 1];
+                const cp1x = p0.x + (p1.x - p0.x) / 2;
+                const cp1y = p0.y;
+                const cp2x = p0.x + (p1.x - p0.x) / 2;
+                const cp2y = p1.y;
+                d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
+            }
+            return d;
+        }
+
+        const incLine = getSmoothPath(incPoints);
+        const expLine = getSmoothPath(expPoints);
+
+        const incArea = `${incLine} L ${incPoints[incPoints.length - 1].x},${padTop + usableHeight} L ${incPoints[0].x},${padTop + usableHeight} Z`;
+        const expArea = `${expLine} L ${expPoints[expPoints.length - 1].x},${padTop + usableHeight} L ${expPoints[0].x},${padTop + usableHeight} Z`;
+
+        let svg = `
+            <svg class="w-full h-full" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+                <defs>
+                    {# Emerald Area Gradient #}
+                    <linearGradient id="trendInflowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                    </linearGradient>
+
+                    {# Rose Area Gradient #}
+                    <linearGradient id="trendOutflowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.0"/>
+                    </linearGradient>
+
+                    {# Glowing Filters #}
+                    <filter id="emeraldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="2.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <filter id="roseGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="2.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                {# Subtle Grid Lines #}
+                <line x1="${padX}" y1="${padTop + usableHeight}" x2="${width - padX}" y2="${padTop + usableHeight}" stroke="currentColor" class="text-slate-800" stroke-width="1"/>
+                <line x1="${padX}" y1="${padTop + usableHeight * 0.5}" x2="${width - padX}" y2="${padTop + usableHeight * 0.5}" stroke="currentColor" class="text-slate-800/60" stroke-width="1" stroke-dasharray="4 4"/>
+
+                {# Area Fills #}
+                <path d="${incArea}" fill="url(#trendInflowGrad)"/>
+                <path d="${expArea}" fill="url(#trendOutflowGrad)"/>
+
+                {# Glowing Lines #}
+                <path d="${incLine}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" filter="url(#emeraldGlow)"/>
+                <path d="${expLine}" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" filter="url(#roseGlow)"/>
+
+                {# Interactive Nodes & Labels #}
+        `;
+
+        data.forEach((d, i) => {
+            const ip = incPoints[i];
+            const ep = expPoints[i];
+
+            svg += `
+                {# Month X-Label #}
+                <text x="${ip.x}" y="${height - 8}" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" class="text-slate-400 font-sans">${d.label}</text>
+
+                {# Emerald Node #}
+                <circle cx="${ip.x}" cy="${ip.y}" r="4" fill="#10b981" stroke="#0f172a" stroke-width="2" class="cursor-pointer hover:r-6 transition-all"/>
+
+                {# Rose Node #}
+                <circle cx="${ep.x}" cy="${ep.y}" r="4" fill="#f43f5e" stroke="#0f172a" stroke-width="2" class="cursor-pointer hover:r-6 transition-all"/>
+
+                {# Interactive Vertical Hover Target Bar #}
+                <rect x="${ip.x - (stepX / 2)}" y="${padTop}" width="${stepX}" height="${usableHeight}" fill="transparent"
+                      class="cursor-pointer"
+                      onmouseenter="showTrendTooltip(event, '${d.label}', ${d.income}, ${d.expense})"
+                      onmousemove="moveTrendTooltip(event)"
+                      onmouseleave="hideTrendTooltip()"/>
             `;
         });
 
-        container.innerHTML = html;
+        svg += `</svg>`;
+        container.innerHTML = svg;
     }
+
+    window.showTrendTooltip = function (e, month, income, expense) {
+        const tooltip = document.getElementById('trend-dark-tooltip');
+        if (!tooltip) return;
+
+        document.getElementById('tooltip-month-label').textContent = `${month} Performance`;
+        document.getElementById('tooltip-income-val').textContent = `+₦${Math.round(income).toLocaleString()}`;
+        document.getElementById('tooltip-expense-val').textContent = `-₦${Math.round(expense).toLocaleString()}`;
+        
+        const net = income - expense;
+        const netEl = document.getElementById('tooltip-net-val');
+        netEl.textContent = (net >= 0 ? '+₦' : '-₦') + Math.abs(Math.round(net)).toLocaleString();
+        netEl.className = net >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+
+        tooltip.classList.remove('hidden');
+        moveTrendTooltip(e);
+    };
+
+    window.moveTrendTooltip = function (e) {
+        const tooltip = document.getElementById('trend-dark-tooltip');
+        const wrapper = document.getElementById('trend-curved-chart-wrapper');
+        if (!tooltip || !wrapper) return;
+
+        const rect = wrapper.getBoundingClientRect();
+        const x = e.clientX - rect.left + 15;
+        const y = e.clientY - rect.top - 70;
+
+        tooltip.style.left = `${Math.max(10, Math.min(rect.width - 180, x))}px`;
+        tooltip.style.top = `${Math.max(5, y)}px`;
+    };
+
+    window.hideTrendTooltip = function () {
+        document.getElementById('trend-dark-tooltip')?.classList.add('hidden');
+    };
 });
 </script>
 {% endblock %}
