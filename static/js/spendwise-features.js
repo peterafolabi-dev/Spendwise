@@ -20,12 +20,16 @@
     const initPrivacyMode = () => {
         const isPrivate = localStorage.getItem('spendwise_privacy') === 'true';
         if (isPrivate) {
-            document.body.classList.add('privacy-active');
+            document.body.classList.add('privacy-mode', 'privacy-active');
+            document.documentElement.classList.add('privacy-mode', 'privacy-active');
         }
         updatePrivacyButton(isPrivate);
 
         window.togglePrivacyMode = function () {
-            const active = document.body.classList.toggle('privacy-active');
+            const active = document.body.classList.toggle('privacy-mode');
+            document.body.classList.toggle('privacy-active', active);
+            document.documentElement.classList.toggle('privacy-mode', active);
+            document.documentElement.classList.toggle('privacy-active', active);
             localStorage.setItem('spendwise_privacy', active);
             updatePrivacyButton(active);
             if (active) {

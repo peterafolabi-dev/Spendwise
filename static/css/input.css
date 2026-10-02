@@ -109,10 +109,13 @@ html.dark .card-surface,
 }
 
 /* Privacy mode amount blur */
+.privacy-mode .currency-val,
+.privacy-active .currency-val,
+.privacy-mode .hide-amount,
 .privacy-active .hide-amount {
-  filter: blur(7px) !important;
+  filter: blur(8px) !important;
   user-select: none !important;
-  transition: filter 0.2s ease;
+  transition: filter 0.2s ease !important;
 }
 
 /* Command Palette backdrop */

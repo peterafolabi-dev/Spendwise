@@ -14,14 +14,25 @@
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     
-    <!-- Prevent Dark Mode Flash -->
+    <!-- Prevent Dark Mode & Privacy Mode Flash -->
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
+        if (localStorage.getItem('spendwise_privacy') === 'true') {
+            document.documentElement.classList.add('privacy-mode', 'privacy-active');
+        }
     </script>
+    <style>
+        .privacy-mode .currency-val, .privacy-active .currency-val,
+        .privacy-mode .hide-amount, .privacy-active .hide-amount {
+            filter: blur(8px) !important;
+            user-select: none !important;
+            transition: filter 0.2s ease !important;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden transition-colors duration-200">
 
