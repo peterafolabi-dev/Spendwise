@@ -44,5 +44,11 @@ urlpatterns = [
     path('import/csv/', views.import_csv, name='import_csv'),
     
     path('profile/', views.profile_view, name='profile'),
+    
+    # Passkey / WebAuthn
+    path('api/passkey/challenge/', views.passkey_challenge, name='passkey_challenge'),
+    path('api/passkey/verify/', views.passkey_verify, name='passkey_verify'),
+    path('api/passkey/register/challenge/', views.passkey_register_challenge, name='passkey_register_challenge'),
+    path('api/passkey/register/verify/', views.passkey_register_verify, name='passkey_register_verify'),
 ]
 

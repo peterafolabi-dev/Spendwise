@@ -12,7 +12,7 @@ from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
 from django.db.models import Sum, F
 from django.utils import timezone
-from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal
+from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, PasskeyCredential
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
 
@@ -465,4 +465,113 @@ def import_csv(request):
                 continue
         return redirect('transaction_list')
     return render(request, 'tracker/import_csv.html')
+
+# Passkey & WebAuthn Endpoints
+import secrets
+import base64
+
+def passkey_challenge(request):
+    """Generates an authentication challenge for WebAuthn navigator.credentials.get()."""
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+    request.session['webauthn_challenge'] = challenge_b64
+    host = request.get_host().split(':')[0]
+    
+    return JsonResponse({
+        'challenge': challenge_b64,
+        'rpId': host,
+        'timeout': 60000,
+        'userVerification': 'preferred',
+    })
+
+def passkey_verify(request):
+    """Verifies a WebAuthn credential assertion and logs the user in."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+    
+    saved_challenge = request.session.get('webauthn_challenge')
+    if not saved_challenge:
+        return JsonResponse({'status': 'error', 'message': 'Authentication session expired. Please try again.'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        cred_id = data.get('id') or data.get('rawId')
+        
+        credential = PasskeyCredential.objects.filter(credential_id=cred_id).select_related('user').first()
+        if not credential:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No registered passkey found on this device for SpendWise. Please sign in with your password and register a passkey in Settings.'
+            }, status=400)
+        
+        user = credential.user
+        login(request, user)
+        if 'webauthn_challenge' in request.session:
+            del request.session['webauthn_challenge']
+            
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Welcome back, {user.username}!',
+            'redirect_url': '/dashboard/'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+def passkey_register_challenge(request):
+    """Generates a registration challenge for navigator.credentials.create()."""
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+    request.session['webauthn_reg_challenge'] = challenge_b64
+    host = request.get_host().split(':')[0]
+    user_handle = base64.urlsafe_b64encode(str(request.user.id).encode('utf-8')).decode('utf-8').rstrip('=')
+    
+    return JsonResponse({
+        'challenge': challenge_b64,
+        'rp': {
+            'name': 'SpendWise',
+            'id': host,
+        },
+        'user': {
+            'id': user_handle,
+            'name': request.user.username,
+            'displayName': request.user.get_full_name() or request.user.username,
+        },
+        'pubKeyCredParams': [
+            {'type': 'public-key', 'alg': -7},
+            {'type': 'public-key', 'alg': -257},
+        ],
+        'timeout': 60000,
+        'attestation': 'none',
+        'authenticatorSelection': {
+            'userVerification': 'preferred',
+            'residentKey': 'preferred',
+        }
+    })
+
+@login_required
+def passkey_register_verify(request):
+    """Saves a newly created WebAuthn credential."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        cred_id = data.get('id') or data.get('rawId')
+        device_name = data.get('deviceName', 'Biometric Device')
+        
+        PasskeyCredential.objects.update_or_create(
+            credential_id=cred_id,
+            defaults={
+                'user': request.user,
+                'device_name': device_name,
+                'public_key': data.get('publicKey', ''),
+            }
+        )
+        if 'webauthn_reg_challenge' in request.session:
+            del request.session['webauthn_reg_challenge']
+            
+        return JsonResponse({'status': 'success', 'message': 'Passkey registered successfully!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
