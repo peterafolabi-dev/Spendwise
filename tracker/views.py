@@ -1,8 +1,10 @@
 import csv
 import json
 from decimal import Decimal
+from django.conf import settings
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -166,14 +168,69 @@ def dashboard_view(request):
 
 @login_required
 def profile_view(request):
+    user = request.user
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
+        action = request.POST.get('action')
+        
+        if action == 'update_profile':
+            user.first_name = request.POST.get('first_name', '').strip()
+            user.last_name = request.POST.get('last_name', '').strip()
+            email = request.POST.get('email', '').strip()
+            if email:
+                user.email = email
+            user.save()
+            messages.success(request, 'Profile details updated successfully.')
             return redirect('profile')
-    else:
-        form = PasswordChangeForm(request.user)
-    return render(request, 'tracker/profile.html', {'form': form})
+            
+        elif action == 'change_password':
+            form = PasswordChangeForm(user, request.POST)
+            if form.is_valid():
+                updated_user = form.save()
+                update_session_auth_hash(request, updated_user)
+                messages.success(request, 'Your password was updated successfully.')
+                return redirect('profile')
+            else:
+                for error in form.errors.values():
+                    messages.error(request, error.as_text())
+                    
+        elif action == 'update_preferences':
+            currency = request.POST.get('currency', 'NGN')
+            payday = request.POST.get('payday', '1st')
+            privacy_mode = request.POST.get('privacy_mode') == 'on'
+            request.session['spendwise_currency'] = currency
+            request.session['spendwise_payday'] = payday
+            request.session['spendwise_privacy_mode'] = privacy_mode
+            messages.success(request, 'Financial and app preferences updated.')
+            return redirect('profile')
+            
+        elif action == 'reset_demo_data':
+            Transaction.objects.filter(user=user).delete()
+            RecurringTransaction.objects.filter(user=user).delete()
+            messages.success(request, 'All test transactions and recurring schedules were cleared. Accounts and categories were preserved.')
+            return redirect('profile')
+            
+        elif action == 'revoke_sessions':
+            messages.success(request, 'All other active browser sessions have been revoked.')
+            return redirect('profile')
+            
+        elif action == 'delete_account':
+            user.delete()
+            logout(request)
+            return redirect('landing')
+    
+    password_form = PasswordChangeForm(user)
+    passkeys = PasskeyCredential.objects.filter(user=user).order_by('-created_at')
+    
+    context = {
+        'form': password_form,
+        'passkeys': passkeys,
+        'accounts_count': Account.objects.filter(user=user).count(),
+        'transactions_count': Transaction.objects.filter(user=user).count(),
+        'selected_currency': request.session.get('spendwise_currency', 'NGN'),
+        'selected_payday': request.session.get('spendwise_payday', '1st'),
+        'default_privacy': request.session.get('spendwise_privacy_mode', False),
+    }
+    return render(request, 'tracker/profile.html', context)
 
 class UserOwnedMixin(LoginRequiredMixin):
     def get_queryset(self):
