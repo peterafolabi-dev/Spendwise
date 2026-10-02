@@ -7,52 +7,64 @@ from django.utils import timezone
 import random
 
 class Command(BaseCommand):
-    help = 'Seeds the database with a demo user and demo data'
+    help = 'Seeds the database with demo user and realistic data'
 
     def handle(self, *args, **kwargs):
-        # Create user
-        user, created = User.objects.get_or_create(username='demo')
-        if created:
-            user.set_password('demo12345')
-            user.save()
-            self.stdout.write('Created demo user.')
-        else:
-            self.stdout.write('Demo user already exists. Overwriting data.')
-            user.accounts.all().delete()
-            user.categories.all().delete()
+        # Create Demo User
+        if User.objects.filter(username='demo').exists():
+            self.stdout.write(self.style.WARNING('Demo user already exists.'))
+            user = User.objects.get(username='demo')
+            user.delete() # Start fresh
+        
+        user = User.objects.create_user(username='demo', password='demo12345')
+        self.stdout.write(self.style.SUCCESS('Created demo user: demo / demo12345'))
 
-        # Accounts
-        cash = Account.objects.create(user=user, name='Wallet', type='CASH', starting_balance=Decimal('200.00'))
-        bank = Account.objects.create(user=user, name='Main Bank', type='BANK', starting_balance=Decimal('1500.00'))
-        savings = Account.objects.create(user=user, name='Emergency Fund', type='SAVINGS', starting_balance=Decimal('5000.00'))
+        # Create Accounts
+        bank_acc = Account.objects.create(user=user, name='Main Bank Account', type='BANK', starting_balance=Decimal('500000.00'))
+        cash_acc = Account.objects.create(user=user, name='Wallet', type='CASH', starting_balance=Decimal('15000.00'))
+        savings_acc = Account.objects.create(user=user, name='Emergency Fund', type='SAVINGS', starting_balance=Decimal('200000.00'))
+        self.stdout.write(self.style.SUCCESS('Created accounts'))
 
-        # Categories
-        cat_food = Category.objects.create(user=user, name='Food & Dining', type='EXPENSE', icon='🍔')
-        cat_rent = Category.objects.create(user=user, name='Rent', type='EXPENSE', icon='🏠')
-        cat_salary = Category.objects.create(user=user, name='Salary', type='INCOME', icon='💼')
-        cat_fun = Category.objects.create(user=user, name='Entertainment', type='EXPENSE', icon='🎉')
+        # Create Categories
+        salary = Category.objects.create(user=user, name='Salary', type='INCOME', icon='💰')
+        food = Category.objects.create(user=user, name='Food', type='EXPENSE', icon='🍔')
+        transport = Category.objects.create(user=user, name='Transport', type='EXPENSE', icon='🚕')
+        rent = Category.objects.create(user=user, name='Rent', type='EXPENSE', icon='🏠')
+        entertainment = Category.objects.create(user=user, name='Entertainment', type='EXPENSE', icon='🎮')
+        data = Category.objects.create(user=user, name='Data & Airtime', type='EXPENSE', icon='📱')
+        self.stdout.write(self.style.SUCCESS('Created categories'))
 
-        # Budgets
-        Budget.objects.create(user=user, category=cat_food, limit=Decimal('400.00'))
-        # Budget over limit
-        Budget.objects.create(user=user, category=cat_fun, limit=Decimal('50.00'))
+        # Create Budgets (One over limit)
+        Budget.objects.create(user=user, category=food, limit=Decimal('50000.00'))
+        Budget.objects.create(user=user, category=transport, limit=Decimal('20000.00'))
+        Budget.objects.create(user=user, category=entertainment, limit=Decimal('10000.00')) # Intentionally low to go over
+        self.stdout.write(self.style.SUCCESS('Created budgets'))
 
-        # Savings Goal
-        SavingsGoal.objects.create(user=user, account=savings, name='Vacation', target_amount=Decimal('8000.00'), target_date=timezone.now().date() + timedelta(days=180))
+        # Create Savings Goal
+        SavingsGoal.objects.create(user=user, account=savings_acc, name='New Laptop', target_amount=Decimal('800000.00'), target_date=timezone.now().date() + timedelta(days=180))
+        self.stdout.write(self.style.SUCCESS('Created savings goal'))
 
-        # Transactions (2 months of data)
+        # Generate 2 months of transactions
         today = timezone.now().date()
-        for i in range(60):
-            d = today - timedelta(days=i)
-            # Add some expenses
-            Transaction.objects.create(user=user, account=bank, amount=Decimal(random.randint(10, 30)), type='EXPENSE', category=cat_food, date=d)
-            if i % 30 == 0:
-                # Add rent
-                Transaction.objects.create(user=user, account=bank, amount=Decimal('1000.00'), type='EXPENSE', category=cat_rent, date=d)
-                # Add salary
-                Transaction.objects.create(user=user, account=bank, amount=Decimal('3000.00'), type='INCOME', category=cat_salary, date=d)
+        start_date = today - timedelta(days=60)
+        
+        # Salary every 30 days
+        Transaction.objects.create(user=user, account=bank_acc, amount=Decimal('350000.00'), type='INCOME', category=salary, date=start_date + timedelta(days=5), note='Monthly Salary')
+        Transaction.objects.create(user=user, account=bank_acc, amount=Decimal('350000.00'), type='INCOME', category=salary, date=start_date + timedelta(days=35), note='Monthly Salary')
 
-        # Force fun budget over limit
-        Transaction.objects.create(user=user, account=bank, amount=Decimal('100.00'), type='EXPENSE', category=cat_fun, date=today)
+        current_date = start_date
+        while current_date <= today:
+            # Daily food
+            Transaction.objects.create(user=user, account=bank_acc, amount=Decimal(random.randint(15, 45) * 100), type='EXPENSE', category=food, date=current_date)
+            # Transport every few days
+            if random.random() > 0.5:
+                Transaction.objects.create(user=user, account=cash_acc, amount=Decimal(random.randint(10, 30) * 100), type='EXPENSE', category=transport, date=current_date)
+            # Entertainment (going over budget)
+            if random.random() > 0.8:
+                Transaction.objects.create(user=user, account=bank_acc, amount=Decimal(random.randint(40, 100) * 100), type='EXPENSE', category=entertainment, date=current_date, note='Weekend vibes')
+            
+            current_date += timedelta(days=1)
 
-        self.stdout.write(self.style.SUCCESS('Successfully seeded demo data'))
+        self.stdout.write(self.style.SUCCESS('Generated transactions'))
+        self.stdout.write(self.style.SUCCESS('Demo data seeding complete!'))
+

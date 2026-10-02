@@ -31,3 +31,4 @@ class RecurringTransactionAdmin(admin.ModelAdmin):
 @admin.register(SavingsGoal)
 class SavingsGoalAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'target_amount', 'target_date', 'account')
+
