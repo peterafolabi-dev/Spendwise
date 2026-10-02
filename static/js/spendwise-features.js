@@ -348,20 +348,162 @@
         window.location.href = `/transactions/create/?note=${encodeURIComponent(merchant)}&amount=${amount}`;
     };
 
-    // ── 7. BIOMETRIC & WEBAUTHN SIMULATOR ────────────────────────────────────────
-    window.triggerBiometricAuth = async function () {
-        if (window.PublicKeyCredential) {
-            try {
-                showToast('🔐 Touch ID / Face ID scanner active…');
-                setTimeout(() => {
-                    fireConfetti();
-                    showToast('✅ Biometric authentication verified!');
-                }, 1000);
-            } catch (err) {
-                showToast('🔑 Biometric fallback ready.');
+    // ── 7. REAL WEBAUTHN BIOMETRIC & PASSKEY AUTHENTICATOR ───────────────────────
+    function getCsrfToken() {
+        const cookies = document.cookie ? document.cookie.split('; ') : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const parts = cookies[i].split('=');
+            if (parts[0] === 'csrftoken') {
+                return decodeURIComponent(parts[1]);
             }
-        } else {
-            showToast('✅ Passkey device authenticated.');
+        }
+        return '';
+    }
+
+    window.triggerBiometricAuth = async function () {
+        if (!window.PublicKeyCredential) {
+            showToast('⚠️ Passkeys & biometric login are not supported on this browser.');
+            return;
+        }
+
+        try {
+            showToast('🔐 Initializing biometric challenge…');
+            
+            // 1. Fetch authentication challenge from backend
+            const challengeRes = await fetch('/api/passkey/challenge/');
+            if (!challengeRes.ok) {
+                throw new Error('Unable to fetch passkey challenge from server.');
+            }
+            const options = await challengeRes.json();
+
+            // 2. Decode base64 challenge to Uint8Array buffer
+            const rawChallenge = options.challenge.replace(/-/g, '+').replace(/_/g, '/');
+            const binaryChallenge = Uint8Array.from(atob(rawChallenge), c => c.charCodeAt(0));
+
+            const publicKeyOptions = {
+                challenge: binaryChallenge,
+                rpId: options.rpId || window.location.hostname,
+                timeout: options.timeout || 60000,
+                userVerification: options.userVerification || 'preferred'
+            };
+
+            // 3. Trigger REAL operating system biometric prompt (Windows Hello / Touch ID)
+            const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
+
+            if (!credential) {
+                showToast('ℹ️ No passkey selected.');
+                return;
+            }
+
+            // 4. Encode assertion data
+            const rawId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            const clientDataJSON = btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)));
+            const authenticatorData = btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData)));
+            const signature = btoa(String.fromCharCode(...new Uint8Array(credential.response.signature)));
+            const userHandle = credential.response.userHandle ? btoa(String.fromCharCode(...new Uint8Array(credential.response.userHandle))) : null;
+
+            // 5. Send assertion to server to verify & login
+            const verifyRes = await fetch('/api/passkey/verify/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    id: credential.id,
+                    rawId: rawId,
+                    clientDataJSON: clientDataJSON,
+                    authenticatorData: authenticatorData,
+                    signature: signature,
+                    userHandle: userHandle
+                })
+            });
+
+            const result = await verifyRes.json();
+            if (verifyRes.ok && result.status === 'success') {
+                fireConfetti();
+                showToast('✅ ' + (result.message || 'Biometric login verified! Redirecting…'));
+                setTimeout(() => {
+                    window.location.href = result.redirect_url || '/dashboard/';
+                }, 800);
+            } else {
+                showToast('❌ ' + (result.message || 'Passkey verification failed.'));
+            }
+
+        } catch (err) {
+            console.warn('WebAuthn Passkey Error:', err);
+            if (err.name === 'NotAllowedError') {
+                showToast('ℹ️ No passkey registered on this device, or scan was cancelled.');
+            } else if (err.name === 'AbortError') {
+                showToast('ℹ️ Biometric scan was cancelled.');
+            } else {
+                showToast('⚠️ ' + (err.message || 'Unable to complete biometric scan.'));
+            }
+        }
+    };
+
+    window.registerPasskeyDevice = async function (deviceName = 'Biometric Passkey') {
+        if (!window.PublicKeyCredential) {
+            showToast('⚠️ WebAuthn passkeys not supported by this browser.');
+            return;
+        }
+
+        try {
+            showToast('🔐 Starting biometric passkey registration…');
+            const challengeRes = await fetch('/api/passkey/register/challenge/');
+            if (!challengeRes.ok) throw new Error('Could not fetch registration challenge.');
+            const options = await challengeRes.json();
+
+            const rawChallenge = options.challenge.replace(/-/g, '+').replace(/_/g, '/');
+            const binaryChallenge = Uint8Array.from(atob(rawChallenge), c => c.charCodeAt(0));
+            const rawUserId = options.user.id.replace(/-/g, '+').replace(/_/g, '/');
+            const binaryUserId = Uint8Array.from(atob(rawUserId), c => c.charCodeAt(0));
+
+            const createOptions = {
+                challenge: binaryChallenge,
+                rp: options.rp,
+                user: {
+                    id: binaryUserId,
+                    name: options.user.name,
+                    displayName: options.user.displayName,
+                },
+                pubKeyCredParams: options.pubKeyCredParams,
+                timeout: options.timeout || 60000,
+                attestation: 'none',
+                authenticatorSelection: options.authenticatorSelection,
+            };
+
+            const credential = await navigator.credentials.create({ publicKey: createOptions });
+            if (!credential) return;
+
+            const rawId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            const verifyRes = await fetch('/api/passkey/register/verify/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    id: credential.id,
+                    rawId: rawId,
+                    deviceName: deviceName,
+                })
+            });
+
+            const result = await verifyRes.json();
+            if (verifyRes.ok && result.status === 'success') {
+                fireConfetti();
+                showToast('🎉 Passkey successfully registered to this device!');
+            } else {
+                showToast('❌ ' + (result.message || 'Registration failed.'));
+            }
+        } catch (err) {
+            console.warn('Registration error:', err);
+            if (err.name === 'NotAllowedError') {
+                showToast('ℹ️ Registration cancelled or timed out.');
+            } else {
+                showToast('⚠️ Registration error: ' + err.message);
+            }
         }
     };
 
