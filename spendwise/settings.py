@@ -81,10 +81,9 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "tracker.storage.LenientCompressedManifestStaticFilesStorage",
     },
 }
-WHITENOISE_MANIFEST_STRICT = False
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'landing'
