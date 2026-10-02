@@ -366,6 +366,15 @@
             return;
         }
 
+        // WebAuthn strictly forbids numeric IP addresses (127.0.0.1)
+        if (window.location.hostname === '127.0.0.1') {
+            showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1. Redirecting…');
+            setTimeout(() => {
+                window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
+            }, 1000);
+            return;
+        }
+
         try {
             showToast('🔐 Initializing biometric challenge…');
             
@@ -380,9 +389,12 @@
             const rawChallenge = options.challenge.replace(/-/g, '+').replace(/_/g, '/');
             const binaryChallenge = Uint8Array.from(atob(rawChallenge), c => c.charCodeAt(0));
 
+            // Dynamically resolve rpId using localhost fallback
+            const targetRpId = window.location.hostname === '127.0.0.1' ? 'localhost' : (options.rpId || window.location.hostname);
+
             const publicKeyOptions = {
                 challenge: binaryChallenge,
-                rpId: options.rpId || window.location.hostname,
+                rpId: targetRpId,
                 timeout: options.timeout || 60000,
                 userVerification: options.userVerification || 'preferred'
             };
@@ -432,7 +444,9 @@
 
         } catch (err) {
             console.warn('WebAuthn Passkey Error:', err);
-            if (err.name === 'NotAllowedError') {
+            if (err.name === 'SecurityError' || (err.message && (err.message.toLowerCase().includes('domain') || err.message.toLowerCase().includes('rpid')))) {
+                showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1.');
+            } else if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ No passkey registered on this device, or scan was cancelled.');
             } else if (err.name === 'AbortError') {
                 showToast('ℹ️ Biometric scan was cancelled.');
@@ -448,6 +462,14 @@
             return;
         }
 
+        if (window.location.hostname === '127.0.0.1') {
+            showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1. Redirecting…');
+            setTimeout(() => {
+                window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
+            }, 1000);
+            return;
+        }
+
         try {
             showToast('🔐 Starting biometric passkey registration…');
             const challengeRes = await fetch('/api/passkey/register/challenge/');
@@ -459,9 +481,14 @@
             const rawUserId = options.user.id.replace(/-/g, '+').replace(/_/g, '/');
             const binaryUserId = Uint8Array.from(atob(rawUserId), c => c.charCodeAt(0));
 
+            const resolvedRp = { ...options.rp };
+            if (window.location.hostname === '127.0.0.1' || !resolvedRp.id) {
+                resolvedRp.id = window.location.hostname === '127.0.0.1' ? 'localhost' : window.location.hostname;
+            }
+
             const createOptions = {
                 challenge: binaryChallenge,
-                rp: options.rp,
+                rp: resolvedRp,
                 user: {
                     id: binaryUserId,
                     name: options.user.name,
@@ -494,12 +521,15 @@
             if (verifyRes.ok && result.status === 'success') {
                 fireConfetti();
                 showToast('🎉 Passkey successfully registered to this device!');
+                setTimeout(() => window.location.reload(), 1200);
             } else {
                 showToast('❌ ' + (result.message || 'Registration failed.'));
             }
         } catch (err) {
             console.warn('Registration error:', err);
-            if (err.name === 'NotAllowedError') {
+            if (err.name === 'SecurityError' || (err.message && (err.message.toLowerCase().includes('domain') || err.message.toLowerCase().includes('rpid')))) {
+                showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1.');
+            } else if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ Registration cancelled or timed out.');
             } else {
                 showToast('⚠️ Registration error: ' + err.message);

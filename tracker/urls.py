@@ -19,9 +19,14 @@ urlpatterns = [
     path('categories/<int:pk>/delete/', views.category_delete_view, name='category_delete'),
     
     path('transactions/', views.TransactionListView.as_view(), name='transaction_list'),
+    path('transactions/ledger/', views.TransactionListView.as_view(), name='transaction_ledger'),
+    path('transactions/<int:pk>/', views.transaction_detail_json, name='transaction_detail_json'),
+    path('transactions/<int:pk>/json/', views.transaction_detail_json, name='transaction_detail_json_alt'),
     path('transactions/create/', views.TransactionCreateView.as_view(), name='transaction_create'),
     path('transactions/<int:pk>/update/', views.TransactionUpdateView.as_view(), name='transaction_update'),
+    path('transactions/<int:pk>/update/ajax/', views.transaction_update_ajax, name='transaction_update_ajax'),
     path('transactions/<int:pk>/delete/', views.TransactionDeleteView.as_view(), name='transaction_delete'),
+    path('transactions/<int:pk>/split/', views.split_transaction_save, name='split_transaction_save'),
     path('transactions/quick-add/', views.quick_add_transaction, name='quick_add_transaction'),
     
     path('budgets/', views.BudgetListView.as_view(), name='budget_list'),
@@ -41,6 +46,7 @@ urlpatterns = [
     
     path('reports/', views.reports_view, name='reports'),
     path('export/csv/', views.export_csv, name='export_csv'),
+    path('export/json/', views.export_json, name='export_json'),
     path('import/csv/', views.import_csv, name='import_csv'),
     
     path('profile/', views.profile_view, name='profile'),
