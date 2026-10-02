@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Savings Vault{% else %}New Savings Vault{% endif %} — SpendWise{% endblock %}
+
+{% block content %}
+<div class="w-full overflow-x-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-6 sm:py-10">
+    <div class="w-full max-w-xl mx-auto my-8 p-6 sm:p-8 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl animate-fade-in-up text-slate-100">
+
+        <!-- 1. Header & Container Polish -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                {% if object %}Edit Savings Vault{% else %}New Savings Vault{% endif %}
+            </h1>
+            <p class="mt-1.5 text-sm text-slate-400">
+                Set dedicated targets, track milestone stashes, and visualize your progress.
+            </p>
+        </div>
+
+        <form method="POST" class="space-y-6" id="savings-form">
+            {% csrf_token %}
+
+            <!-- Errors Banner -->
+            {% if form.errors %}
+            <div class="rounded-xl bg-rose-500/10 border border-rose-500/30 p-4 text-xs text-rose-400 animate-shake">
+                {% for field in form %}
+                    {% for error in field.errors %}<p><strong class="capitalize">{{ field.label }}:</strong> {{ error }}</p>{% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 2. Goal Identity & Visual Picker -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Goal Category / Theme</label>
+                <!-- Quick horizontal pill selector with popular icons -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 mb-3 scrollbar-none" id="icon-pills">
+                    <button type="button" data-icon="🛡️" data-suggest="Emergency Fund" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>🛡️</span> Emergency
+                    </button>
+                    <button type="button" data-icon="💻" data-suggest="MacBook / Tech" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>💻</span> Tech
+                    </button>
+                    <button type="button" data-icon="✈️" data-suggest="Vacation & Travel" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>✈️</span> Travel
+                    </button>
+                    <button type="button" data-icon="🚗" data-suggest="Vehicle Savings" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>🚗</span> Car
+                    </button>
+                    <button type="button" data-icon="🏠" data-suggest="Annual House Rent" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>🏠</span> Rent
+                    </button>
+                    <button type="button" data-icon="📈" data-suggest="Investment Portfolio" class="icon-chip whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                        <span>📈</span> Investment
+                    </button>
+                </div>
+
+                <!-- Vault Name Input -->
+                <label for="id_name" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Vault / Goal Name</label>
+                <div class="relative">
+                    <input type="text" name="name" id="id_name" required value="{{ form.name.value|default:'' }}"
+                           placeholder="e.g. 6-Month Emergency Buffer, MacBook Pro M3"
+                           class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                </div>
+            </div>
+
+            <!-- 3. Hero Target Amount (Visual Focal Point) -->
+            <div>
+                <label for="id_target_amount" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Target Goal Amount</label>
+                <div class="relative flex items-center rounded-2xl bg-slate-800/40 border border-slate-700/80 px-4 py-3 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all">
+                    <span class="text-3xl font-bold text-emerald-400 mr-2 select-none">₦</span>
+                    <input type="number" step="0.01" name="target_amount" id="id_target_amount" required value="{{ form.target_amount.value|default:'' }}"
+                           placeholder="0.00"
+                           class="w-full bg-transparent text-3xl font-bold text-white placeholder-slate-600 focus:outline-none border-none p-0 tabular-nums">
+                </div>
+                <p class="mt-1.5 text-xs text-slate-400">Total target balance you want to accumulate in this vault.</p>
+            </div>
+
+            <!-- 4. Linked Account & Target Date: Balanced 2-Column Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Linked Account -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="id_account" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Linked Account</label>
+                        <a href="{% url 'account_create' %}" class="text-[11px] font-semibold text-emerald-400 hover:underline">+ New</a>
+                    </div>
+                    <select name="account" id="id_account" required class="w-full bg-slate-800/60 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                        {% for acc in form.account.field.queryset %}
+                        <option value="{{ acc.pk }}" {% if form.account.value == acc.pk or form.account.value == acc.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ acc.name }} (₦{{ acc.current_balance|floatformat:0 }})
+                        </option>
+                        {% empty %}
+                        <option value="">No accounts available</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Target Date -->
+                <div>
+                    <label for="id_target_date" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Target Date</label>
+                    <input type="date" name="target_date" id="id_target_date" required
+                           value="{{ form.target_date.value|date:'Y-m-d'|default:form.target_date.value|default:'' }}"
+                           class="w-full bg-slate-800/60 border border-slate-700 text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all [color-scheme:dark]">
+                    
+                    <!-- Quick preset chips beneath date input -->
+                    <div class="flex items-center gap-1.5 mt-2" id="date-presets">
+                        <button type="button" data-preset="3m" class="preset-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-400 hover:text-emerald-400 border border-slate-700/60 transition-all">
+                            3 Months
+                        </button>
+                        <button type="button" data-preset="6m" class="preset-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-400 hover:text-emerald-400 border border-slate-700/60 transition-all">
+                            6 Months
+                        </button>
+                        <button type="button" data-preset="eoy" class="preset-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-400 hover:text-emerald-400 border border-slate-700/60 transition-all">
+                            End of Year
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Dynamic Savings Pace Projection Badge -->
+            <div id="savings-pace-card" class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl p-3 text-xs flex items-center gap-2.5">
+                <span class="text-base">🎯</span>
+                <div id="savings-pace-text">
+                    Enter target amount & target date to calculate your monthly stash pace.
+                </div>
+            </div>
+
+            <!-- 6. Action Buttons -->
+            <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-800">
+                <a href="{% url 'savings_list' %}" class="text-slate-400 hover:text-white px-5 py-2.5 rounded-xl hover:bg-slate-800/60 transition-all font-semibold text-sm">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    {% if object %}Save Vault{% else %}Create Vault{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('id_name');
+    const targetAmountInput = document.getElementById('id_target_amount');
+    const targetDateInput = document.getElementById('id_target_date');
+    const paceText = document.getElementById('savings-pace-text');
+    const iconButtons = document.querySelectorAll('.icon-chip');
+    const presetButtons = document.querySelectorAll('.preset-btn');
+
+    // 1. Goal Emoji / Icon Selector logic
+    iconButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const icon = btn.dataset.icon;
+            const suggest = btn.dataset.suggest;
+            
+            iconButtons.forEach(b => {
+                b.classList.remove('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                b.classList.add('bg-slate-800/80', 'border-slate-700/60', 'text-slate-300');
+            });
+            btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+            btn.classList.remove('bg-slate-800/80', 'border-slate-700/60', 'text-slate-300');
+
+            if (!nameInput.value.trim()) {
+                nameInput.value = `${icon} ${suggest}`;
+            } else {
+                // If name already starts with an emoji, replace it; otherwise prefix
+                const trimmed = nameInput.value.trim();
+                const regex = /^[\p{Emoji}\u200d\ufe0f]+\s*/u;
+                if (regex.test(trimmed)) {
+                    nameInput.value = trimmed.replace(regex, `${icon} `);
+                } else {
+                    nameInput.value = `${icon} ${trimmed}`;
+                }
+            }
+            nameInput.focus();
+        });
+    });
+
+    // 2. Date presets logic
+    presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const preset = btn.dataset.preset;
+            const now = new Date();
+            let target = new Date();
+
+            if (preset === '3m') {
+                target.setMonth(now.getMonth() + 3);
+            } else if (preset === '6m') {
+                target.setMonth(now.getMonth() + 6);
+            } else if (preset === 'eoy') {
+                target = new Date(now.getFullYear(), 11, 31);
+            }
+
+            const yyyy = target.getFullYear();
+            const mm = String(target.getMonth() + 1).padStart(2, '0');
+            const dd = String(target.getDate()).padStart(2, '0');
+            targetDateInput.value = `${yyyy}-${mm}-${dd}`;
+            updatePaceCalculation();
+        });
+    });
+
+    // 3. Dynamic Savings Pace Badge Projection
+    function updatePaceCalculation() {
+        const amount = parseFloat(targetAmountInput.value) || 0;
+        const dateStr = targetDateInput.value;
+
+        if (amount <= 0 || !dateStr) {
+            paceText.textContent = "Enter target amount & target date to calculate your monthly stash pace.";
+            return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDate = new Date(dateStr);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 0) {
+            paceText.innerHTML = '<span class="text-rose-400 font-semibold">⚠️ Please select a target date in the future.</span>';
+            return;
+        }
+
+        const months = Math.max(diffDays / 30.4375, 0.2);
+        const weeks = Math.max(diffDays / 7, 1);
+
+        const monthlyPace = amount / months;
+        const weeklyPace = amount / weeks;
+
+        const fmtMonth = '₦' + monthlyPace.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        const fmtWeek = '₦' + weeklyPace.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+        paceText.innerHTML = `Required pace: <strong class="text-white font-extrabold">${fmtMonth}</strong> / month (approx. <strong class="text-white font-extrabold">${fmtWeek}</strong> / week) to reach your goal on time.`;
+    }
+
+    targetAmountInput.addEventListener('input', updatePaceCalculation);
+    targetDateInput.addEventListener('input', updatePaceCalculation);
+    targetDateInput.addEventListener('change', updatePaceCalculation);
+
+    // Initial check
+    updatePaceCalculation();
+});
+</script>
+{% endblock %}
