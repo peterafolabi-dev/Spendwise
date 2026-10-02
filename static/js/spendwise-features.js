@@ -256,19 +256,172 @@
     };
 
     function generateAiReply(query) {
-        const q = query.toLowerCase();
-        if (q.includes('laptop') || q.includes('afford')) {
-            return `Based on your average net monthly income and savings rate, you can safely set aside **₦35,000/month** into your New Laptop Goal without touching rent or groceries. You'll hit your target in roughly 4 months!`;
-        } else if (q.includes('dining') || q.includes('food') || q.includes('spent')) {
-            return `You've spent approximately **₦42,500** on Food & Dining this cycle. You are currently **14% under** your allocated limit! Keep this pace and you'll roll over **₦7,500** into your savings buffer next month.`;
-        } else if (q.includes('save') || q.includes('tip') || q.includes('cut')) {
-            return `💡 **Top 3 Actionable Tips**:
-1. Turn on **Purchase Round-Ups** to automatically stash ~₦8,000/mo in spare change.
-2. Review your recurring subscriptions: you have 2 active entertainment bills due next week.
-3. Your daily "Safe-to-Spend" allowance is **₦3,450/day** to finish the month in surplus!`;
-        } else {
-            return `I've analyzed your cash flow runway: Your projected net worth is positive for the next 90 days. Would you like me to adjust your Category Envelopes or review your upcoming recurring bills?`;
+        const q = query.toLowerCase().trim();
+
+        // 1. DYNAMIC NUMBER CALCULATION (e.g. "if I save 20000 every month for 6 months" or "can I buy 250000 phone")
+        const amountMatch = q.match(/(?:₦|ngn|\$)?\s*(\d[\d,]*)(?:\s*(?:k|thousand))?/i);
+        const monthsMatch = q.match(/(\d+)\s*(?:month|months|mo)/i);
+        if (q.includes('save') && amountMatch && monthsMatch) {
+            const rawAmt = parseFloat(amountMatch[1].replace(/,/g, ''));
+            const numMonths = parseInt(monthsMatch[1], 10);
+            const totalProjected = rawAmt * numMonths;
+            return `📊 **Savings Projection Engine**:
+• Monthly Contribution: **₦${rawAmt.toLocaleString()}**
+• Duration: **${numMonths} months**
+• Total Accumulated: **₦${totalProjected.toLocaleString()}**
+
+💡 *Pro-tip*: Stashing this in a dedicated SpendWise **Savings Vault** locks in your milestone and isolates it from daily operating expenses!`;
         }
+
+        // 2. WEBAUTHN / BIOMETRIC PASSKEYS
+        if (q.includes('passkey') || q.includes('biometric') || q.includes('face id') || q.includes('touch id') || q.includes('windows hello') || q.includes('fido')) {
+            return `🔐 **WebAuthn & Hardware Biometrics in SpendWise**:
+SpendWise implements the **W3C WebAuthn (FIDO2)** protocol:
+1. **Asymmetric Cryptography**: A private key stays inside your device's hardware Secure Enclave or TPM.
+2. **Zero Shared Secrets**: The server only holds your public key and a cryptographic signature counter (`sign_count`). Phishing is mathematically impossible.
+3. **One-Touch Access**: Sign in instantly using Touch ID, Face ID, or Windows Hello.
+⚙️ *Management*: Register or delete passkey devices anytime under **Settings &rarr; Security & Passkeys**.`;
+        }
+
+        // 3. PRIVACY MODE (BLUR BALANCES)
+        if (q.includes('privacy') || q.includes('blur') || q.includes('hide balance') || q.includes('public mode')) {
+            return `👁️ **One-Click Privacy Mode**:
+• Press **Ctrl + P** (or click the eye icon in the top navbar) to instantly toggle Privacy Mode.
+• **CSS Filter Blur**: Applies a non-destructive \`filter: blur(8px)\` across all \`.currency-val\` spans.
+• **Persistent State**: Your privacy preference is securely stored in \`localStorage\` with zero load flash.
+🛡️ Perfect for reviewing your ledger in coffee shops, libraries, or screen shares!`;
+        }
+
+        // 4. BILL SPLITTING & IOUs
+        if (q.includes('split') || q.includes('bill') || q.includes('shared expense') || q.includes('owe') || q.includes('reimburse') || q.includes('iou')) {
+            return `🧾 **Bill Splitting & Peer IOU Tracking**:
+SpendWise provides two ways to split shared expenses:
+1. **Interactive Bill Splitter Modal**: Click the calculator icon to split dinner, rent, or utilities with tip % and copy a formatted WhatsApp summary with 1 click.
+2. **Ledger Row Splitting**: Click any transaction on your Ledger and choose **"Split Bill"**. It scales down your personal expense and automatically logs the remaining balance as an **IOU / Pending Reimbursement**!`;
+        }
+
+        // 5. OCR RECEIPT SCANNING
+        if (q.includes('ocr') || q.includes('receipt') || q.includes('scan') || q.includes('camera') || q.includes('photo')) {
+            return `📸 **Instant OCR Receipt Extraction**:
+• Click **"OCR Receipt"** when creating a transaction or launch it from the floating palette.
+• Upload a photo or PDF of your receipt: our engine extracts the **Merchant Name**, **Date**, and **Total Amount**.
+• Tap **"Use in New Transaction"** to automatically populate the creation form with zero typing!`;
+        }
+
+        // 6. COMMAND PALETTE (CMD+K / CTRL+K)
+        if (q.includes('command') || q.includes('palette') || q.includes('cmd+k') || q.includes('ctrl+k') || q.includes('shortcut')) {
+            return `⚡ **Global Command Palette (Cmd + K / Ctrl + K)**:
+Access SpendWise without taking your hands off the keyboard:
+• **⌘K / Ctrl+K**: Open spotlight search to jump to Transactions, Budgets, Reports, or Settings.
+• **Ctrl+P**: Toggle Privacy Mode.
+• **N**: Quick Add new transaction.
+• **?**: Show full keyboard shortcuts cheat sheet.
+• **Esc**: Dismiss any open drawer or modal.`;
+        }
+
+        // 7. CASH FLOW RUNWAY & SAFE-TO-SPEND
+        if (q.includes('runway') || q.includes('safe to spend') || q.includes('burn rate') || q.includes('dial') || q.includes('daily limit')) {
+            return `📉 **Predictive Cash Flow Runway & Safe-to-Spend**:
+• **Safe-to-Spend Gauge**: Takes your unallocated monthly budget, deducts upcoming recurring commitments, and divides by remaining days in the month to provide an exact daily allowance (e.g. ₦3,450/day).
+• **Predictive Runway Chart**: Runs a Monte Carlo linear extrapolation over your past 90-day burn rate to forecast your net liquid reserves over the upcoming 3 to 6 months.`;
+        }
+
+        // 8. 50/30/20 BUDGETING RULE
+        if (q.includes('50/30/20') || q.includes('budget rule') || q.includes('framework') || q.includes('how to budget')) {
+            return `📐 **The 50/30/20 Financial Framework**:
+• **50% Needs**: Housing/Hostel rent, groceries, transport, utility bills, airtime & data.
+• **30% Wants**: Dining out, weekend activities, streaming subscriptions, leisure shopping.
+• **20% Savings & Debt**: Emergency buffer, investment portfolio, tech upgrades.
+💡 *In SpendWise*: Create Category Envelopes labeled with spending caps matching these exact ratios!`;
+        }
+
+        // 9. EMERGENCY FUND
+        if (q.includes('emergency') || q.includes('buffer') || q.includes('how much emergency')) {
+            return `🛡️ **Emergency Fund Strategy**:
+• **Students & Freelancers**: Aim for **3 to 6 months of mandatory living expenses** (e.g. ₦150k – ₦400k depending on lifestyle).
+• **Where to keep it**: Keep it in a liquid **SpendWise Savings Vault** linked to a high-yield or safe bank account.
+• **Rule of Thumb**: Only touch this for true crises (medical emergencies, device breakdown necessary for work/study, unexpected relocation).`;
+        }
+
+        // 10. INVESTING, STOCKS & COMPOUND INTEREST
+        if (q.includes('invest') || q.includes('stock') || q.includes('etf') || q.includes('compound') || q.includes('crypto') || q.includes('treasury')) {
+            return `📈 **Investing & Compounding Fundamentals**:
+1. **Rule #1**: Build your emergency buffer *first* before investing in volatile assets.
+2. **Dollar-Cost Averaging (DCA)**: Invest a fixed amount (e.g. ₦20,000) every month into diversified index funds / ETFs regardless of market dips.
+3. **Compound Growth**: At 12% annual return, ₦25,000/month compounds to over **₦2.05 Million in 5 years** and **₦5.8 Million in 10 years**!
+4. **Inflation Defense**: In high-inflation markets, hold a portion of assets in dollar-denominated funds or hard assets.`;
+        }
+
+        // 11. INFLATION & NAIRA CURRENCY DEFENSE
+        if (q.includes('inflation') || q.includes('naira') || q.includes('devaluation') || q.includes('dollar') || q.includes('fx') || q.includes('exchange rate')) {
+            return `🌍 **Hedging Against Inflation & Currency Devaluation**:
+1. **Multi-Currency Ledgers**: Track foreign currency cash/vaults in SpendWise with live exchange conversion.
+2. **Annual Subscriptions**: Prepay essential annual recurring commitments (e.g. hosting, software, certifications) before price hikes.
+3. **Productive Assets**: Invest in career-advancing tech gear, cloud certifications, or skills that yield remote foreign currency income!`;
+        }
+
+        // 12. TECH & STUDENT GADGETS (LAPTOP, PHONE)
+        if (q.includes('laptop') || q.includes('macbook') || q.includes('phone') || q.includes('buy') || q.includes('afford') || q.includes('tech')) {
+            return `💻 **Tech Gear Purchase Analysis**:
+• **Rule of Affordability**: If buying a tool for software engineering or career growth, treat it as an investment with ROI.
+• **Payment Strategy**: Avoid high-interest consumer credit. Set up a **SpendWise Savings Vault** (e.g. *"💻 MacBook Pro M3"*) with an end-of-year target date.
+• **Pace**: Our dynamic calculator shows that saving **₦45,000/month** hits a ₦450k goal in 10 months comfortably!`;
+        }
+
+        // 13. FOOD, DINING & GROCERIES
+        if (q.includes('dining') || q.includes('food') || q.includes('groceries') || q.includes('restaurant') || q.includes('eating out')) {
+            return `🍔 **Food & Dining Budget Optimization**:
+• **Run-Rate Insight**: Check the dynamic 30-day spend card on your Budget Envelope.
+• **Meal Prepping**: Cooking in bulk cuts food expenses by 40–60% compared to daily delivery or dining out.
+• **Envelope Trick**: Set a weekly food cap instead of monthly—it prevents blowing through the entire allowance in the first 10 days of the month!`;
+        }
+
+        // 14. SAVINGS TIPS & EXPENSE CUTTING
+        if (q.includes('save') || q.includes('tip') || q.includes('cut') || q.includes('advice') || q.includes('help')) {
+            return `💡 **Top 4 High-Impact Money-Saving Tips**:
+1. **Audit Recurring Subscriptions**: Review your **Recurring Transactions** list—cancel streaming services or gym memberships you haven't used in 30 days.
+2. **Automate Milestone Stashes**: Set standing orders right on payday into your Savings Vault before discretionary spending begins.
+3. **Track Every Naira**: Use SpendWise Quick Add (\`N\`) immediately after paying to eliminate untracked cash leaks.
+4. **Follow Safe-to-Spend**: Never exceed your daily allowance indicator on the dashboard!`;
+        }
+
+        // 15. FREELANCING, SIDE HUSTLES & TAX
+        if (q.includes('freelance') || q.includes('side hustle') || q.includes('tax') || q.includes('client') || q.includes('rate')) {
+            return `💼 **Freelancer & Developer Financial Playbook**:
+• **The 3-Bucket Rule**: When a client pays you:
+  - **50%**: Operating & personal living allowance.
+  - **30%**: Tax withholding and business reinvestment buffer.
+  - **20%**: Long-term wealth vault.
+• **Audit Reports**: Export your quarterly CSV from SpendWise with formula-injection defenses built in to file taxes or submit proof of funds!`;
+        }
+
+        // 16. DATA EXPORT & AUDIT
+        if (q.includes('export') || q.includes('csv') || q.includes('json') || q.includes('backup') || q.includes('download')) {
+            return `📁 **Data Ownership & Export Formats**:
+SpendWise gives you 100% data sovereignty:
+• **Sanitized CSV Export**: All fields are formula-escaped (protecting against Excel CSV injection attacks with \`=\`, \`+\`, \`-\`, \`@\`).
+• **Full JSON Backup**: Complete database snapshot of accounts, categories, transactions, and budgets under **Settings &rarr; Export Data**.
+• **CSV Importer**: Migrate existing bank statements with automated malformed row skipping.`;
+        }
+
+        // 17. RECURRING SUBSCRIPTIONS & BILLS
+        if (q.includes('recurring') || q.includes('subscription') || q.includes('bills') || q.includes('netflix') || q.includes('spotify') || q.includes('rent')) {
+            return `🔁 **Recurring Schedule Engine**:
+• Head to **Recurring** in the navbar to configure subscriptions (Netflix, Starlink, Rent, Gym).
+• SpendWise calculates your annualized commitment (e.g. \`₦25,000/mo = ₦300,000/yr\`) and alerts you 3 days before any upcoming due date.`;
+        }
+
+        // 18. DEFAULT / GENERAL FINANCIAL ASSISTANT
+        return `🤖 **SpendWise AI Financial Copilot**:
+I am trained on your accounts, envelopes, cash flow runway, and engineering finance principles!
+
+You can ask me anything about:
+• *"Can I afford a new laptop?"* or *"How much should I save for rent?"*
+• *"Explain the 50/30/20 rule"* or *"Tips to cut food spending"*
+• *"How do passkeys work?"* or *"How do I split bills with friends?"*
+• *"Calculate saving ₦30,000 for 8 months"* or *"Investment compounding rules"*
+
+What would you like to explore or optimize next?`;
     }
 
     // ── 5. BILL SPLITTER & SHARED EXPENSES ───────────────────────────────────────
