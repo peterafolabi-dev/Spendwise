@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,8 +62,12 @@
                         </div>
                     </div>
                     {% else %}
-                    <a href="{% url 'login' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400">Log in</a>
-                    <a href="{% url 'signup' %}" class="ml-4 inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">Sign up</a>
+                    {% if not request.resolver_match.url_name == 'login' %}
+                    <a href="{% url 'login' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Log in</a>
+                    {% endif %}
+                    {% if not request.resolver_match.url_name == 'signup' %}
+                    <a href="{% url 'signup' %}" class="{% if request.resolver_match.url_name == 'login' %}ml-0{% else %}ml-4{% endif %} inline-flex items-center justify-center rounded-lg border border-transparent bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all active:scale-[0.98]">Sign up</a>
+                    {% endif %}
                     {% endif %}
                 </div>
             </div>
