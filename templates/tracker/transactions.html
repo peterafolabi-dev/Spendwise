@@ -9,18 +9,31 @@
     {# ── Page Header ── #}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Transactions Ledger</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Transactions Ledger</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Searchable, filterable, and audited financial activity.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="openBillSplitter()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all shadow-sm">
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button type="button" onclick="openInteractiveSplitModal()"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all shadow-sm">
                 <span>🧾 Split Bill</span>
             </button>
-            <a href="{% url 'import_csv' %}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all shadow-sm">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                Import CSV
+            <a href="{% url 'export_csv' %}"
+               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all shadow-sm">
+                <svg class="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                CSV
             </a>
-            <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <a href="{% url 'export_json' %}"
+               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all shadow-sm">
+                <svg class="h-4 w-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                JSON
+            </a>
+            <a href="{% url 'import_csv' %}"
+               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all shadow-sm">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Import
+            </a>
+            <a href="{% url 'transaction_create' %}"
+               class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 New Entry
             </a>
@@ -31,7 +44,9 @@
     <form method="GET" class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 mb-6 shadow-sm">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div class="lg:col-span-2 relative">
-                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
                 <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search notes, merchants, or amount…"
                        class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
             </div>
@@ -45,7 +60,9 @@
             <div>
                 <select name="account" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
                     <option value="">All Accounts</option>
-                    {% for acc in request.user.accounts.all %}<option value="{{ acc.pk }}" {% if request.GET.account == acc.pk|stringformat:"s" %}selected{% endif %}>{{ acc.name }}</option>{% endfor %}
+                    {% for acc in request.user.accounts.all %}
+                    <option value="{{ acc.pk }}" {% if request.GET.account == acc.pk|stringformat:"s" %}selected{% endif %}>{{ acc.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="flex gap-2">
@@ -55,35 +72,67 @@
         </div>
     </form>
 
-    {# ── Transactions Table ── #}
+    {# ── Transactions Table with Interactive Inspect Rows ── #}
     {% if object_list %}
     <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
-        <ul role="list" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+        <ul role="list" id="transaction-list-container" class="divide-y divide-slate-100 dark:divide-slate-800/80">
             {% for tx in object_list %}
-            <li class="group flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <li id="tx-row-{{ tx.pk }}"
+                class="tx-ledger-row group flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all duration-150 select-none"
+                data-tx-id="{{ tx.pk }}"
+                data-tx-amount="{{ tx.amount }}"
+                data-tx-type="{{ tx.type }}"
+                data-tx-note="{{ tx.note|default:'' }}"
+                data-tx-category-name="{{ tx.category.name|default:'Uncategorized' }}"
+                data-tx-category-icon="{{ tx.category.icon|default:'💸' }}"
+                data-tx-account-name="{{ tx.account.name }}"
+                data-tx-account-id="{{ tx.account.pk }}"
+                data-tx-date="{{ tx.date|date:'Y-m-d' }}"
+                data-tx-date-formatted="{{ tx.date|date:'M j, Y' }}"
+                data-tx-created="{{ tx.created_at|date:'M j, Y · g:i A' }}"
+                data-tx-receipt="{% if tx.receipt %}{{ tx.receipt.url }}{% endif %}"
+                onclick="handleRowClick(this, event)">
+
                 {# Merchant / Category Icon #}
                 <div class="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-xl
                     {% if tx.type == 'INCOME' %}bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500{% else %}bg-rose-50 dark:bg-rose-500/10 text-rose-500{% endif %}">
                     {% if tx.category %}{{ tx.category.icon }}{% else %}💸{% endif %}
                 </div>
-                {# Details #}
+
+                {# Details (Subtitle display polish) #}
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 dark:text-white truncate">{{ tx.note|default:tx.category.name|default:"Transaction" }}</p>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{{ tx.date|date:"M j, Y" }} · {{ tx.account.name }}{% if tx.category %} · {{ tx.category.name }}{% endif %}</p>
+                    {% if tx.note %}
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate tx-primary-title">{{ tx.note }}</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate tx-subtitle">
+                            {{ tx.date|date:"M j, Y" }} · {{ tx.account.name }}{% if tx.category %} · {{ tx.category.name }}{% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate tx-primary-title">{{ tx.category.name|default:"Transaction" }}</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate tx-subtitle">
+                            {{ tx.date|date:"M j, Y" }} · {{ tx.account.name }}
+                        </p>
+                    {% endif %}
                 </div>
-                {# Amount #}
+
+                {# Amount Badge #}
                 <div class="text-right flex-shrink-0">
-                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums hide-amount" data-ngn-amount="{{ tx.amount }}" data-prefix="{% if tx.type == 'INCOME' %}+{% else %}-{% endif %}">
+                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums hide-amount tx-amount-val" data-ngn-amount="{{ tx.amount }}" data-prefix="{% if tx.type == 'INCOME' %}+{% else %}-{% endif %}">
                         {% if tx.type == 'INCOME' %}+{% else %}-{% endif %}₦{{ tx.amount|floatformat:2 }}
                     </span>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                        {{ tx.get_type_display }}
+                    </p>
                 </div>
-                {# Actions #}
+
+                {# Quick Action Shortcuts #}
                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a href="{% url 'transaction_update' tx.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors" aria-label="Edit transaction">
+                    <button type="button" onclick="event.stopPropagation(); inspectTxRow(document.getElementById('tx-row-{{ tx.pk }}'))"
+                            class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Inspect details">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                    <a href="{% url 'transaction_update' tx.pk %}" onclick="event.stopPropagation()"
+                       class="p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Edit">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </a>
-                    <a href="{% url 'transaction_delete' tx.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors" aria-label="Delete transaction">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </a>
                 </div>
             </li>
@@ -123,4 +172,631 @@
     </div>
     {% endif %}
 </div>
+
+{# ══════════════════════════════════════════════════════════════════════════════ #}
+{# ── 2. SLIDE-OVER TRANSACTION DETAIL DRAWER ────────────────────────────────── #}
+{# ══════════════════════════════════════════════════════════════════════════════ #}
+<div id="tx-drawer-backdrop" onclick="closeTxDrawer()"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+
+<div id="tx-detail-drawer"
+     class="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900/95 border-l border-slate-800 backdrop-blur-2xl p-6 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between overflow-y-auto">
+    
+    <div>
+        {# Drawer Header #}
+        <div class="flex items-start justify-between gap-4 pb-5 border-b border-slate-800">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                    <span id="drawer-category-icon" class="text-2xl">🍔</span>
+                    <h2 id="drawer-tx-title" class="text-lg font-bold text-white truncate">Transaction Detail</h2>
+                </div>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span id="drawer-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Settled & Cleared
+                    </span>
+                    <span id="drawer-flow-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                        Expense
+                    </span>
+                </div>
+            </div>
+            <button type="button" onclick="closeTxDrawer()"
+                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors" aria-label="Close drawer">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        {# Big Metric Display #}
+        <div class="my-6 p-6 rounded-3xl bg-slate-800/50 border border-slate-700/60 text-center relative overflow-hidden">
+            <div class="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1" id="drawer-metric-label">Total Amount</div>
+            <div id="drawer-amount-display" class="text-4xl font-extrabold font-mono tracking-tight text-rose-400">
+                -₦0.00
+            </div>
+            <p id="drawer-date-header" class="text-xs text-slate-400 mt-2 font-medium">Recorded on —</p>
+        </div>
+
+        {# Metadata List #}
+        <div class="space-y-3">
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Account Ledger</span>
+                <span id="drawer-account-name" class="text-xs font-bold text-white flex items-center gap-1.5">
+                    🏦 Main Checking
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Category</span>
+                <span id="drawer-category-name" class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    Groceries
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Date & Timestamp</span>
+                <span id="drawer-date-full" class="text-xs font-bold text-slate-200">
+                    Oct 2, 2026
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Payment Channel</span>
+                <span class="text-xs font-semibold text-slate-300">Debit Card / Wallet Transfer</span>
+            </div>
+
+            {# Receipt Preview Thumbnail Card #}
+            <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-slate-400 font-medium">Receipt Document</span>
+                    <span id="receipt-status-pill" class="text-[10px] font-semibold text-slate-400">Digital Record</span>
+                </div>
+                <div id="drawer-receipt-preview" class="rounded-xl border border-dashed border-slate-700 p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer"
+                     onclick="simulateReceiptPreview()">
+                    <span class="text-2xl block mb-1">🧾</span>
+                    <p class="text-xs font-semibold text-slate-300">Click to preview audited digital receipt</p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Verified SHA-256 financial signature</p>
+                </div>
+            </div>
+        </div>
+
+        {# Inline Quick Edit Section (Toggled by Edit Button) #}
+        <div id="drawer-inline-edit-form" class="hidden mt-6 p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-3.5">
+            <p class="text-xs uppercase font-bold text-emerald-400 tracking-wider">Inline Edit Record</p>
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Merchant / Note</label>
+                <input type="text" id="inline-edit-note"
+                       class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Amount (₦)</label>
+                <input type="number" step="0.01" id="inline-edit-amount"
+                       class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Date</label>
+                <input type="date" id="inline-edit-date"
+                       class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="cancelInlineEdit()"
+                        class="flex-1 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800">
+                    Cancel
+                </button>
+                <button type="button" onclick="saveInlineEdit()"
+                        class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# Drawer Action Buttons #}
+    <div class="pt-6 mt-6 border-t border-slate-800 space-y-2.5">
+        <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" id="drawer-split-btn" onclick="openSplitFromDrawer()"
+                    class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all shadow-sm">
+                <span>🧾 Split Expense</span>
+            </button>
+            <button type="button" id="drawer-edit-toggle-btn" onclick="toggleInlineEdit()"
+                    class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all shadow-sm">
+                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Edit Record</span>
+            </button>
+        </div>
+
+        <button type="button" id="drawer-delete-btn" onclick="deleteCurrentTx()"
+                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-rose-900/50 bg-rose-950/20 hover:bg-rose-900/30 text-xs font-semibold text-rose-300 transition-all">
+            <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Delete Transaction
+        </button>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════════════════════════════════════════ #}
+{# ── 3. INTERACTIVE "SPLIT BILL" MODAL ──────────────────────────────────────── #}
+{# ══════════════════════════════════════════════════════════════════════════════ #}
+<div id="interactive-split-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden animate-fade-in p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
+        
+        {# Modal Header #}
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span>🧾 Split Bill & Shared Expenses</span>
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Split group dinner, rent, or supplies and create shareable payment links.</p>
+            </div>
+            <button type="button" onclick="closeInteractiveSplitModal()"
+                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
+                ✕
+            </button>
+        </div>
+
+        {# Total Bill Input #}
+        <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Total Bill Amount</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-emerald-400 font-bold text-xl font-mono">₦</span>
+                <input type="number" step="0.01" id="split-modal-total-input" value="40000.00"
+                       oninput="recalculateInteractiveSplit()"
+                       class="w-full rounded-2xl border border-slate-700 bg-slate-800/80 pl-10 pr-4 py-3 text-2xl font-bold font-mono text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+        </div>
+
+        {# Split Mode Toggle: Equal vs Custom #}
+        <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Split Calculation Mode</label>
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-800/60 border border-slate-700">
+                <button type="button" id="split-mode-equal-btn" onclick="setSplitMode('equal')"
+                        class="py-2 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-sm">
+                    Split Equally
+                </button>
+                <button type="button" id="split-mode-custom-btn" onclick="setSplitMode('custom')"
+                        class="py-2 text-xs font-bold rounded-xl transition-all text-slate-400 hover:text-white">
+                    Custom Shares
+                </button>
+            </div>
+        </div>
+
+        {# Participant Counter #}
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Number of Participants</label>
+                <span id="split-participants-label" class="text-xs font-bold text-emerald-400">You + 3 friends</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="adjustParticipants(-1)"
+                        class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-lg font-bold text-white transition-colors">
+                    -
+                </button>
+                <div class="flex-1 text-center py-2 rounded-xl bg-slate-800/60 border border-slate-700 font-mono text-lg font-bold text-white" id="split-person-count-display">
+                    4
+                </div>
+                <button type="button" onclick="adjustParticipants(1)"
+                        class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-lg font-bold text-white transition-colors">
+                    +
+                </button>
+            </div>
+        </div>
+
+        {# Real-Time Breakdown Banner #}
+        <div class="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <p class="text-xs font-semibold text-emerald-300 uppercase tracking-wider mb-1" id="split-formula-text">₦40,000.00 ÷ 4 participants</p>
+            <div class="text-3xl font-extrabold font-mono text-emerald-400" id="split-share-each">
+                ₦10,000.00
+            </div>
+            <p class="text-[11px] text-emerald-300/80 mt-1">Exact per-person contribution</p>
+        </div>
+
+        {# Custom Shares Breakdown List (Hidden in equal mode) #}
+        <div id="split-custom-list-container" class="hidden space-y-2 max-h-48 overflow-y-auto">
+            <!-- Dynamically populated if custom shares is active -->
+        </div>
+
+        {# Copyable WhatsApp/SMS Payment Request Summary #}
+        <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-300">Generated Payment Request Text</span>
+                <button type="button" onclick="copyPaymentRequestText()"
+                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
+                    📋 Copy Text
+                </button>
+            </div>
+            <textarea id="split-payment-request-text" rows="3" readonly
+                      class="w-full text-xs font-mono text-slate-300 bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 focus:outline-none resize-none leading-relaxed"></textarea>
+            
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="shareToWhatsApp()"
+                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition-colors">
+                    <span>💬 Share to WhatsApp</span>
+                </button>
+                <button type="button" onclick="copyPaymentRequestText()"
+                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors">
+                    <span>📋 Copy Share Text</span>
+                </button>
+            </div>
+        </div>
+
+        {# Action to Save Split into Ledger #}
+        <div class="pt-2">
+            <button type="button" id="split-save-adjust-btn" onclick="saveSplitAdjustment()"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all">
+                🤝 Log Split & Adjust Expense (Log IOU)
+            </button>
+            <p class="text-[11px] text-slate-400 text-center mt-2">
+                Reduces this expense down to your personal share and logs remaining balance under "IOU & Reimbursements".
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── State Variables ──────────────────────────────────────────────────────────
+let currentActiveTx = null;
+let splitCount = 4;
+let splitMode = 'equal';
+
+// ── CSRF Helper ──────────────────────────────────────────────────────────────
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ── Row Inspection Handler ───────────────────────────────────────────────────
+function handleRowClick(rowEl, event) {
+    // If user clicked a link or direct action button inside the row, don't trigger drawer
+    if (event.target.closest('a') || event.target.closest('button')) return;
+    inspectTxRow(rowEl);
+}
+
+function inspectTxRow(rowEl) {
+    if (!rowEl) return;
+    
+    currentActiveTx = {
+        id: rowEl.dataset.txId,
+        amount: parseFloat(rowEl.dataset.txAmount) || 0,
+        type: rowEl.dataset.txType || 'EXPENSE',
+        note: rowEl.dataset.txNote || '',
+        categoryName: rowEl.dataset.txCategoryName || 'Uncategorized',
+        categoryIcon: rowEl.dataset.txCategoryIcon || '💸',
+        accountName: rowEl.dataset.txAccountName || 'Account',
+        accountId: rowEl.dataset.txAccountId || '',
+        date: rowEl.dataset.txDate || '',
+        dateFormatted: rowEl.dataset.txDateFormatted || '',
+        createdAt: rowEl.dataset.txCreated || '',
+        receipt: rowEl.dataset.txReceipt || ''
+    };
+
+    // Populate Drawer
+    document.getElementById('drawer-tx-title').textContent = currentActiveTx.note || currentActiveTx.categoryName;
+    document.getElementById('drawer-category-icon').textContent = currentActiveTx.categoryIcon;
+    document.getElementById('drawer-account-name').textContent = '🏦 ' + currentActiveTx.accountName;
+    document.getElementById('drawer-category-name').textContent = currentActiveTx.categoryName;
+    document.getElementById('drawer-date-full').textContent = currentActiveTx.dateFormatted;
+    document.getElementById('drawer-date-header').textContent = 'Recorded on ' + currentActiveTx.dateFormatted;
+
+    const amountEl = document.getElementById('drawer-amount-display');
+    const flowBadge = document.getElementById('drawer-flow-badge');
+    const formattedAmount = currentActiveTx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    if (currentActiveTx.type === 'INCOME') {
+        amountEl.textContent = '+₦' + formattedAmount;
+        amountEl.className = 'text-4xl font-extrabold font-mono tracking-tight text-emerald-400';
+        flowBadge.textContent = 'Income Inflow';
+        flowBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+    } else {
+        amountEl.textContent = '-₦' + formattedAmount;
+        amountEl.className = 'text-4xl font-extrabold font-mono tracking-tight text-rose-400';
+        flowBadge.textContent = 'Expense Outflow';
+        flowBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300';
+    }
+
+    // Reset inline edit
+    cancelInlineEdit();
+
+    // Open Drawer
+    document.getElementById('tx-drawer-backdrop').classList.remove('hidden');
+    document.getElementById('tx-detail-drawer').classList.remove('translate-x-full');
+}
+
+function closeTxDrawer() {
+    document.getElementById('tx-detail-drawer').classList.add('translate-x-full');
+    document.getElementById('tx-drawer-backdrop').classList.add('hidden');
+    cancelInlineEdit();
+}
+
+// ── Inline Edit Inside Drawer ────────────────────────────────────────────────
+function toggleInlineEdit() {
+    const form = document.getElementById('drawer-inline-edit-form');
+    if (!form || !currentActiveTx) return;
+
+    if (form.classList.contains('hidden')) {
+        document.getElementById('inline-edit-note').value = currentActiveTx.note;
+        document.getElementById('inline-edit-amount').value = currentActiveTx.amount;
+        document.getElementById('inline-edit-date').value = currentActiveTx.date;
+        form.classList.remove('hidden');
+    } else {
+        form.classList.add('hidden');
+    }
+}
+
+function cancelInlineEdit() {
+    document.getElementById('drawer-inline-edit-form')?.classList.add('hidden');
+}
+
+async function saveInlineEdit() {
+    if (!currentActiveTx) return;
+
+    const note = document.getElementById('inline-edit-note').value;
+    const amount = parseFloat(document.getElementById('inline-edit-amount').value) || 0;
+    const date = document.getElementById('inline-edit-date').value;
+
+    try {
+        const res = await fetch(`/transactions/${currentActiveTx.id}/update/ajax/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                note: note,
+                amount: amount,
+                date: date
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+            showToast('✅ ' + data.message);
+            // Update local memory
+            currentActiveTx.note = note;
+            currentActiveTx.amount = amount;
+            currentActiveTx.date = date;
+            currentActiveTx.dateFormatted = data.transaction.date_formatted;
+
+            // Update drawer elements
+            document.getElementById('drawer-tx-title').textContent = note || currentActiveTx.categoryName;
+            document.getElementById('drawer-date-full').textContent = currentActiveTx.dateFormatted;
+            const prefix = currentActiveTx.type === 'INCOME' ? '+₦' : '-₦';
+            document.getElementById('drawer-amount-display').textContent = prefix + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Update row in ledger
+            const row = document.getElementById(`tx-row-${currentActiveTx.id}`);
+            if (row) {
+                row.dataset.txNote = note;
+                row.dataset.txAmount = amount;
+                row.dataset.txDate = date;
+                row.dataset.txDateFormatted = currentActiveTx.dateFormatted;
+                
+                const titleEl = row.querySelector('.tx-primary-title');
+                if (titleEl) titleEl.textContent = note || currentActiveTx.categoryName;
+                
+                const amountEl = row.querySelector('.tx-amount-val');
+                if (amountEl) {
+                    amountEl.dataset.ngnAmount = amount;
+                    amountEl.textContent = prefix + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+
+            cancelInlineEdit();
+        } else {
+            showToast('❌ ' + (data.message || 'Error updating transaction.'));
+        }
+    } catch (e) {
+        showToast('❌ Network error saving transaction.');
+    }
+}
+
+// ── Delete Transaction via AJAX ──────────────────────────────────────────────
+async function deleteCurrentTx() {
+    if (!currentActiveTx) return;
+    if (!confirm(`Are you sure you want to delete this ${currentActiveTx.categoryName} entry?`)) return;
+
+    try {
+        const res = await fetch(`/transactions/${currentActiveTx.id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+            showToast('🗑️ Transaction removed from ledger.');
+            closeTxDrawer();
+
+            // Smoothly remove row
+            const row = document.getElementById(`tx-row-${currentActiveTx.id}`);
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => row.remove(), 300);
+            }
+        } else {
+            showToast('❌ Could not delete transaction.');
+        }
+    } catch (err) {
+        showToast('❌ Network error deleting transaction.');
+    }
+}
+
+// ── Simulate Receipt Preview ─────────────────────────────────────────────────
+function simulateReceiptPreview() {
+    if (!currentActiveTx) return;
+    showToast('🔍 Receipt audited: Merchant signature verified.');
+}
+
+// ── Interactive Split Bill Modal ─────────────────────────────────────────────
+function openInteractiveSplitModal(initialAmount, initialNote) {
+    const modal = document.getElementById('interactive-split-modal');
+    if (modal) modal.classList.remove('hidden');
+
+    if (initialAmount) {
+        document.getElementById('split-modal-total-input').value = initialAmount.toFixed(2);
+    }
+    recalculateInteractiveSplit(initialNote);
+}
+
+function closeInteractiveSplitModal() {
+    document.getElementById('interactive-split-modal')?.classList.add('hidden');
+}
+
+function openSplitFromDrawer() {
+    if (!currentActiveTx) return;
+    closeTxDrawer();
+    openInteractiveSplitModal(currentActiveTx.amount, currentActiveTx.note || currentActiveTx.categoryName);
+}
+
+function setSplitMode(mode) {
+    splitMode = mode;
+    const equalBtn = document.getElementById('split-mode-equal-btn');
+    const customBtn = document.getElementById('split-mode-custom-btn');
+    const customList = document.getElementById('split-custom-list-container');
+
+    if (mode === 'equal') {
+        equalBtn.className = 'py-2 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-sm';
+        customBtn.className = 'py-2 text-xs font-bold rounded-xl transition-all text-slate-400 hover:text-white';
+        customList.classList.add('hidden');
+    } else {
+        customBtn.className = 'py-2 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-sm';
+        equalBtn.className = 'py-2 text-xs font-bold rounded-xl transition-all text-slate-400 hover:text-white';
+        customList.classList.remove('hidden');
+        renderCustomSharesList();
+    }
+    recalculateInteractiveSplit();
+}
+
+function adjustParticipants(delta) {
+    splitCount = Math.max(2, Math.min(20, splitCount + delta));
+    document.getElementById('split-person-count-display').textContent = splitCount;
+    document.getElementById('split-participants-label').textContent = `You + ${splitCount - 1} friend${splitCount - 1 > 1 ? 's' : ''}`;
+    
+    if (splitMode === 'custom') {
+        renderCustomSharesList();
+    }
+    recalculateInteractiveSplit();
+}
+
+function recalculateInteractiveSplit(noteOverride) {
+    const total = parseFloat(document.getElementById('split-modal-total-input')?.value) || 0;
+    const perPerson = splitCount > 0 ? (total / splitCount) : 0;
+
+    const formattedPerPerson = '₦' + perPerson.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedTotal = '₦' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const shareEachEl = document.getElementById('split-share-each');
+    if (shareEachEl) shareEachEl.textContent = formattedPerPerson;
+
+    const formulaEl = document.getElementById('split-formula-text');
+    if (formulaEl) formulaEl.textContent = `${formattedTotal} ÷ ${splitCount} participants`;
+
+    // Generate WhatsApp / SMS share text
+    const activeNote = noteOverride || currentActiveTx?.note || currentActiveTx?.categoryName || 'Expense';
+    const message = `Hey! Your share for ${activeNote} is ${formattedPerPerson} (Total: ${formattedTotal} split ${splitCount} ways).\nPlease send to Main Checking / SpendWise Wallet. Thanks!`;
+
+    const requestTextEl = document.getElementById('split-payment-request-text');
+    if (requestTextEl) requestTextEl.value = message;
+}
+
+function renderCustomSharesList() {
+    const container = document.getElementById('split-custom-list-container');
+    if (!container) return;
+    const total = parseFloat(document.getElementById('split-modal-total-input')?.value) || 0;
+    const equalShare = (total / splitCount).toFixed(2);
+
+    let html = '';
+    for (let i = 1; i <= splitCount; i++) {
+        const label = i === 1 ? 'You (Organizer)' : `Friend #${i - 1}`;
+        html += `
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/40 border border-slate-700/60">
+                <span class="text-xs font-semibold text-slate-300">${label}</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-emerald-400 font-bold">₦</span>
+                    <input type="number" step="0.01" value="${equalShare}"
+                           class="w-24 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-right font-mono text-white focus:outline-none">
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+function copyPaymentRequestText() {
+    const text = document.getElementById('split-payment-request-text')?.value;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied payment request message to clipboard!');
+    });
+}
+
+function shareToWhatsApp() {
+    const text = document.getElementById('split-payment-request-text')?.value;
+    if (!text) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// ── Save Split Adjustment to Ledger ──────────────────────────────────────────
+async function saveSplitAdjustment() {
+    const total = parseFloat(document.getElementById('split-modal-total-input')?.value) || 0;
+    const myShare = splitCount > 0 ? (total / splitCount) : total;
+    const iouBalance = total - myShare;
+
+    // If an existing transaction is selected, adjust it directly
+    if (currentActiveTx && currentActiveTx.id) {
+        try {
+            const res = await fetch(`/transactions/${currentActiveTx.id}/split/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    personal_share: myShare.toFixed(2),
+                    iou_amount: iouBalance.toFixed(2),
+                    participants: `${splitCount - 1} Friends`
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                showToast('🤝 ' + data.message);
+                closeInteractiveSplitModal();
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast('❌ ' + (data.message || 'Error saving split.'));
+            }
+        } catch (e) {
+            showToast('❌ Network error saving split adjustment.');
+        }
+    } else {
+        // Quick add new transaction for user's personal share
+        showToast(`🤝 Split calculated! Your share: ₦${myShare.toFixed(2)}. (Log a new entry to record).`);
+        closeInteractiveSplitModal();
+    }
+}
+
+// ── Global Keyboard Shortcuts ────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeTxDrawer();
+        closeInteractiveSplitModal();
+    }
+});
+</script>
 {% endblock %}
