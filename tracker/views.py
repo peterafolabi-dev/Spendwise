@@ -343,7 +343,35 @@ class SavingsGoalDeleteView(UserOwnedMixin, DeleteView):
 # RecurringTransaction CRUD
 class RecurringListView(UserOwnedMixin, ListView):
     model = RecurringTransaction
-    template_name = 'tracker/recurringtransactions.html'
+    template_name = 'tracker/recurringtransaction_list.html'
+    ordering = ['next_due_date']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        qs = self.get_queryset()
+        
+        # Total monthly commitments (expenses)
+        monthly_commitments = qs.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        active_count = qs.count()
+        next_bill = qs.filter(next_due_date__gte=timezone.now().date()).order_by('next_due_date').first() or qs.first()
+        
+        # Check if next bill is due in <= 3 days
+        due_soon = False
+        days_until_next = None
+        if next_bill:
+            days_until_next = (next_bill.next_due_date - timezone.now().date()).days
+            due_soon = 0 <= days_until_next <= 3
+
+        context.update({
+            'recurring_transactions': qs,
+            'total_monthly_commitments': monthly_commitments,
+            'active_subscriptions_count': active_count,
+            'next_upcoming_bill': next_bill,
+            'due_soon': due_soon,
+            'days_until_next': days_until_next,
+        })
+        return context
 
 class RecurringCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = RecurringTransaction
