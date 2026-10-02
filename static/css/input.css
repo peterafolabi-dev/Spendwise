@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary-50: #ecfdf5;
@@ -27,86 +28,107 @@
   --color-destructive-950: #4c0519;
 }
 
-/* ── Global Dark-Mode Form Fix ──────────────────────────────────────────── */
-/* Ensures ALL inputs/selects/textareas look correct in dark mode regardless
-   of which Tailwind utility classes are on them. */
-@layer base {
-  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  .dark select,
-  .dark textarea {
-    background-color: rgb(30 41 59 / 0.7); /* slate-800/70 */
-    color: rgb(241 245 249);               /* slate-100 */
-    border-color: rgb(51 65 85);           /* slate-700 */
-  }
-  .dark input::placeholder,
-  .dark textarea::placeholder {
-    color: rgb(100 116 139);               /* slate-500 */
-  }
-  .dark input:focus:not([type="checkbox"]):not([type="radio"]),
-  .dark select:focus,
-  .dark textarea:focus {
-    outline: none;
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.35);
-  }
-  /* SSO & ghost buttons in dark */
-  .dark .sso-btn {
-    background-color: rgb(30 41 59 / 0.6);
-    border-color: rgb(51 65 85 / 0.6);
-    color: rgb(226 232 240);
-  }
-  .dark .sso-btn:hover {
-    background-color: rgb(30 41 59);
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   BULLETPROOF DARK MODE STYLING (GUARANTEED NO WHITE-BOXES IN DARK MODE)
+   ══════════════════════════════════════════════════════════════════════════ */
+html.dark, .dark {
+  color-scheme: dark;
 }
 
-/* ── Django Form Utilities ── */
-@layer components {
-  .django-form p { @apply mb-4; }
-  .django-form input {
-    @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 placeholder-gray-500 dark:placeholder-slate-500 text-gray-900 dark:text-white dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all;
-  }
-  .django-form label {
-    @apply block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-1.5;
-  }
-  .django-form ul.errorlist {
-    @apply text-rose-500 text-sm mt-1 mb-4 list-disc pl-5;
-  }
-  .django-form .helptext {
-    @apply text-xs text-slate-500 dark:text-slate-400 mt-1 block;
-  }
+/* Global input fields in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.dark select,
+html.dark textarea,
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+.dark select,
+.dark textarea {
+  background-color: #0f172a !important; /* solid slate-900 */
+  color: #f8fafc !important;           /* bright text */
+  border-color: #334155 !important;     /* slate-700 border */
 }
 
-/* ── Command Palette ── */
-@layer components {
-  #cmd-palette-backdrop {
-    backdrop-filter: blur(6px);
-  }
-  #cmd-palette {
-    box-shadow: 0 32px 64px -12px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
-  }
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
 }
 
-/* ── Privacy Mode ── */
-.privacy-blur .balance-amount,
-.privacy-blur .tx-amount {
-  filter: blur(8px);
+html.dark input:focus:not([type="checkbox"]):not([type="radio"]),
+html.dark select:focus,
+html.dark textarea:focus,
+.dark input:focus:not([type="checkbox"]):not([type="radio"]),
+.dark select:focus,
+.dark textarea:focus {
+  outline: none !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* SSO buttons in dark mode (Google, Apple, etc.) */
+html.dark .sso-btn,
+.dark .sso-btn,
+html.dark button.sso-btn,
+.dark button.sso-btn {
+  background-color: #1e293b !important; /* slate-800 */
+  border-color: #334155 !important;     /* slate-700 */
+  color: #f1f5f9 !important;
+}
+
+html.dark .sso-btn:hover,
+.dark .sso-btn:hover {
+  background-color: #334155 !important;
+}
+
+/* Primary Emerald action buttons */
+.btn-emerald {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+.btn-emerald:hover {
+  background-color: #10b981 !important;
+}
+
+/* Secondary dark buttons */
+html.dark .btn-secondary,
+.dark .btn-secondary {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+html.dark .btn-secondary:hover,
+.dark .btn-secondary:hover {
+  background-color: #334155 !important;
+}
+
+/* Cards & surfaces in dark mode */
+html.dark .card-surface,
+.dark .card-surface {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: #1e293b !important;
+}
+
+/* Privacy mode amount blur */
+.privacy-active .hide-amount {
+  filter: blur(7px) !important;
+  user-select: none !important;
   transition: filter 0.2s ease;
-  cursor: pointer;
 }
 
-/* ── Confetti ── */
-.confetti-canvas {
+/* Command Palette backdrop */
+#cmd-palette-backdrop {
+  backdrop-filter: blur(8px);
+}
+
+/* Confetti canvas */
+#confetti-canvas {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
 }
 
-/* ── Custom utilities ── */
-@layer utilities {
-  .fade-in {
-    opacity: 1; /* No longer hides by default — use animate-fade-in-up */
-  }
-  .tabular-nums { font-variant-numeric: tabular-nums; }
+/* Tabular numbers for all financial figures */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
