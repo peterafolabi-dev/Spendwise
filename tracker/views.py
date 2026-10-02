@@ -260,13 +260,13 @@ class TransactionListView(UserOwnedMixin, ListView):
 class TransactionCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/transaction_form.html'
     success_url = reverse_lazy('transaction_list')
 
 class TransactionUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/transaction_form.html'
     success_url = reverse_lazy('transaction_list')
 
 class TransactionDeleteView(UserOwnedMixin, DeleteView):
