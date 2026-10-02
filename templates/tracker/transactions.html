@@ -1,140 +1,123 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transactions — SpendWise{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+
+    {# ── Page Header ── #}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Transactions</h2>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Transactions</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Every naira in and out, all in one place.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'import_csv' %}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Import CSV
+            </a>
+            <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 Add Transaction
-            </button>
+            </a>
         </div>
     </div>
 
-    <!-- Filters & Search -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6 p-4">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div class="sm:col-span-2">
-                <label for="search" class="sr-only">Search</label>
-                <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" name="search" id="search" class="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md h-10 px-3" placeholder="Search transactions...">
+    {# ── Filters ── #}
+    <form method="GET" class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-sm">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="lg:col-span-2 relative">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search notes or amounts…"
+                       class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+            </div>
+            <div>
+                <select name="type" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                    <option value="">All Types</option>
+                    <option value="INCOME" {% if request.GET.type == 'INCOME' %}selected{% endif %}>Income</option>
+                    <option value="EXPENSE" {% if request.GET.type == 'EXPENSE' %}selected{% endif %}>Expense</option>
+                </select>
+            </div>
+            <div>
+                <select name="account" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                    <option value="">All Accounts</option>
+                    {% for acc in request.user.accounts.all %}<option value="{{ acc.pk }}" {% if request.GET.account == acc.pk|stringformat:"s" %}selected{% endif %}>{{ acc.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all">Filter</button>
+                <a href="{% url 'transaction_list' %}" class="flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-400 transition-all" title="Clear filters">✕</a>
+            </div>
+        </div>
+    </form>
+
+    {# ── Transactions Table ── #}
+    {% if object_list %}
+    <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+        <ul role="list" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+            {% for tx in object_list %}
+            <li class="group flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                {# Icon #}
+                <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl
+                    {% if tx.type == 'INCOME' %}bg-emerald-50 dark:bg-emerald-500/10{% else %}bg-rose-50 dark:bg-rose-500/10{% endif %}">
+                    {% if tx.category %}{{ tx.category.icon }}{% else %}💸{% endif %}
                 </div>
-            </div>
-            <div>
-                <select class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                    <option>All Categories</option>
-                    <option>Groceries</option>
-                    <option>Dining</option>
-                    <option>Transport</option>
-                </select>
-            </div>
-            <div>
-                <select class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                    <option>Last 30 Days</option>
-                    <option>This Month</option>
-                    <option>Last Month</option>
-                    <option>This Year</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transactions List -->
-    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
-        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-            <!-- Transaction Item -->
-            <li>
-                <a href="#" class="block hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Whole Foods Market</p>
-                            <div class="ml-2 flex-shrink-0 flex">
-                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Groceries
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-2 sm:flex sm:justify-between">
-                            <div class="sm:flex">
-                                <p class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                    Checking Account
-                                </p>
-                            </div>
-                            <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-                                <p class="text-gray-900 dark:text-white font-medium mr-4">-$84.50</p>
-                                <p>Oct 2, 2026</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+                {# Details #}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ tx.note|default:tx.category.name|default:"Transaction" }}</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{{ tx.date|date:"N j, Y" }} · {{ tx.account.name }}{% if tx.category %} · {{ tx.category.name }}{% endif %}</p>
+                </div>
+                {# Amount #}
+                <div class="text-right flex-shrink-0">
+                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums">
+                        {% if tx.type == 'INCOME' %}+{% else %}-{% endif %}₦{{ tx.amount|floatformat:2 }}
+                    </span>
+                </div>
+                {# Actions #}
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href="{% url 'transaction_update' tx.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors" aria-label="Edit transaction">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </a>
+                    <a href="{% url 'transaction_delete' tx.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors" aria-label="Delete transaction">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </a>
+                </div>
             </li>
-            <!-- Transaction Item -->
-            <li>
-                <a href="#" class="block hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Monthly Salary</p>
-                            <div class="ml-2 flex-shrink-0 flex">
-                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Income
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-2 sm:flex sm:justify-between">
-                            <div class="sm:flex">
-                                <p class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                    Checking Account
-                                </p>
-                            </div>
-                            <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-                                <p class="text-green-600 font-medium mr-4">+$3,200.00</p>
-                                <p>Oct 1, 2026</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </li>
+            {% endfor %}
         </ul>
-        
-        <!-- Pagination -->
-        <div class="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between sm:px-6">
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">97</span> results
-                    </p>
-                </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            1
-                        </a>
-                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            2
-                        </a>
-                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                    </nav>
-                </div>
-            </div>
+    </div>
+
+    {# ── Pagination ── #}
+    {% if is_paginated %}
+    <div class="flex items-center justify-between mt-6">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </p>
+        <div class="flex items-center gap-2">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all">← Prev</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all">Next →</a>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
+
+    {% else %}
+    {# Empty State #}
+    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
+            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No transactions found</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">{% if request.GET.q %}Try adjusting your search or filters.{% else %}Add your first income or expense to get started.{% endif %}</p>
+        <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Add your first transaction
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

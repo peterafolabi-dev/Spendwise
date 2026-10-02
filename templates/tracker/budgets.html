@@ -1,29 +1,67 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Budgets — SpendWise{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Budgets</h2>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Budgets</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Set monthly spending limits per category and stay on track.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700">
-                Create Budget
-            </button>
-        </div>
+        <a href="{% url 'budget_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Set Budget
+        </a>
     </div>
-    
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Groceries</h3>
-                <span class="text-sm text-gray-500">$350 / $500</span>
+
+    {% if object_list %}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 stagger-container">
+        {% for budget in object_list %}
+        {% with spent=budget.category.transactions.all %}
+        {# Ideally the view passes computed spent; here we display the budget card #}
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">{{ budget.category.icon }}</span>
+                    <div>
+                        <h3 class="font-semibold text-slate-900 dark:text-white text-sm">{{ budget.category.name }}</h3>
+                        <p class="text-xs text-slate-400">Monthly limit</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <a href="{% url 'budget_update' budget.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors" aria-label="Edit budget">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </a>
+                    <a href="{% url 'budget_delete' budget.pk %}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors" aria-label="Delete budget">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </a>
+                </div>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                <div class="bg-primary-600 h-2.5 rounded-full" style="width: 70%"></div>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="font-medium text-slate-700 dark:text-slate-300">₦{{ budget.limit|floatformat:0 }} limit</span>
             </div>
-            <p class="mt-2 text-sm text-gray-500">$150 remaining</p>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div class="bg-emerald-500 h-full rounded-full transition-all duration-700" style="width: 60%"></div>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Track your {{ budget.category.name }} spending this month</p>
         </div>
+        {% endwith %}
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
+            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No budgets yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">Create a monthly limit for a spending category so you never overspend again.</p>
+        <a href="{% url 'budget_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Set your first budget
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

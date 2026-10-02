@@ -1,34 +1,56 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categories — SpendWise{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Categories</h2>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Categories</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Organise your income and expenses into clear buckets.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700">
-                Add Category
-            </button>
-        </div>
+        <a href="{% url 'category_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            New Category
+        </a>
     </div>
-    
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-            <li class="px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Groceries</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Expense</p>
-                    </div>
+
+    {% if object_list %}
+    {# ── Split into Income & Expense ── #}
+    {% regroup object_list by type as type_groups %}
+    {% for group in type_groups %}
+    <div class="mb-8">
+        <h2 class="text-xs font-bold uppercase tracking-widest mb-4 {% if group.grouper == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+            {% if group.grouper == 'INCOME' %}💰 Income{% else %}💸 Expense{% endif %}
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 stagger-container">
+            {% for cat in group.list %}
+            <div class="group bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item flex flex-col items-center text-center gap-2">
+                <span class="text-3xl leading-none">{{ cat.icon }}</span>
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ cat.name }}</p>
+                <div class="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href="{% url 'category_update' cat.pk %}" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium" aria-label="Edit {{ cat.name }}">Edit</a>
+                    <span class="text-slate-300 dark:text-slate-600">·</span>
+                    <a href="{% url 'category_delete' cat.pk %}" class="text-xs text-rose-500 dark:text-rose-400 hover:underline font-medium" aria-label="Delete {{ cat.name }}">Del</a>
                 </div>
-            </li>
-        </ul>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+    {% endfor %}
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
+            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No categories yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">Create your first category to start organising your transactions.</p>
+        <a href="{% url 'category_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Create a category
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

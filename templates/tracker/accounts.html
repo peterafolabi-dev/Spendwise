@@ -1,28 +1,70 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accounts — SpendWise{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+
+    {# ── Page Header ── #}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Accounts</h2>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Accounts</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your wallets, bank accounts and savings.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700">
-                Add Account
-            </button>
-        </div>
+        <a href="{% url 'account_create' %}"
+           class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Add Account
+        </a>
     </div>
-    
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Account Card -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Checking</h3>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Bank</span>
+
+    {% if object_list %}
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 stagger-container">
+        {% for account in object_list %}
+        {% with balance=account.current_balance %}
+        <div class="group bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item flex flex-col justify-between gap-4">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ account.get_type_display }}</p>
+                    <h3 class="mt-1 text-lg font-bold text-slate-900 dark:text-white">{{ account.name }}</h3>
+                </div>
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold
+                    {% if account.type == 'BANK' %}bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
+                    {% elif account.type == 'SAVINGS' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400
+                    {% elif account.type == 'CARD' %}bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400
+                    {% else %}bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300{% endif %}">
+                    {{ account.get_type_display }}
+                </span>
             </div>
-            <p class="text-3xl font-semibold text-gray-900 dark:text-white mb-2">$5,240.00</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Chase Bank ****1234</p>
+            <div>
+                <p class="text-[clamp(1.4rem,4vw,2rem)] font-bold {% if balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-slate-900 dark:text-white{% endif %} tracking-tight tabular-nums leading-tight">
+                    ₦{{ balance|floatformat:2 }}
+                </p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Current balance</p>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'account_update' account.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Edit</a>
+                <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+                <a href="{% url 'account_delete' account.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10">Delete</a>
+            </div>
         </div>
+        {% endwith %}
+        {% endfor %}
     </div>
+    {% else %}
+    {# Empty State #}
+    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
+            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No accounts yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">Add your first account to start tracking your money across cash, bank, and savings.</p>
+        <a href="{% url 'account_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Add your first account
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

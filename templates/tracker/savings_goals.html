@@ -1,26 +1,65 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Savings Goals — SpendWise{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">Savings Goals</h2>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Savings Goals</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Set a target, track progress, celebrate when you hit it.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700">
-                New Goal
-            </button>
-        </div>
+        <a href="{% url 'savings_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            New Goal
+        </a>
     </div>
-    
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Emergency Fund</h3>
-            <span class="text-sm text-gray-500">$5,000 / $10,000</span>
+
+    {% if object_list %}
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 stagger-container">
+        {% for goal in object_list %}
+        {% with pct=goal.progress_percentage %}
+        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item flex flex-col gap-4">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 dark:text-white">{{ goal.name }}</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Target: {{ goal.target_date|date:"N j, Y" }}</p>
+                </div>
+                {% if pct >= 100 %}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 px-2.5 py-1 rounded-full">🎉 Done!</span>
+                {% else %}
+                <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ pct }}%</span>
+                {% endif %}
+            </div>
+            <div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden mb-2">
+                    <div class="h-full rounded-full transition-all duration-1000 {% if pct >= 100 %}bg-emerald-400{% else %}bg-emerald-500{% endif %}" style="width: {{ pct }}%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>₦{{ goal.account.current_balance|floatformat:0 }} saved</span>
+                    <span>₦{{ goal.target_amount|floatformat:0 }} goal</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'savings_update' goal.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Edit</a>
+                <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+                <a href="{% url 'savings_delete' goal.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10">Delete</a>
+            </div>
         </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-            <div class="bg-primary-600 h-2.5 rounded-full" style="width: 50%"></div>
-        </div>
+        {% endwith %}
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float text-3xl">🎯</div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No goals yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">Dream big — create a savings goal and watch your progress grow.</p>
+        <a href="{% url 'savings_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Create your first goal
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
