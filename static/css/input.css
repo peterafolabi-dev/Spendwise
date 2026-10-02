@@ -8,53 +8,105 @@
   --color-primary-300: #6ee7b7;
   --color-primary-400: #34d399;
   --color-primary-500: #10b981;
-  --color-primary-600: #059669; /* Emerald Base */
+  --color-primary-600: #059669;
   --color-primary-700: #047857;
   --color-primary-800: #065f46;
   --color-primary-900: #064e3b;
   --color-primary-950: #022c22;
-  
+
   --color-destructive-50: #fff1f2;
   --color-destructive-100: #ffe4e6;
   --color-destructive-200: #fecdd3;
   --color-destructive-300: #fda4af;
   --color-destructive-400: #fb7185;
   --color-destructive-500: #f43f5e;
-  --color-destructive-600: #e11d48; /* Rose Base */
+  --color-destructive-600: #e11d48;
   --color-destructive-700: #be123c;
   --color-destructive-800: #9f1239;
   --color-destructive-900: #881337;
   --color-destructive-950: #4c0519;
 }
 
-/* Django Form Utilities */
-@layer components {
-  .django-form p {
-    @apply mb-4;
+/* ── Global Dark-Mode Form Fix ──────────────────────────────────────────── */
+/* Ensures ALL inputs/selects/textareas look correct in dark mode regardless
+   of which Tailwind utility classes are on them. */
+@layer base {
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .dark select,
+  .dark textarea {
+    background-color: rgb(30 41 59 / 0.7); /* slate-800/70 */
+    color: rgb(241 245 249);               /* slate-100 */
+    border-color: rgb(51 65 85);           /* slate-700 */
   }
-  .django-form input {
-    @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm;
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: rgb(100 116 139);               /* slate-500 */
   }
-  .django-form label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  .dark input:focus:not([type="checkbox"]):not([type="radio"]),
+  .dark select:focus,
+  .dark textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.35);
   }
-  .django-form ul.errorlist {
-    @apply text-red-500 text-sm mt-1 mb-4 list-disc pl-5;
+  /* SSO & ghost buttons in dark */
+  .dark .sso-btn {
+    background-color: rgb(30 41 59 / 0.6);
+    border-color: rgb(51 65 85 / 0.6);
+    color: rgb(226 232 240);
   }
-  .django-form .helptext {
-    @apply text-xs text-gray-500 dark:text-gray-400 mt-1 block;
+  .dark .sso-btn:hover {
+    background-color: rgb(30 41 59);
   }
 }
 
-/* Custom utilities */
+/* ── Django Form Utilities ── */
+@layer components {
+  .django-form p { @apply mb-4; }
+  .django-form input {
+    @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 placeholder-gray-500 dark:placeholder-slate-500 text-gray-900 dark:text-white dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all;
+  }
+  .django-form label {
+    @apply block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-1.5;
+  }
+  .django-form ul.errorlist {
+    @apply text-rose-500 text-sm mt-1 mb-4 list-disc pl-5;
+  }
+  .django-form .helptext {
+    @apply text-xs text-slate-500 dark:text-slate-400 mt-1 block;
+  }
+}
+
+/* ── Command Palette ── */
+@layer components {
+  #cmd-palette-backdrop {
+    backdrop-filter: blur(6px);
+  }
+  #cmd-palette {
+    box-shadow: 0 32px 64px -12px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
+  }
+}
+
+/* ── Privacy Mode ── */
+.privacy-blur .balance-amount,
+.privacy-blur .tx-amount {
+  filter: blur(8px);
+  transition: filter 0.2s ease;
+  cursor: pointer;
+}
+
+/* ── Confetti ── */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Custom utilities ── */
 @layer utilities {
   .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    opacity: 1; /* No longer hides by default — use animate-fade-in-up */
   }
-  .fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
 }
