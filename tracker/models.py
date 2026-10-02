@@ -5,9 +5,8 @@ from django.core.exceptions import ValidationError
 from datetime import timedelta
 from decimal import Decimal
 from django.db.models import Sum, Q
-
-class Account(models.fields.Field):
-    pass # Wait, let me rewrite this cleanly.
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 ACCOUNT_TYPES = [
     ('CASH', 'Cash'),
@@ -136,4 +135,48 @@ class SavingsGoal(models.Model):
 
     def __str__(self):
         return self.name
+
+
+def seed_user_defaults(user):
+    """Auto-seeds default account and categories for a user."""
+    # Seed default account if none exists
+    if not Account.objects.filter(user=user).exists():
+        Account.objects.create(
+            user=user,
+            name="Main Checking / Cash Wallet",
+            type="BANK",
+            starting_balance=Decimal('50000.00')
+        )
+
+    # Seed default categories
+    default_categories = [
+        # Expense
+        ("Food & Dining", "EXPENSE", "🍔"),
+        ("Groceries", "EXPENSE", "🛒"),
+        ("Rent & Housing", "EXPENSE", "🏠"),
+        ("Utilities", "EXPENSE", "💡"),
+        ("Transportation", "EXPENSE", "🚕"),
+        ("Entertainment", "EXPENSE", "🎮"),
+        ("Health & Fitness", "EXPENSE", "💪"),
+        ("Shopping", "EXPENSE", "🛍️"),
+        ("Account Transfer", "EXPENSE", "🔄"),
+        # Income
+        ("Salary", "INCOME", "💼"),
+        ("Freelance", "INCOME", "💻"),
+        ("Investments", "INCOME", "📈"),
+        ("Gifts", "INCOME", "🎁"),
+    ]
+
+    for name, cat_type, icon in default_categories:
+        Category.objects.get_or_create(
+            user=user,
+            name=name,
+            defaults={"type": cat_type, "icon": icon}
+        )
+
+
+@receiver(post_save, sender=User)
+def create_user_defaults(sender, instance, created, **kwargs):
+    if created:
+        seed_user_defaults(instance)
 
