@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
@@ -142,7 +142,7 @@
         <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Progress</h3>
-                <a href="{% url 'budgets' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">Manage</a>
+                <a href="{% url 'budget_list' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">Manage</a>
             </div>
             <div class="space-y-5">
                 <!-- Budget Item -->
@@ -182,7 +182,7 @@
         <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
-                <a href="{% url 'transactions' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">View all</a>
+                <a href="{% url 'transaction_list' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">View all</a>
             </div>
             <div class="flow-root">
                 <ul role="list" class="-my-4 divide-y divide-gray-100 dark:divide-slate-800/80">
