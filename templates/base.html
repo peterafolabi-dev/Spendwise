@@ -133,10 +133,12 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Global Footer -->
+    <!-- Global Footer (Only shown on non-auth pages) -->
+    {% if not request.resolver_match.url_name == 'login' and not request.resolver_match.url_name == 'signup' %}
     <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
-            <div>&copy; {% now "Y" %} SpendWise. Bank-grade encryption & 100% private financial ledger.</div>
+            <div>&copy; {% now "Y" %} SpendWise · Bank-grade encryption & privacy</div>
+            {% if user.is_authenticated %}
             <div class="flex items-center gap-4">
                 <button onclick="openCommandPalette()" class="hover:text-emerald-500 transition-colors">⌘K Palette</button>
                 <span>·</span>
@@ -146,8 +148,10 @@
                 <span>·</span>
                 <button onclick="openCopilotModal()" class="hover:text-emerald-500 transition-colors">AI Copilot</button>
             </div>
+            {% endif %}
         </div>
     </footer>
+    {% endif %}
 
     <!-- ══════════════════════════════════════════════════════════════════════
          GLOBAL FLOATING POWER TOOLS & MODALS

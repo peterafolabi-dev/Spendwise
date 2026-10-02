@@ -4,19 +4,18 @@
 {% block title %}Sign In — SpendWise{% endblock %}
 
 {% block content %}
-<div class="relative min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 overflow-hidden bg-slate-50 dark:bg-gray-950 transition-colors duration-200">
+<div class="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
 
     {# ── Ambient Glow Blobs ── #}
-    <div class="pointer-events-none absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 blur-[120px]"></div>
+    <div class="pointer-events-none absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-emerald-500/15 dark:bg-emerald-500/10 blur-[120px]"></div>
     <div class="pointer-events-none absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full bg-cyan-500/15 dark:bg-cyan-500/10 blur-[120px]"></div>
 
-    {# ── Card ── #}
-    <div class="relative w-full max-w-md animate-fade-in-up z-10">
-        <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-black/40 px-8 py-7">
+    {# ── Centered Card ── #}
+    <div class="relative w-full max-w-md animate-fade-in-up z-10 my-auto">
+        <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-3xl shadow-2xl shadow-slate-200/50 dark:shadow-black/40 px-8 py-7">
 
-            {# Header #}
+            {# Header (Stray secondary [₦] logo removed) #}
             <div class="mb-6 text-center">
-                <a href="{% url 'landing' %}" class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-500 text-white font-bold text-lg shadow-lg shadow-emerald-500/30 mb-4">₦</a>
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome back</h1>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Take control of your <span id="typing-text" class="font-semibold text-emerald-600 dark:text-emerald-400"></span><span class="animate-pulse text-emerald-500">|</span>
@@ -112,14 +111,18 @@
                 </button>
             </div>
 
-            {# Footer #}
+            {# Switch to Signup #}
             <p class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
                 Don't have an account?
                 <a href="{% url 'signup' %}" class="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">Create one free →</a>
             </p>
 
         </div>
-        <p class="mt-4 text-center text-xs text-slate-400 dark:text-slate-600">© {% now "Y" %} SpendWise · Your data stays private.</p>
+
+        {# Single Consolidated Clean Footer #}
+        <p class="mt-5 text-center text-xs text-slate-400 dark:text-slate-500">
+            &copy; {% now "Y" %} SpendWise · Bank-grade encryption & privacy
+        </p>
     </div>
 </div>
 {% endblock %}
@@ -145,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('typing-text');
     let wi = 0, ci = 0, deleting = false;
     function tick() {
+        if (!el) return;
         const word = words[wi];
         if (!deleting) {
             el.textContent = word.slice(0, ++ci);
