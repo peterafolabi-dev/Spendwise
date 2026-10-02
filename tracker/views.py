@@ -330,6 +330,13 @@ class TransactionListView(UserOwnedMixin, ListView):
     template_name = 'tracker/transactions.html'
     ordering = ['-date', '-created_at']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        account_id = self.request.GET.get('account')
+        if account_id:
+            qs = qs.filter(account_id=account_id)
+        return qs
+
 class TransactionCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Transaction
     form_class = TransactionForm

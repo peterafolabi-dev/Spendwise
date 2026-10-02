@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}Accounts — SpendWise{% endblock %}
 
@@ -10,61 +10,142 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Accounts</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your wallets, bank accounts and savings.</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your wallets, bank accounts, cards, and savings vaults.</p>
         </div>
         <a href="{% url 'account_create' %}"
-           class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
             Add Account
         </a>
     </div>
 
-    {% if object_list %}
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 stagger-container">
+    {# ── 1. High-Level Net Balance KPI Summary Bar ── #}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <!-- Total Net Balance -->
+        <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Net Balance</span>
+                <span class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">₦</span>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                ₦<span class="currency-val">{{ total_balance|floatformat:2|intcomma }}</span>
+            </div>
+            <div class="mt-1.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <span class="inline-flex w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>{{ accounts_count }} Active Ledger{{ accounts_count|pluralize }}</span>
+            </div>
+        </div>
+
+        <!-- Total Inflow -->
+        <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Inflow</span>
+                <span class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">📈</span>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
+                +₦<span class="currency-val">{{ total_inflow|floatformat:2|intcomma }}</span>
+            </div>
+            <div class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Lifetime credited income
+            </div>
+        </div>
+
+        <!-- Total Outflow -->
+        <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Outflow</span>
+                <span class="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-sm">📉</span>
+            </div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight tabular-nums">
+                -₦<span class="currency-val">{{ total_outflow|floatformat:2|intcomma }}</span>
+            </div>
+            <div class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Lifetime debited expenses
+            </div>
+        </div>
+    </div>
+
+    {# ── 2. Responsive 3-Column Grid & Account Cards ── #}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-container">
         {% for account in object_list %}
         {% with balance=account.current_balance %}
-        <div class="group bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item flex flex-col justify-between gap-4">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ account.get_type_display }}</p>
-                    <h3 class="mt-1 text-lg font-bold text-slate-900 dark:text-white">{{ account.name }}</h3>
+        <div class="group relative bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xl transition-all duration-300 rounded-2xl p-6 flex flex-col justify-between gap-5 animate-stagger-item">
+            
+            <!-- Top Row: Icon Badge & Dropdown Actions -->
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <!-- Single Account Icon Badge in Top-Left Corner -->
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0
+                        {% if account.type == 'BANK' %}bg-blue-500/10 border border-blue-500/20 text-blue-400
+                        {% elif account.type == 'SAVINGS' %}bg-amber-500/10 border border-amber-500/20 text-amber-400
+                        {% elif account.type == 'CARD' %}bg-violet-500/10 border border-violet-500/20 text-violet-400
+                        {% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %}">
+                        {% if account.type == 'BANK' %}🏦
+                        {% elif account.type == 'SAVINGS' %}🔒
+                        {% elif account.type == 'CARD' %}💳
+                        {% else %}💵{% endif %}
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">{{ account.name }}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            {% if account.type == 'BANK' %}Bank Account
+                            {% elif account.type == 'SAVINGS' %}Savings Vault
+                            {% elif account.type == 'CARD' %}Credit Card
+                            {% else %}Cash Wallet{% endif %}
+                        </p>
+                    </div>
                 </div>
-                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold
-                    {% if account.type == 'BANK' %}bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
-                    {% elif account.type == 'SAVINGS' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400
-                    {% elif account.type == 'CARD' %}bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400
-                    {% else %}bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300{% endif %}">
-                    {{ account.get_type_display }}
-                </span>
+
+                <!-- Sleek Ghost Action Menu (···) -->
+                <div class="relative group/menu">
+                    <button type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" title="Account actions">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                        </svg>
+                    </button>
+                    <div class="hidden group-hover/menu:block group-focus-within/menu:block absolute right-0 top-8 w-32 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl py-1 z-20 text-xs">
+                        <a href="{% url 'account_update' account.pk %}" class="flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors">
+                            <span>✏️</span> Edit
+                        </a>
+                        <a href="{% url 'account_delete' account.pk %}" class="flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                            <span>🗑️</span> Delete
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div>
-                <p class="text-[clamp(1.4rem,4vw,2rem)] font-bold {% if balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-slate-900 dark:text-white{% endif %} tracking-tight tabular-nums leading-tight">
-                    ₦{{ balance|floatformat:2 }}
-                </p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Current balance</p>
+
+            <!-- Middle: Formatted Amount with Comma Separation -->
+            <div class="py-2">
+                <div class="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Current Balance</div>
+                <div class="text-3xl font-extrabold {% if balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-slate-900 dark:text-white{% endif %} tracking-tight tabular-nums leading-tight">
+                    ₦<span class="currency-val">{{ balance|floatformat:2|intcomma }}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1">Baseline: ₦<span class="currency-val">{{ account.starting_balance|floatformat:2|intcomma }}</span></div>
             </div>
-            <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <a href="{% url 'account_update' account.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Edit</a>
-                <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
-                <a href="{% url 'account_delete' account.pk %}" class="flex-1 text-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10">Delete</a>
+
+            <!-- Bottom: Footer Badge linking to filtered transactions -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <a href="{% url 'transaction_list' %}?account={{ account.pk }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-500 hover:text-emerald-400 hover:underline transition-all">
+                    <span>View Transactions</span>
+                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+                <span class="text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">ID #{{ account.pk }}</span>
             </div>
         </div>
         {% endwith %}
         {% endfor %}
-    </div>
-    {% else %}
-    {# Empty State #}
-    <div class="flex flex-col items-center justify-center py-24 text-center animate-fade-in-up">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
-            <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">No accounts yet</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-6">Add your first account to start tracking your money across cash, bank, and savings.</p>
-        <a href="{% url 'account_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-            Add your first account
+
+        <!-- 3. Quick-Add Dashed Action Tile -->
+        <a href="{% url 'account_create' %}" class="border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl flex flex-col items-center justify-center p-8 text-slate-500 hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all cursor-pointer min-h-[220px] group">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            </div>
+            <span class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-400 transition-colors">+ Add Account</span>
+            <span class="text-xs text-slate-400 mt-1">Connect a bank, wallet, card, or vault</span>
         </a>
     </div>
-    {% endif %}
+
 </div>
 {% endblock %}
