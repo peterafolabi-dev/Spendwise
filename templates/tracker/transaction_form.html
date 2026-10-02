@@ -61,26 +61,37 @@
             <!-- 4. 2-Column Grid: Account & Category -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="id_account" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Account</label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="id_account" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Account</label>
+                        <a href="{% url 'account_create' %}" class="text-[11px] font-semibold text-emerald-400 hover:underline">+ New Account</a>
+                    </div>
                     <select name="account" id="id_account" required class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         {% for acc in form.account.field.queryset %}
                         <option value="{{ acc.pk }}" {% if form.account.value == acc.pk or form.account.value == acc.pk|stringformat:"s" %}selected{% endif %}>
                             {{ acc.name }} (₦{{ acc.current_balance|floatformat:0 }})
                         </option>
+                        {% empty %}
+                        <option value="">No accounts available</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div id="category-wrapper">
-                    <label for="id_category" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="id_category" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Category</label>
+                        <a href="{% url 'category_create' %}" class="text-[11px] font-semibold text-emerald-400 hover:underline">+ New Category</a>
+                    </div>
                     <select name="category" id="id_category" class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                         <option value="">Select category…</option>
                         {% for cat in form.category.field.queryset %}
-                        <option value="{{ cat.pk }}" data-type="{{ cat.type }}" {% if form.category.value == cat.pk or form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+                        <option value="{{ cat.pk }}" data-type="{{ cat.type|upper }}" {% if form.category.value == cat.pk or form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
                             {{ cat.icon }} {{ cat.name }}
                         </option>
                         {% endfor %}
                     </select>
+                    <p id="no-category-fallback" class="hidden text-xs text-amber-400 mt-1.5">
+                        No categories found for this type. <a href="{% url 'category_create' %}" class="underline font-semibold">+ Add New Category</a>
+                    </p>
                 </div>
             </div>
 
@@ -178,19 +189,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.className = 'type-pill-btn py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 bg-cyan-500 text-white shadow-md shadow-cyan-500/25 font-bold';
             }
 
-            // Filter category options based on type
-            if (categorySelect) {
-                Array.from(categorySelect.options).forEach(opt => {
-                    const catType = opt.getAttribute('data-type');
-                    if (!catType || catType === (val === 'TRANSFER' ? 'EXPENSE' : val)) {
-                        opt.style.display = '';
-                    } else {
-                        opt.style.display = 'none';
-                    }
-                });
-            }
+            // Apply filter
+            applyCategoryFilter(val);
         });
     });
+
+    function applyCategoryFilter(typeVal) {
+        if (!categorySelect) return;
+        const normalized = (typeVal === 'TRANSFER' ? 'EXPENSE' : typeVal).toUpperCase();
+        let visibleCount = 0;
+
+        Array.from(categorySelect.options).forEach((opt, idx) => {
+            if (idx === 0) {
+                opt.style.display = '';
+                return;
+            }
+            const catType = (opt.getAttribute('data-type') || '').toUpperCase();
+            if (!catType || catType === normalized) {
+                opt.style.display = '';
+                visibleCount++;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        const fallback = document.getElementById('no-category-fallback');
+        if (fallback) {
+            if (visibleCount === 0) {
+                fallback.classList.remove('hidden');
+            } else {
+                fallback.classList.add('hidden');
+            }
+        }
+    }
+
+    // Run filter on initial load
+    applyCategoryFilter(typeInput ? typeInput.value : 'EXPENSE');
 
     // Check query params if prefilled (e.g. from OCR scanner: ?note=Starbucks&amount=4500)
     const urlParams = new URLSearchParams(window.location.search);
