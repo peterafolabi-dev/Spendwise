@@ -248,10 +248,24 @@ class UserFormMixin:
         form.instance.user = self.request.user
         return super().form_valid(form)
 
-# Account CRUD
 class AccountListView(UserOwnedMixin, ListView):
     model = Account
     template_name = 'tracker/accounts.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        accounts = list(self.get_queryset())
+        total_balance = sum((acc.current_balance() for acc in accounts), Decimal('0.00'))
+        total_inflow = Transaction.objects.filter(user=user, type='INCOME').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
+        total_outflow = Transaction.objects.filter(user=user, type='EXPENSE').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
+        context.update({
+            'total_balance': total_balance,
+            'accounts_count': len(accounts),
+            'total_inflow': total_inflow,
+            'total_outflow': total_outflow,
+        })
+        return context
 
 class AccountCreateView(UserOwnedMixin, CreateView):
     model = Account
