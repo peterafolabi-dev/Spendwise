@@ -637,6 +637,31 @@ def export_csv(request):
     return response
 
 @login_required
+def export_json(request):
+    """Exports the user's full financial ledger as formatted JSON."""
+    transactions = Transaction.objects.filter(user=request.user).order_by('-date')
+    data = []
+    for t in transactions:
+        data.append({
+            'id': t.id,
+            'date': t.date.isoformat(),
+            'account': t.account.name,
+            'type': t.type,
+            'category': t.category.name if t.category else None,
+            'amount': float(t.amount),
+            'note': t.note or "",
+        })
+    content = json.dumps({
+        'spendwise_export': data,
+        'user': request.user.username,
+        'exported_at': timezone.now().isoformat(),
+        'total_records': len(data),
+    }, indent=2)
+    response = HttpResponse(content, content_type='application/json')
+    response['Content-Disposition'] = f'attachment; filename="spendwise_ledger_{request.user.username}.json"'
+    return response
+
+@login_required
 def import_csv(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
@@ -685,6 +710,8 @@ def passkey_challenge(request):
     challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
     request.session['webauthn_challenge'] = challenge_b64
     host = request.get_host().split(':')[0]
+    if (host == '127.0.0.1' or host == 'localhost') and settings.DEBUG:
+        host = 'localhost'
     
     return JsonResponse({
         'challenge': challenge_b64,
@@ -733,6 +760,8 @@ def passkey_register_challenge(request):
     challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
     request.session['webauthn_reg_challenge'] = challenge_b64
     host = request.get_host().split(':')[0]
+    if (host == '127.0.0.1' or host == 'localhost') and settings.DEBUG:
+        host = 'localhost'
     user_handle = base64.urlsafe_b64encode(str(request.user.id).encode('utf-8')).decode('utf-8').rstrip('=')
     
     return JsonResponse({
