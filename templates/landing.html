@@ -1,31 +1,36 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}SpendWise — Smart Financial Tracker for High-Performers{% endblock %}
+{% block title %}SpendWise — Master Your Money, Automate Your Future{% endblock %}
 
 {% block content %}
-<div class="relative overflow-hidden bg-slate-50 dark:bg-slate-950 py-20 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+<div class="relative overflow-hidden bg-slate-50 dark:bg-slate-950 pt-12 pb-24 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
 
     <!-- Ambient Glowing Orbs -->
     <div class="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-500/15 dark:bg-emerald-500/10 blur-[140px]"></div>
-    <div class="pointer-events-none absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full bg-cyan-500/15 dark:bg-cyan-500/10 blur-[140px]"></div>
+    <div class="pointer-events-none absolute top-1/3 -right-40 w-[550px] h-[550px] rounded-full bg-cyan-500/15 dark:bg-cyan-500/10 blur-[140px]"></div>
 
-    <!-- Hero Section -->
-    <div class="relative max-w-4xl mx-auto text-center z-10 animate-fade-in-up">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         HERO SECTION
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="relative max-w-5xl mx-auto text-center z-10 animate-fade-in-up">
         
         <!-- Live Pill Badge -->
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-8 shadow-sm">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-6 shadow-sm">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>2026 Next-Gen Financial Intelligence</span>
         </div>
 
-        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
-            Master your money. <br class="hidden sm:inline">
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-400">Zero guesswork.</span>
+        <!-- H1 Headline with Two-Line Hierarchy & Typewriter -->
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-5">
+            <span class="block">Master your money.</span>
+            <span class="block mt-1 text-slate-800 dark:text-slate-100">
+                Automate your <span id="hero-typewriter" class="text-emerald-500 dark:text-emerald-400"></span><span class="animate-pulse text-emerald-500 dark:text-emerald-400 font-light">|</span>
+            </span>
         </h1>
 
-        <p class="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            The personal finance tracker built for students & professionals. Real-time Naira ledger, predictive cashflow runway, smart budget envelopes, and an embedded AI copilot.
+        <p class="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            The personal finance tracker built for students & individuals. Real-time Naira ledger, predictive cashflow runway, smart budget envelopes, and an embedded AI copilot.
         </p>
 
         <!-- CTA Buttons -->
@@ -39,70 +44,259 @@
             </a>
         </div>
 
-        <!-- Micro stats -->
-        <div class="mt-12 flex items-center justify-center gap-8 text-xs text-slate-400 font-medium">
-            <div class="flex items-center gap-1.5">
+        <!-- Trust Badges Above the Fold -->
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs">
                 <span class="text-emerald-500">✓</span> No Bank Logins Required
-            </div>
-            <div class="flex items-center gap-1.5">
+            </span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs">
                 <span class="text-emerald-500">✓</span> 100% Offline & Private
-            </div>
-            <div class="flex items-center gap-1.5">
+            </span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 font-medium shadow-2xs">
                 <span class="text-emerald-500">✓</span> Pure Nigerian Naira (₦)
+            </span>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             FLOATING DASHBOARD PRODUCT PREVIEW
+             ══════════════════════════════════════════════════════════════════ -->
+        <div class="relative rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 shadow-2xl shadow-emerald-500/10 backdrop-blur-2xl p-6 sm:p-8 mt-12 max-w-5xl mx-auto text-left transform transition-all duration-500 hover:scale-[1.01]">
+            
+            <!-- Window Bar -->
+            <div class="flex items-center justify-between pb-5 mb-6 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                    <span class="ml-2 text-xs font-mono text-slate-400">spendwise.app/dashboard</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-semibold">Live Preview</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Mini Snippet Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                
+                <!-- 1. Safe-to-Spend Dial Widget -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                            <span class="font-semibold uppercase tracking-wider">Dynamic Engine</span>
+                            <span class="text-emerald-500 font-bold">14 Days Left</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Safe-to-Spend Dial</h4>
+                        <p class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums">
+                            ₦18,500<span class="text-xs font-normal text-slate-400">/day</span>
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                            <span>Monthly Envelope</span>
+                            <span class="font-semibold text-slate-800 dark:text-slate-200">₦259,000 Remaining</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div class="bg-emerald-500 h-full rounded-full" style="width: 68%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Mini 30-Day Runway Trajectory Chart -->
+                <div id="runway" class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                            <span class="font-semibold uppercase tracking-wider">Cashflow</span>
+                            <span class="text-cyan-500 font-bold">Trajectory</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">30-Day Predictive Runway</h4>
+                        <p class="text-xs text-slate-400 mt-1">Factors in salary, rent & upcoming bills.</p>
+                    </div>
+
+                    <!-- Mini SVG Area Chart -->
+                    <div class="my-3">
+                        <svg class="w-full h-16" viewBox="0 0 200 60" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="miniRunway" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.4"/>
+                                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 0,45 Q 60,35 120,25 T 200,10 L 200,60 L 0,60 Z" fill="url(#miniRunway)"/>
+                            <path d="M 0,45 Q 60,35 120,25 T 200,10" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <span>Day 1: ₦340k</span>
+                        <span class="text-emerald-500 font-bold">Day 30: +₦510k</span>
+                    </div>
+                </div>
+
+                <!-- 3. Quick Transaction List (₦ NGN) -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            <span class="font-semibold uppercase tracking-wider">Feed</span>
+                            <span class="text-slate-400">Live</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Recent Transactions</h4>
+                        
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center justify-between py-1 border-b border-slate-200/40 dark:border-slate-700/40">
+                                <div class="flex items-center gap-2">
+                                    <span>🍔</span>
+                                    <span class="font-medium text-slate-700 dark:text-slate-200">Whole Foods</span>
+                                </div>
+                                <span class="font-bold text-rose-500">-₦12,400</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1 border-b border-slate-200/40 dark:border-slate-700/40">
+                                <div class="flex items-center gap-2">
+                                    <span>🎵</span>
+                                    <span class="font-medium text-slate-700 dark:text-slate-200">Spotify Sub</span>
+                                </div>
+                                <span class="font-bold text-rose-500">-₦1,200</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1">
+                                <div class="flex items-center gap-2">
+                                    <span>💼</span>
+                                    <span class="font-medium text-slate-700 dark:text-slate-200">Freelance Inflow</span>
+                                </div>
+                                <span class="font-bold text-emerald-500">+₦85,000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 text-center text-[11px] text-slate-400 border-t border-slate-200/60 dark:border-slate-700/60">
+                        Categorized automatically
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
 
-    <!-- Feature Grid -->
-    <div class="relative max-w-7xl mx-auto mt-24 px-4 sm:px-6 lg:px-8 z-10">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         FEATURE HIGHLIGHTS (#features)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div id="features" class="relative max-w-7xl mx-auto mt-28 px-4 sm:px-6 lg:px-8 z-10">
         <div class="text-center mb-16">
-            <h2 class="text-xs uppercase font-extrabold tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">Architected for Speed</h2>
-            <p class="text-3xl font-extrabold text-slate-900 dark:text-white">Everything you need to thrive financially</p>
+            <h2 class="text-xs uppercase font-extrabold tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">Engineered for Precision</h2>
+            <p class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">Smart features that change how you spend</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
             <!-- Feature 1 -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                 <div>
                     <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-2xl mb-6">🎯</div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Safe-to-Spend Dial</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Know exactly how much you can spend today without starving tomorrow. Dynamically adjusts as you log expenses.
+                        Never overspend again. A dynamic budgeting engine that calculates real-time daily spending limits and automatically rolls leftover funds into the next month.
                     </p>
                 </div>
                 <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    Automatic Month Rollover →
+                    Automatic Rollovers →
                 </div>
             </div>
 
             <!-- Feature 2 -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                 <div>
                     <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-500 flex items-center justify-center text-2xl mb-6">🔮</div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Predictive Runway</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        A forward-looking 30-to-90-day cashflow trajectory chart that factors in recurring bills, paychecks, and subscriptions.
+                        A forward-looking 30-to-90-day trajectory chart that factors in recurring paychecks, upcoming subscription renewals, and scheduled bill dates.
                     </p>
                 </div>
                 <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
-                    Zero-Deficit Projections →
+                    90-Day Trajectory Curve →
                 </div>
             </div>
 
             <!-- Feature 3 -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                 <div>
                     <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 flex items-center justify-center text-2xl mb-6">🤖</div>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">AI Financial Copilot</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Ask natural-language questions about your spending, budget health, or if you can afford that upcoming gadget.
+                        An embedded conversational assistant to ask natural-language questions like "How much did I spend dining out this month?" or "Can I afford a new laptop next week?"
                     </p>
                 </div>
                 <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    Embedded AI Intelligence →
+                    Instant Financial Clarity →
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SECURITY SECTION (#security)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div id="security" class="relative max-w-5xl mx-auto mt-28 px-4 sm:px-6 lg:px-8 z-10 text-center">
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 sm:p-12 shadow-sm">
+            <span class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-2xl mx-auto mb-4">🔒</span>
+            <h3 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-3">Bank-Grade Privacy, Built-In</h3>
+            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+                SpendWise never asks for your bank credentials or BVN. All data is scoped strictly to your account, protected with Passkey/WebAuthn biometrics and encrypted storage.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                    🛡️ WebAuthn / Touch ID
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                    👁️ Instant One-Click Privacy Blur
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                    📥 1-Click CSV & Tax Audit Export
                 </div>
             </div>
         </div>
     </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Hero Typewriter Animation
+    const words = ["future.", "wealth.", "cash flow.", "runway."];
+    const el = document.getElementById('hero-typewriter');
+    if (!el) return;
+
+    let wordIdx = 0;
+    let charIdx = 0;
+    let isDeleting = false;
+
+    function typeLoop() {
+        const currentWord = words[wordIdx];
+
+        if (isDeleting) {
+            el.textContent = currentWord.substring(0, charIdx - 1);
+            charIdx--;
+        } else {
+            el.textContent = currentWord.substring(0, charIdx + 1);
+            charIdx++;
+        }
+
+        let speed = isDeleting ? 40 : 85;
+
+        if (!isDeleting && charIdx === currentWord.length) {
+            speed = 2200; // Pause at complete word
+            isDeleting = true;
+        } else if (isDeleting && charIdx === 0) {
+            isDeleting = false;
+            wordIdx = (wordIdx + 1) % words.length;
+            speed = 450; // Pause before typing next word
+        }
+
+        setTimeout(typeLoop, speed);
+    }
+
+    typeLoop();
+});
+</script>
 {% endblock %}
