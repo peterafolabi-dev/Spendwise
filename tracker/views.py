@@ -256,7 +256,7 @@ class AccountListView(UserOwnedMixin, ListView):
 class AccountCreateView(UserOwnedMixin, CreateView):
     model = Account
     form_class = AccountForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/account_form.html'
     success_url = reverse_lazy('account_list')
 
     def form_valid(self, form):
@@ -266,7 +266,7 @@ class AccountCreateView(UserOwnedMixin, CreateView):
 class AccountUpdateView(UserOwnedMixin, UpdateView):
     model = Account
     form_class = AccountForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/account_form.html'
     success_url = reverse_lazy('account_list')
 
 class AccountDeleteView(UserOwnedMixin, DeleteView):
@@ -513,14 +513,34 @@ class BudgetListView(UserOwnedMixin, ListView):
 class BudgetCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Budget
     form_class = BudgetForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/budget_form.html'
     success_url = reverse_lazy('budget_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        thirty_days_ago = timezone.now().date() - timezone.timedelta(days=30)
+        cat_spend = {
+            c.id: float(Transaction.objects.filter(user=self.request.user, category=c, type='EXPENSE', date__gte=thirty_days_ago).aggregate(t=Sum('amount'))['t'] or 0)
+            for c in Category.objects.filter(user=self.request.user, type='EXPENSE')
+        }
+        context['category_spend_json'] = json.dumps(cat_spend)
+        return context
 
 class BudgetUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = Budget
     form_class = BudgetForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/budget_form.html'
     success_url = reverse_lazy('budget_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        thirty_days_ago = timezone.now().date() - timezone.timedelta(days=30)
+        cat_spend = {
+            c.id: float(Transaction.objects.filter(user=self.request.user, category=c, type='EXPENSE', date__gte=thirty_days_ago).aggregate(t=Sum('amount'))['t'] or 0)
+            for c in Category.objects.filter(user=self.request.user, type='EXPENSE')
+        }
+        context['category_spend_json'] = json.dumps(cat_spend)
+        return context
 
 class BudgetDeleteView(UserOwnedMixin, DeleteView):
     model = Budget
@@ -585,13 +605,13 @@ class RecurringListView(UserOwnedMixin, ListView):
 class RecurringCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = RecurringTransaction
     form_class = RecurringTransactionForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/recurringtransaction_form.html'
     success_url = reverse_lazy('recurring_list')
 
 class RecurringUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = RecurringTransaction
     form_class = RecurringTransactionForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/recurringtransaction_form.html'
     success_url = reverse_lazy('recurring_list')
 
 class RecurringDeleteView(UserOwnedMixin, DeleteView):
