@@ -555,13 +555,13 @@ class SavingsGoalListView(UserOwnedMixin, ListView):
 class SavingsGoalCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = SavingsGoal
     form_class = SavingsGoalForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/savings_form.html'
     success_url = reverse_lazy('savings_list')
 
 class SavingsGoalUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = SavingsGoal
     form_class = SavingsGoalForm
-    template_name = 'tracker/generic_form.html'
+    template_name = 'tracker/savings_form.html'
     success_url = reverse_lazy('savings_list')
 
 class SavingsGoalDeleteView(UserOwnedMixin, DeleteView):
