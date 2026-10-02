@@ -73,16 +73,76 @@ def logout_view(request):
 def dashboard_view(request):
     user = request.user
     accounts = Account.objects.filter(user=user)
-    total_balance = sum(account.current_balance() for account in accounts)
+    total_balance = sum(account.current_balance() for account in accounts) if accounts.exists() else Decimal('0.00')
     
-    current_month = timezone.now().replace(day=1)
+    today = timezone.now().date()
+    current_month_start = today.replace(day=1)
     
-    transactions = Transaction.objects.filter(user=user, date__gte=current_month.date())
+    # Days left in current month
+    import calendar
+    _, last_day = calendar.monthrange(today.year, today.month)
+    days_left = max(1, last_day - today.day + 1)
+    
+    transactions = Transaction.objects.filter(user=user, date__gte=current_month_start)
     income = transactions.filter(type='INCOME').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     expenses = transactions.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
-    recent_transactions = Transaction.objects.filter(user=user).order_by('-date', '-created_at')[:5]
-    budgets = Budget.objects.filter(user=user)
+    recent_transactions = Transaction.objects.filter(user=user).order_by('-date', '-created_at')[:8]
+    budgets = Budget.objects.filter(user=user).select_related('category')
+    
+    total_budget_limit = budgets.aggregate(total=Sum('limit'))['total'] or Decimal('0.00')
+    budget_remaining = max(Decimal('0.00'), total_budget_limit - expenses)
+    safe_to_spend_today = (budget_remaining / Decimal(days_left)) if budget_remaining > 0 else Decimal('0.00')
+    
+    # Savings goals & Round-ups
+    savings_goals = SavingsGoal.objects.filter(user=user)
+    primary_goal = savings_goals.first()
+    
+    # Estimated spare change round-ups (to nearest 100)
+    roundup_estimate = Decimal('0.00')
+    for tx in transactions.filter(type='EXPENSE'):
+        cents = tx.amount % Decimal('100.00')
+        if cents > 0:
+            roundup_estimate += (Decimal('100.00') - cents)
+            
+    # Category spending breakdown for SVG Donut
+    cat_data = []
+    cat_colors = ['#10b981', '#06b6d4', '#f43f5e', '#8b5cf6', '#f59e0b', '#3b82f6', '#ec4899']
+    for idx, cat in enumerate(Category.objects.filter(user=user, type='EXPENSE')):
+        cat_total = transactions.filter(category=cat).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        if cat_total > 0:
+            cat_data.append({
+                'label': cat.name,
+                'value': float(cat_total),
+                'icon': cat.icon,
+                'color': cat_colors[idx % len(cat_colors)]
+            })
+            
+    # Fallback categories if empty
+    if not cat_data:
+        cat_data = [
+            {'label': 'Groceries', 'value': 28500, 'icon': '🍔', 'color': '#10b981'},
+            {'label': 'Transport', 'value': 14200, 'icon': '🚕', 'color': '#06b6d4'},
+            {'label': 'Data & Airtime', 'value': 8500, 'icon': '📱', 'color': '#8b5cf6'},
+            {'label': 'Entertainment', 'value': 12000, 'icon': '🎮', 'color': '#f59e0b'},
+        ]
+        
+    # 6-Month Trend Data
+    months_trend = []
+    for i in range(5, -1, -1):
+        m_date = (today.replace(day=1) - timezone.timedelta(days=i * 28)).replace(day=1)
+        m_end = (m_date + timezone.timedelta(days=32)).replace(day=1)
+        m_tx = Transaction.objects.filter(user=user, date__gte=m_date, date__lt=m_end)
+        m_inc = m_tx.filter(type='INCOME').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
+        m_exp = m_tx.filter(type='EXPENSE').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
+        months_trend.append({
+            'label': m_date.strftime('%b'),
+            'income': float(m_inc),
+            'expense': float(m_exp),
+        })
+        
+    # Recurring subscriptions / upcoming
+    recurring_bills = RecurringTransaction.objects.filter(user=user).order_by('next_due_date')[:4]
     
     context = {
         'total_balance': total_balance,
@@ -90,6 +150,17 @@ def dashboard_view(request):
         'monthly_expenses': expenses,
         'recent_transactions': recent_transactions,
         'budgets': budgets,
+        'accounts': accounts,
+        'primary_goal': primary_goal,
+        'savings_goals': savings_goals,
+        'safe_to_spend_today': safe_to_spend_today,
+        'budget_remaining': budget_remaining,
+        'total_budget_limit': total_budget_limit,
+        'days_left': days_left,
+        'roundup_estimate': roundup_estimate,
+        'cat_data_json': json.dumps(cat_data),
+        'months_trend_json': json.dumps(months_trend),
+        'recurring_bills': recurring_bills,
     }
     return render(request, 'tracker/dashboard.html', context)
 

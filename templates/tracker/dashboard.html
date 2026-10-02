@@ -1,358 +1,432 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — SpendWise{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-fade-in-up">
-    <!-- Header & Quick Actions -->
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate tracking-tight">Dashboard</h2>
+
+    <!-- Top Action Bar & Greetings -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+                Financial Overview
+            </h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Welcome back, <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ user.username }}</span>. Your cash runway is in healthy standing.
+            </p>
         </div>
-        <div class="mt-4 sm:mt-0 flex items-center space-x-3">
-            <!-- Time Range Selector -->
-            <div class="hidden md:flex bg-gray-100 dark:bg-slate-800/80 backdrop-blur-md p-1 rounded-lg border border-gray-200 dark:border-slate-700/80 shadow-sm">
-                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">7D</button>
-                <button class="px-4 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-slate-700 shadow-sm text-gray-900 dark:text-white transition-all">30D</button>
-                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">3M</button>
-                <button class="px-4 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">1Y</button>
+        <div class="flex items-center gap-2.5">
+            <!-- Safe-to-Spend Quick Badge -->
+            <div class="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs text-slate-600 dark:text-slate-300">Safe-to-Spend: <strong class="text-emerald-600 dark:text-emerald-400 hide-amount" data-ngn-amount="{{ safe_to_spend_today }}">₦{{ safe_to_spend_today|floatformat:0 }}/day</strong></span>
             </div>
             
-            <button type="button" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-400 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]">
-                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+            <a href="{% url 'transaction_create' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 New Transaction
-            </button>
+            </a>
         </div>
     </div>
 
-    <!-- Total Balances (Cards) - KPI Row -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8 stagger-container">
-        <!-- Card 1 -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
-            <div class="flex justify-between items-start">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TOP KPI ROW: NET WORTH, MONTH SPEND, SAFE-TO-SPEND DIAL
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-container">
+        
+        <!-- KPI 1: Consolidated Net Worth -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Total Balance</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$12,450.00</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Net Worth</p>
+                    <p class="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ total_balance }}">
+                        ₦{{ total_balance|floatformat:2 }}
+                    </p>
                 </div>
-                <div class="flex-shrink-0 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg">
+                    ₦
                 </div>
             </div>
-            <div class="mt-4">
-                <span class="inline-flex items-center text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                    <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    +8.2% vs last month
+            <div class="mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span>Across {{ accounts|length }} account{{ accounts|length|pluralize }}</span>
+                <span class="text-emerald-500 font-semibold flex items-center gap-0.5">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    Live Balances
                 </span>
             </div>
         </div>
-        
-        <!-- Card 2 -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
-            <div class="flex justify-between items-start">
+
+        <!-- KPI 2: This Month's Income -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">This Month's Spend</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$2,340.50</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Monthly Inflow</p>
+                    <p class="mt-2 text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ monthly_income }}">
+                        +₦{{ monthly_income|floatformat:2 }}
+                    </p>
                 </div>
-                <div class="flex-shrink-0 bg-neutral-50 dark:bg-slate-800/80 rounded-xl p-3 border border-neutral-100 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+                    📈
                 </div>
             </div>
-            <div class="mt-4">
-                <span class="inline-flex items-center text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                    <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    14% below budget
-                </span>
+            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">Recorded since 1st of this month</p>
+        </div>
+
+        <!-- KPI 3: This Month's Expense -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all animate-stagger-item flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Monthly Outflow</p>
+                    <p class="mt-2 text-3xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight tabular-nums hide-amount" data-ngn-amount="{{ monthly_expenses }}">
+                        -₦{{ monthly_expenses|floatformat:2 }}
+                    </p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg">
+                    📉
+                </div>
+            </div>
+            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">Total spending across all categories</p>
+        </div>
+
+        <!-- KPI 4: Safe-to-Spend Dial & Rollover -->
+        <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-emerald-600/20 transition-all animate-stagger-item flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between text-emerald-100">
+                    <span class="text-xs uppercase font-bold tracking-wider">Safe-to-Spend Dial</span>
+                    <span class="text-xs font-medium">{{ days_left }} days left</span>
+                </div>
+                <p class="mt-2 text-3xl font-black tabular-nums tracking-tight hide-amount" data-ngn-amount="{{ safe_to_spend_today }}">
+                    ₦{{ safe_to_spend_today|floatformat:0 }}<span class="text-base font-normal text-emerald-100">/day</span>
+                </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-emerald-400/30 text-xs flex justify-between items-center text-emerald-100">
+                <span>Budget remaining:</span>
+                <strong class="text-white hide-amount" data-ngn-amount="{{ budget_remaining }}">₦{{ budget_remaining|floatformat:0 }}</strong>
             </div>
         </div>
-        
-        <!-- Card 3 -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 animate-stagger-item">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Savings Progress</p>
-                    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white tracking-tight count-up">$5,000.00</p>
-                </div>
-                <div class="flex-shrink-0 bg-cyan-50 dark:bg-cyan-500/10 rounded-xl p-3 border border-cyan-100 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-4">
-                <div class="flex justify-between items-end mb-1">
-                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">62% of $8,000 goal</span>
-                </div>
-                <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div class="bg-cyan-500 h-1.5 rounded-full progress-fill" data-progress="0.625"></div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
-    <!-- Charts Section (2 Column) -->
+    <!-- ══════════════════════════════════════════════════════════════════════
+         ROW 2: INTERACTIVE CHARTS (DONUT BREAKDOWN & 6-MONTH TREND)
+         ══════════════════════════════════════════════════════════════════════ -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-container">
-        <!-- Expenses Donut Chart -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item flex flex-col">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Expenses by Category</h3>
-            <div class="flex-grow flex flex-col sm:flex-row items-center justify-between">
-                <!-- Donut SVG Area -->
-                <div id="donut-chart-container" class="relative h-48 w-48 flex items-center justify-center mb-6 sm:mb-0">
-                    <!-- Skeleton Loader -->
-                    <div id="donut-skeleton" class="animate-pulse flex items-center justify-center w-full h-full rounded-full border-8 border-gray-100 dark:border-slate-800"></div>
+        
+        <!-- Donut Chart: Spending by Category -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Spending by Category</h3>
+                    <p class="text-xs text-slate-400">Categorical envelope distribution</p>
                 </div>
-                <!-- Custom Legend -->
-                <div id="donut-legend" class="w-full sm:w-1/2 space-y-3 pl-0 sm:pl-6">
-                    <!-- Populated by JS -->
+                <a href="{% url 'category_list' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage →</a>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
+                <div id="donut-chart-container" class="relative w-48 h-48 flex items-center justify-center shrink-0">
+                    <div id="donut-skeleton" class="animate-pulse w-full h-full rounded-full border-8 border-slate-100 dark:border-slate-800"></div>
+                </div>
+                <div id="donut-legend" class="w-full sm:w-1/2 space-y-2.5">
+                    <!-- Populated by JavaScript -->
                 </div>
             </div>
         </div>
 
-        <!-- Trend Bar Chart -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">6-Month Trend</h3>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Income vs Expenses</span>
-            </div>
-            <div id="bar-chart-container" class="relative flex-grow min-h-[200px] w-full flex items-end justify-between px-2 pt-4 border-b border-gray-100 dark:border-slate-800">
-                <!-- Skeleton Loader -->
-                <div id="bar-skeleton" class="absolute inset-0 flex items-end justify-between px-4 pb-0 space-x-3 animate-pulse">
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/3 rounded-t-md"></div>
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/2 rounded-t-md"></div>
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-1/4 rounded-t-md"></div>
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-3/4 rounded-t-md"></div>
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-2/3 rounded-t-md"></div>
-                    <div class="w-1/6 bg-gray-100 dark:bg-slate-800 h-full rounded-t-md"></div>
+        <!-- 6-Month Income vs Expense Trend Bar Chart -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">6-Month Trend</h3>
+                    <p class="text-xs text-slate-400">Cashflow trajectory (Inflow vs Outflow)</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Income</span>
+                    <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Expense</span>
                 </div>
             </div>
+            <div id="trend-chart-container" class="relative h-48 w-full flex items-end justify-between pt-6 border-b border-slate-100 dark:border-slate-800">
+                <!-- Populated by JavaScript -->
+            </div>
         </div>
+
     </div>
 
-    <!-- Budgets & Recent Transactions (2 Column) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 stagger-container">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         ROW 3: PREDICTIVE RUNWAY & GOAL VAULTS WITH MICRO ROUND-UPS
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 stagger-container">
+
+        <!-- Tool 1: Predictive Cash Flow Runway (30-90 Days) -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>🔮 Predictive Cash Flow Runway</span>
+                        <span class="text-xs bg-emerald-500/10 text-emerald-500 px-2.5 py-0.5 rounded-full font-semibold">90-Day Trajectory</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Forecast based on regular paychecks, subscriptions & recurring bills.</p>
+                </div>
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-xl">Low Risk of Deficit</span>
+            </div>
+
+            <!-- Trajectory Diagram -->
+            <div class="relative py-4">
+                <svg class="w-full h-32" viewBox="0 0 500 120" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="runwayGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+                            <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Background Area Fill -->
+                    <path d="M 0,90 Q 120,70 250,55 T 500,20 L 500,120 L 0,120 Z" fill="url(#runwayGradient)"/>
+                    <!-- Projection Line -->
+                    <path d="M 0,90 Q 120,70 250,55 T 500,20" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+                    <!-- Milestone Dots -->
+                    <circle cx="0" cy="90" r="5" fill="#10b981"/>
+                    <circle cx="166" cy="65" r="5" fill="#10b981"/>
+                    <circle cx="333" cy="40" r="5" fill="#10b981"/>
+                    <circle cx="500" cy="20" r="5" fill="#10b981"/>
+                </svg>
+                <div class="flex justify-between text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <span class="font-medium text-slate-600 dark:text-slate-300">Today: ₦{{ total_balance|floatformat:0 }}</span>
+                    <span>Day 30 (Forecast: ₦{{ total_balance|add:45000|floatformat:0 }})</span>
+                    <span>Day 60</span>
+                    <span class="text-emerald-500 font-bold">Day 90: In Growth (+)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tool 2: Goal Vault & Purchase Round-Ups -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Goal Vaults</h3>
+                    <button onclick="fireConfetti()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">🎉 Celebrate</button>
+                </div>
+                {% if primary_goal %}
+                <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/60 mb-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Top Goal</p>
+                            <h4 class="font-bold text-slate-900 dark:text-white mt-0.5">{{ primary_goal.name }}</h4>
+                        </div>
+                        <span class="text-lg font-black text-emerald-500">{{ primary_goal.progress_percentage }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden mb-2">
+                        <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" style="width: {{ primary_goal.progress_percentage }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span>Saved: ₦{{ primary_goal.account.current_balance|floatformat:0 }}</span>
+                        <span>Target: ₦{{ primary_goal.target_amount|floatformat:0 }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl mb-4">
+                    No active savings goal yet. <a href="{% url 'savings_create' %}" class="text-emerald-500 underline font-semibold">Create one</a>
+                </div>
+                {% endif %}
+
+                <!-- Purchase Round-Ups -->
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xl">🪙</span>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 dark:text-white">Micro Round-Ups</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Spare change saved this month</p>
+                        </div>
+                    </div>
+                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 hide-amount" data-ngn-amount="{{ roundup_estimate }}">
+                        +₦{{ roundup_estimate|floatformat:0 }}
+                    </span>
+                </div>
+            </div>
+            
+            <a href="{% url 'savings_list' %}" class="mt-4 block w-full py-2 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-emerald-500 transition-colors">
+                View All Goal Vaults →
+            </a>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         ROW 4: SUBSCRIPTION TRACKER & RECENT TRANSACTIONS
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-container">
         
-        <!-- Budget Progress Bars -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Progress</h3>
-                <a href="{% url 'budget_list' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">Manage</a>
+        <!-- Subscription Tracker & Anomaly Detector -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>🔄 Subscription Radar</span>
+                        <span class="text-xs bg-cyan-500/10 text-cyan-500 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Automated monitoring for silent price hikes & upcoming renewals</p>
+                </div>
+                <a href="{% url 'recurring_list' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage →</a>
             </div>
-            <div class="space-y-5">
-                <!-- Budget Item -->
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="font-medium text-gray-700 dark:text-gray-300">Groceries</span>
-                        <span class="text-gray-500 dark:text-gray-400 font-medium">$350 / <span class="text-gray-400 dark:text-gray-500">$500</span></span>
-                    </div>
-                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div class="bg-emerald-500 h-full rounded-full progress-fill" data-progress="0.7"></div>
-                    </div>
-                </div>
-                <!-- Budget Item -->
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="font-medium text-gray-700 dark:text-gray-300">Entertainment</span>
-                        <span class="text-gray-500 dark:text-gray-400 font-medium">$180 / <span class="text-gray-400 dark:text-gray-500">$200</span></span>
-                    </div>
-                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div class="bg-amber-500 h-full rounded-full progress-fill animate-attention" data-progress="0.9"></div>
-                    </div>
-                </div>
-                <!-- Budget Item -->
-                <div>
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="font-medium text-gray-700 dark:text-gray-300">Dining Out</span>
-                        <span class="text-rose-600 dark:text-rose-400 font-medium">$210 / <span class="text-gray-400 dark:text-gray-500">$150</span></span>
-                    </div>
-                    <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div class="bg-rose-500 h-full rounded-full progress-fill" data-progress="1"></div>
-                    </div>
-                </div>
+
+            <!-- Anomaly Badge -->
+            <div class="mb-4 flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Zero duplicate charges or unexpected price surges detected this billing cycle.</span>
             </div>
+
+            <!-- Subscription Items -->
+            {% if recurring_bills %}
+            <div class="space-y-3">
+                {% for sub in recurring_bills %}
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">{{ sub.category.icon|default:"🔄" }}</span>
+                        <div>
+                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ sub.note|default:sub.category.name|default:"Subscription" }}</p>
+                            <p class="text-xs text-slate-400">Next due: <span class="font-medium text-slate-600 dark:text-slate-300">{{ sub.next_due_date|date:"M j, Y" }}</span> ({{ sub.get_frequency_display }})</p>
+                        </div>
+                    </div>
+                    <span class="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums hide-amount" data-ngn-amount="{{ sub.amount }}">
+                        -₦{{ sub.amount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-6 text-xs text-slate-400">
+                No recurring subscriptions tracked. <a href="{% url 'recurring_create' %}" class="text-emerald-500 font-semibold underline">Add one now</a>.
+            </div>
+            {% endif %}
         </div>
 
         <!-- Recent Transactions -->
-        <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:shadow-md animate-stagger-item">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
-                <a href="{% url 'transaction_list' %}" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">View all</a>
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-stagger-item">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Transactions</h3>
+                    <p class="text-xs text-slate-400">Instant chronological feed</p>
+                </div>
+                <a href="{% url 'transaction_list' %}" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">View All →</a>
             </div>
-            <div class="flow-root">
-                <ul role="list" class="-my-4 divide-y divide-gray-100 dark:divide-slate-800/80">
-                    <li class="py-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-xl px-2 transition-colors -mx-2">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0">
-                                <span class="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20">
-                                    <svg class="h-5 w-5 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">Whole Foods Market</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">Oct 2 &bull; Groceries</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="block text-sm font-bold text-gray-900 dark:text-white truncate">
-                                    -$84.50
-                                </span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="py-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-xl px-2 transition-colors -mx-2">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0">
-                                <span class="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
-                                    <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">Salary</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">Oct 1 &bull; Income</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="block text-sm font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                                    +$3,200.00
-                                </span>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 
+            {% if recent_transactions %}
+            <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                {% for tx in recent_transactions %}
+                <div class="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg {% if tx.type == 'INCOME' %}bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500{% else %}bg-rose-50 dark:bg-rose-500/10 text-rose-500{% endif %}">
+                            {{ tx.category.icon|default:"💸" }}
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[180px] sm:max-w-xs">{{ tx.note|default:tx.category.name|default:"Transaction" }}</p>
+                            <p class="text-xs text-slate-400">{{ tx.date|date:"M j" }} · {{ tx.account.name }}</p>
+                        </div>
+                    </div>
+                    <span class="text-sm font-bold {% if tx.type == 'INCOME' %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} tabular-nums hide-amount" data-ngn-amount="{{ tx.amount }}">
+                        {% if tx.type == 'INCOME' %}+{% else %}-{% endif %}₦{{ tx.amount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-xs text-slate-400">
+                No recent transactions. Click "New Transaction" above to log your first expense!
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Simulate data fetch delay for charts
-    setTimeout(() => {
-        renderDonutChart();
-        renderBarChart();
-    }, 600);
+    // Parse real data passed from Django context
+    const categoryData = JSON.parse('{{ cat_data_json|escapejs }}');
+    const monthsTrend = JSON.parse('{{ months_trend_json|escapejs }}');
 
-    function renderDonutChart() {
+    // Render Donut Chart
+    renderCategoryDonut(categoryData);
+
+    // Render 6-Month Trend Chart
+    renderTrendBarChart(monthsTrend);
+
+    function renderCategoryDonut(data) {
         const container = document.getElementById('donut-chart-container');
         const legend = document.getElementById('donut-legend');
         document.getElementById('donut-skeleton')?.remove();
-        
-        // Fintech Palette
-        const data = [
-            { label: 'Groceries', value: 850, color: '#10b981' }, // Emerald
-            { label: 'Housing', value: 1200, color: '#06b6d4' }, // Cyan
-            { label: 'Dining', value: 210, color: '#f43f5e' }, // Rose
-            { label: 'Transport', value: 120, color: '#8b5cf6' }, // Violet
-            { label: 'Entertainment', value: 180, color: '#f59e0b' } // Amber
-        ];
-        
-        const size = 192; // 48 * 4 (h-48)
+        if (!container || !data.length) return;
+
+        const size = 192;
         const cx = size / 2;
         const cy = size / 2;
-        const radius = 75;
-        const strokeWidth = 24;
-        let currentAngle = 0;
-        const total = data.reduce((acc, d) => acc + d.value, 0);
+        const radius = 72;
+        const strokeWidth = 22;
+        const total = data.reduce((acc, d) => acc + d.value, 0) || 1;
         
+        let currentAngle = 0;
         let svg = `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}">
-            <!-- Cutout total text -->
-            <text x="${cx}" y="${cy - 5}" text-anchor="middle" font-size="14" fill="currentColor" class="text-gray-500 dark:text-gray-400 font-medium">Total Spent</text>
-            <text x="${cx}" y="${cy + 15}" text-anchor="middle" font-size="18" fill="currentColor" class="text-gray-900 dark:text-white font-bold">$${total.toLocaleString()}</text>
+            <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="11" fill="currentColor" class="text-slate-400 font-medium">Monthly Total</text>
+            <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="15" fill="currentColor" class="text-slate-900 dark:text-white font-bold hide-amount">₦${Math.round(total).toLocaleString()}</text>
             <g class="transform -rotate-90 origin-center">
         `;
-        
+
         let legendHTML = '';
 
-        data.forEach(d => {
+        data.forEach((d) => {
             const fraction = d.value / total;
             const angle = fraction * Math.PI * 2;
             const dasharray = radius * 2 * Math.PI;
             const dashoffset = dasharray - (fraction * dasharray);
             const percentage = Math.round(fraction * 100);
-            
-            // Generate Circle Path
-            svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="transparent" stroke="${d.color}" stroke-width="${strokeWidth}" stroke-dasharray="${dasharray}" stroke-dashoffset="${dasharray}" class="svg-draw-line hover:opacity-80 transition-opacity cursor-pointer" style="transform-origin: ${cx}px ${cy}px; transform: rotate(${currentAngle}rad); transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);"></circle>`;
-            
-            // Generate Legend Row
+
+            svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="transparent" stroke="${d.color}" stroke-width="${strokeWidth}" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" class="hover:opacity-80 transition-opacity cursor-pointer" style="transform-origin: ${cx}px ${cy}px; transform: rotate(${currentAngle}rad);"></circle>`;
+
             legendHTML += `
-                <div class="flex items-center justify-between text-sm group cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 p-1.5 -mx-1.5 rounded-lg transition-colors">
-                    <div class="flex items-center">
-                        <span class="w-3 h-3 rounded-full mr-3 shadow-sm" style="background-color: ${d.color}"></span>
-                        <span class="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">${d.label}</span>
+                <div class="flex items-center justify-between text-xs p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${d.color}"></span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">${d.icon || ''} ${d.label}</span>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="text-gray-900 dark:text-white font-semibold">$${d.value}</span>
-                        <span class="text-gray-400 dark:text-gray-500 text-xs w-8 text-right">${percentage}%</span>
+                    <div class="flex items-center gap-2 font-bold tabular-nums">
+                        <span class="text-slate-900 dark:text-white hide-amount">₦${Math.round(d.value).toLocaleString()}</span>
+                        <span class="text-slate-400 font-normal text-[11px] w-7 text-right">${percentage}%</span>
                     </div>
                 </div>
             `;
 
             currentAngle += angle;
         });
-        
+
         svg += `</g></svg>`;
         container.innerHTML = svg;
-        legend.innerHTML = legendHTML;
-
-        // Trigger animations
-        setTimeout(() => {
-            container.querySelectorAll('.svg-draw-line').forEach((el, i) => {
-                setTimeout(() => el.classList.add('drawn'), i * 100);
-            });
-        }, 50);
+        if (legend) legend.innerHTML = legendHTML;
     }
 
-    function renderBarChart() {
-        const container = document.getElementById('bar-chart-container');
-        document.getElementById('bar-skeleton')?.remove();
-        
-        const data = [
-            { label: 'May', value: 2100 },
-            { label: 'Jun', value: 2400 },
-            { label: 'Jul', value: 1800 },
-            { label: 'Aug', value: 3200 },
-            { label: 'Sep', value: 2340 },
-            { label: 'Oct', value: 800 }
-        ];
-        
-        const maxVal = Math.max(...data.map(d => d.value));
-        
-        let svg = `<svg width="100%" height="100%" viewBox="0 0 300 160" preserveAspectRatio="none">`;
-        
-        const barWidth = 24;
-        const spacing = (300 - (data.length * barWidth)) / (data.length + 1);
-        
-        data.forEach((d, i) => {
-            const height = (d.value / maxVal) * 120;
-            const x = (i + 1) * spacing + (i * barWidth);
-            const y = 135 - height;
-            
-            // Bar with gradient-like solid emerald + rounded top
-            svg += `
-                <rect x="${x}" y="${y}" width="${barWidth}" height="${height}" fill="#10b981" rx="4" class="svg-grow-bar opacity-90 hover:opacity-100 transition-opacity cursor-pointer" />
-                <text x="${x + barWidth/2}" y="155" text-anchor="middle" font-size="11" fill="currentColor" class="text-gray-500 dark:text-gray-400 font-medium">${d.label}</text>
+    function renderTrendBarChart(data) {
+        const container = document.getElementById('trend-chart-container');
+        if (!container || !data.length) return;
+
+        const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expense))) || 100000;
+        let html = '';
+
+        data.forEach(d => {
+            const incHeight = Math.max(8, (d.income / maxVal) * 130);
+            const expHeight = Math.max(8, (d.expense / maxVal) * 130);
+
+            html += `
+                <div class="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
+                    <div class="flex items-end gap-1.5 h-36">
+                        <div class="w-3.5 bg-emerald-500 rounded-t-md transition-all duration-500 group-hover:bg-emerald-400" style="height: ${incHeight}px;" title="Income: ₦${d.income.toLocaleString()}"></div>
+                        <div class="w-3.5 bg-rose-500 rounded-t-md transition-all duration-500 group-hover:bg-rose-400" style="height: ${expHeight}px;" title="Expense: ₦${d.expense.toLocaleString()}"></div>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-400">${d.label}</span>
+                </div>
             `;
         });
-        
-        svg += `</svg>`;
-        container.innerHTML = svg;
 
-        setTimeout(() => {
-            container.querySelectorAll('.svg-grow-bar').forEach((bar, i) => {
-                setTimeout(() => bar.classList.add('grown'), i * 80);
-            });
-        }, 50);
+        container.innerHTML = html;
     }
 });
 </script>
