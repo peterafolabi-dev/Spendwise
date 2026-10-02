@@ -182,6 +182,8 @@ class UserOwnedMixin(LoginRequiredMixin):
 class UserFormMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        from .models import seed_user_defaults
+        seed_user_defaults(self.request.user)
         kwargs['user'] = self.request.user
         return kwargs
 
