@@ -121,12 +121,12 @@ class UserFormMixin:
 # Account CRUD
 class AccountListView(UserOwnedMixin, ListView):
     model = Account
-    template_name = 'tracker/account_list.html'
+    template_name = 'tracker/accounts.html'
 
 class AccountCreateView(UserOwnedMixin, CreateView):
     model = Account
     form_class = AccountForm
-    template_name = 'tracker/account_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('account_list')
 
     def form_valid(self, form):
@@ -136,23 +136,23 @@ class AccountCreateView(UserOwnedMixin, CreateView):
 class AccountUpdateView(UserOwnedMixin, UpdateView):
     model = Account
     form_class = AccountForm
-    template_name = 'tracker/account_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('account_list')
 
 class AccountDeleteView(UserOwnedMixin, DeleteView):
     model = Account
-    template_name = 'tracker/account_confirm_delete.html'
+    template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('account_list')
 
 # Category CRUD
 class CategoryListView(UserOwnedMixin, ListView):
     model = Category
-    template_name = 'tracker/category_list.html'
+    template_name = 'tracker/categories.html'
 
 class CategoryCreateView(UserOwnedMixin, CreateView):
     model = Category
     form_class = CategoryForm
-    template_name = 'tracker/category_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('category_list')
 
     def form_valid(self, form):
@@ -162,7 +162,7 @@ class CategoryCreateView(UserOwnedMixin, CreateView):
 class CategoryUpdateView(UserOwnedMixin, UpdateView):
     model = Category
     form_class = CategoryForm
-    template_name = 'tracker/category_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('category_list')
 
 @login_required
@@ -178,29 +178,29 @@ def category_delete_view(request, pk):
         RecurringTransaction.objects.filter(category=category).update(category=uncategorised)
         category.delete()
         return redirect('category_list')
-    return render(request, 'tracker/category_confirm_delete.html', {'object': category})
+    return render(request, 'tracker/generic_confirm_delete.html', {'object': category})
 
 # Transaction CRUD
 class TransactionListView(UserOwnedMixin, ListView):
     model = Transaction
-    template_name = 'tracker/transaction_list.html'
+    template_name = 'tracker/transactions.html'
     ordering = ['-date', '-created_at']
 
 class TransactionCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
-    template_name = 'tracker/transaction_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('transaction_list')
 
 class TransactionUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
-    template_name = 'tracker/transaction_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('transaction_list')
 
 class TransactionDeleteView(UserOwnedMixin, DeleteView):
     model = Transaction
-    template_name = 'tracker/transaction_confirm_delete.html'
+    template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('transaction_list')
 
 @login_required
@@ -226,67 +226,67 @@ def quick_add_transaction(request):
 # Budget CRUD
 class BudgetListView(UserOwnedMixin, ListView):
     model = Budget
-    template_name = 'tracker/budget_list.html'
+    template_name = 'tracker/budgets.html'
 
 class BudgetCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Budget
     form_class = BudgetForm
-    template_name = 'tracker/budget_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('budget_list')
 
 class BudgetUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = Budget
     form_class = BudgetForm
-    template_name = 'tracker/budget_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('budget_list')
 
 class BudgetDeleteView(UserOwnedMixin, DeleteView):
     model = Budget
-    template_name = 'tracker/budget_confirm_delete.html'
+    template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('budget_list')
 
 # SavingsGoal CRUD
 class SavingsGoalListView(UserOwnedMixin, ListView):
     model = SavingsGoal
-    template_name = 'tracker/savingsgoal_list.html'
+    template_name = 'tracker/savings_goals.html'
 
 class SavingsGoalCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = SavingsGoal
     form_class = SavingsGoalForm
-    template_name = 'tracker/savingsgoal_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('savings_list')
 
 class SavingsGoalUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = SavingsGoal
     form_class = SavingsGoalForm
-    template_name = 'tracker/savingsgoal_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('savings_list')
 
 class SavingsGoalDeleteView(UserOwnedMixin, DeleteView):
     model = SavingsGoal
-    template_name = 'tracker/savingsgoal_confirm_delete.html'
+    template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('savings_list')
 
 # RecurringTransaction CRUD
 class RecurringListView(UserOwnedMixin, ListView):
     model = RecurringTransaction
-    template_name = 'tracker/recurringtransaction_list.html'
+    template_name = 'tracker/recurringtransactions.html'
 
 class RecurringCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = RecurringTransaction
     form_class = RecurringTransactionForm
-    template_name = 'tracker/recurringtransaction_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('recurring_list')
 
 class RecurringUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     model = RecurringTransaction
     form_class = RecurringTransactionForm
-    template_name = 'tracker/recurringtransaction_form.html'
+    template_name = 'tracker/generic_form.html'
     success_url = reverse_lazy('recurring_list')
 
 class RecurringDeleteView(UserOwnedMixin, DeleteView):
     model = RecurringTransaction
-    template_name = 'tracker/recurringtransaction_confirm_delete.html'
+    template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('recurring_list')
 
 # Reports
