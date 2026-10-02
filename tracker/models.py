@@ -22,7 +22,9 @@ TRANSACTION_TYPES = [
 
 FREQUENCY_CHOICES = [
     ('WEEKLY', 'Weekly'),
+    ('BIWEEKLY', 'Bi-Weekly'),
     ('MONTHLY', 'Monthly'),
+    ('YEARLY', 'Yearly'),
 ]
 
 class Account(models.Model):
