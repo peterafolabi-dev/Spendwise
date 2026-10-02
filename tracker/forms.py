@@ -65,4 +65,8 @@ class SavingsGoalForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['account'].queryset = Account.objects.filter(user=user, type='SAVINGS')
+            savings_accs = Account.objects.filter(user=user, type='SAVINGS')
+            if savings_accs.exists():
+                self.fields['account'].queryset = savings_accs
+            else:
+                self.fields['account'].queryset = Account.objects.filter(user=user)
