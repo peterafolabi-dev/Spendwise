@@ -9,6 +9,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     
     path('accounts/', views.AccountListView.as_view(), name='account_list'),
+    path('accounts/login/', views.login_view, name='accounts_login'),
     path('accounts/create/', views.AccountCreateView.as_view(), name='account_create'),
     path('accounts/<int:pk>/update/', views.AccountUpdateView.as_view(), name='account_update'),
     path('accounts/<int:pk>/delete/', views.AccountDeleteView.as_view(), name='account_delete'),
