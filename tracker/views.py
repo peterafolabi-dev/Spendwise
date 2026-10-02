@@ -328,10 +328,162 @@ class TransactionUpdateView(UserOwnedMixin, UserFormMixin, UpdateView):
     template_name = 'tracker/transaction_form.html'
     success_url = reverse_lazy('transaction_list')
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.content_type == 'application/json':
+            tx = self.object
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Transaction updated successfully!',
+                'transaction': {
+                    'id': tx.id,
+                    'amount': float(tx.amount),
+                    'amount_display': f"{tx.amount:,.2f}",
+                    'type': tx.type,
+                    'note': tx.note or '',
+                    'account_name': tx.account.name,
+                    'category_name': tx.category.name if tx.category else 'Uncategorized',
+                    'category_icon': tx.category.icon if tx.category else '💸',
+                    'date_formatted': tx.date.strftime('%b %d, %Y'),
+                }
+            })
+        return response
+
 class TransactionDeleteView(UserOwnedMixin, DeleteView):
     model = Transaction
     template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('transaction_list')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        tx_id = self.object.id
+        self.object.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json' or 'application/json' in request.headers.get('accept', ''):
+            return JsonResponse({'status': 'success', 'message': 'Transaction deleted successfully.', 'id': tx_id})
+        return redirect(self.get_success_url())
+
+    def post(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
+
+@login_required
+def transaction_detail_json(request, pk):
+    """Returns JSON details of a transaction for the Slide-Over Drawer."""
+    tx = get_object_or_404(Transaction, pk=pk, user=request.user)
+    return JsonResponse({
+        'status': 'success',
+        'transaction': {
+            'id': tx.id,
+            'amount': float(tx.amount),
+            'amount_display': f"{tx.amount:,.2f}",
+            'type': tx.type,
+            'type_display': tx.get_type_display(),
+            'date': tx.date.strftime('%Y-%m-%d'),
+            'date_formatted': tx.date.strftime('%b %d, %Y'),
+            'note': tx.note or '',
+            'account_id': tx.account.id,
+            'account_name': tx.account.name,
+            'category_id': tx.category.id if tx.category else None,
+            'category_name': tx.category.name if tx.category else 'Uncategorized',
+            'category_icon': tx.category.icon if tx.category else '💸',
+            'created_at': tx.created_at.strftime('%b %d, %Y · %I:%M %p'),
+        }
+    })
+
+@login_required
+def transaction_update_ajax(request, pk):
+    """AJAX handler for updating transaction fields from the Slide-Over Drawer."""
+    tx = get_object_or_404(Transaction, pk=pk, user=request.user)
+    if request.method in ('POST', 'PUT'):
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+            
+            if 'amount' in data and data['amount'] != '':
+                tx.amount = Decimal(str(data['amount']))
+            if 'note' in data:
+                tx.note = data['note']
+            if 'type' in data and data['type'] in ('INCOME', 'EXPENSE'):
+                tx.type = data['type']
+            if 'date' in data and data['date']:
+                tx.date = data['date']
+            if 'account_id' in data and data['account_id']:
+                tx.account = get_object_or_404(Account, pk=data['account_id'], user=request.user)
+            if 'category_id' in data:
+                if data['category_id']:
+                    tx.category = get_object_or_404(Category, pk=data['category_id'], user=request.user)
+                else:
+                    tx.category = None
+            
+            tx.clean()
+            tx.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Transaction updated successfully!',
+                'transaction': {
+                    'id': tx.id,
+                    'amount': float(tx.amount),
+                    'amount_display': f"{tx.amount:,.2f}",
+                    'type': tx.type,
+                    'note': tx.note or '',
+                    'account_name': tx.account.name,
+                    'category_name': tx.category.name if tx.category else 'Uncategorized',
+                    'category_icon': tx.category.icon if tx.category else '💸',
+                    'date_formatted': tx.date.strftime('%b %d, %Y'),
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+@login_required
+def split_transaction_save(request, pk):
+    """Adjusts the transaction amount down to user's personal share and optionally logs the remaining balance as IOU/Pending Reimbursement."""
+    if request.method == 'POST':
+        try:
+            tx = get_object_or_404(Transaction, pk=pk, user=request.user)
+            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            personal_share = Decimal(str(data.get('personal_share', tx.amount)))
+            iou_amount = Decimal(str(data.get('iou_amount', 0)))
+            participants = data.get('participants', 'Friends')
+            
+            # Find or create IOU / Reimbursement category
+            iou_cat, _ = Category.objects.get_or_create(
+                user=request.user,
+                name='IOU & Reimbursements',
+                defaults={'type': 'EXPENSE', 'icon': '🤝'}
+            )
+            
+            orig_amount = tx.amount
+            orig_note = tx.note or (tx.category.name if tx.category else 'Expense')
+            
+            # Update current transaction to personal share
+            tx.amount = personal_share
+            tx.note = f"{orig_note} (My Share: ₦{personal_share:,.2f} of ₦{orig_amount:,.2f})"
+            tx.save()
+            
+            # If IOU amount > 0, create reimbursement transaction
+            if iou_amount > 0:
+                Transaction.objects.create(
+                    user=request.user,
+                    account=tx.account,
+                    amount=iou_amount,
+                    type='EXPENSE',
+                    category=iou_cat,
+                    date=tx.date,
+                    note=f"Owed by {participants}: ₦{iou_amount:,.2f} (from {orig_note})"
+                )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Expense adjusted to ₦{personal_share:,.2f} and IOU recorded for ₦{iou_amount:,.2f}!',
+                'new_amount': float(personal_share),
+                'new_note': tx.note
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'POST required.'}, status=405)
 
 @login_required
 def quick_add_transaction(request):
