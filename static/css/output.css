@@ -8,17 +8,7 @@
       "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
-    --color-red-50: oklch(97.1% 0.013 17.38);
-    --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-400: oklch(70.4% 0.191 22.216);
-    --color-red-500: oklch(63.7% 0.237 25.331);
-    --color-red-600: oklch(57.7% 0.245 27.325);
-    --color-red-800: oklch(44.4% 0.177 26.899);
-    --color-red-900: oklch(39.6% 0.141 25.723);
     --color-amber-500: oklch(76.9% 0.188 70.08);
-    --color-green-100: oklch(96.2% 0.044 156.743);
-    --color-green-600: oklch(62.7% 0.194 149.214);
-    --color-green-800: oklch(44.8% 0.119 151.328);
     --color-emerald-50: oklch(97.9% 0.021 166.113);
     --color-emerald-100: oklch(95% 0.052 163.051);
     --color-emerald-200: oklch(90.5% 0.093 164.15);
@@ -33,12 +23,9 @@
     --color-cyan-500: oklch(71.5% 0.143 215.221);
     --color-cyan-600: oklch(60.9% 0.126 221.723);
     --color-blue-50: oklch(97% 0.014 254.604);
-    --color-blue-100: oklch(93.2% 0.032 255.585);
     --color-blue-400: oklch(70.7% 0.165 254.624);
     --color-blue-500: oklch(62.3% 0.214 259.815);
-    --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
-    --color-blue-800: oklch(42.4% 0.199 265.638);
     --color-violet-50: oklch(96.9% 0.016 293.756);
     --color-violet-400: oklch(70.2% 0.183 293.541);
     --color-violet-500: oklch(60.6% 0.25 292.717);
@@ -125,7 +112,6 @@
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
-    --color-primary-300: #6ee7b7;
     --color-primary-400: #34d399;
     --color-primary-500: #10b981;
     --color-primary-600: #059669;
@@ -1863,143 +1849,65 @@
     --tw-ring-offset-color: var(--color-slate-900);
   }
 }
-@layer base {
-  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), .dark select, .dark textarea {
-    background-color: rgb(30 41 59 / 0.7);
-    color: rgb(241 245 249);
-    border-color: rgb(51 65 85);
-  }
-  .dark input::placeholder, .dark textarea::placeholder {
-    color: rgb(100 116 139);
-  }
-  .dark input:focus:not([type="checkbox"]):not([type="radio"]), .dark select:focus, .dark textarea:focus {
-    outline: none;
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.35);
-  }
-  .dark .sso-btn {
-    background-color: rgb(30 41 59 / 0.6);
-    border-color: rgb(51 65 85 / 0.6);
-    color: rgb(226 232 240);
-  }
-  .dark .sso-btn:hover {
-    background-color: rgb(30 41 59);
-  }
+html.dark, .dark {
+  color-scheme: dark;
 }
-@layer components {
-  .django-form p {
-    margin-bottom: calc(var(--spacing) * 4);
-  }
-  .django-form input {
-    position: relative;
-    display: block;
-    width: 100%;
-    appearance: none;
-    border-radius: var(--radius-xl);
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-    border-color: var(--color-gray-300);
-    padding-inline: calc(var(--spacing) * 3);
-    padding-block: calc(var(--spacing) * 2);
-    color: var(--color-gray-900);
-    &::placeholder {
-      color: var(--color-gray-500);
-    }
-    transition-property: all;
-    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-    transition-duration: var(--tw-duration, var(--default-transition-duration));
-    &:focus {
-      border-color: var(--color-emerald-500);
-    }
-    &:focus {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-    }
-    &:focus {
-      --tw-ring-color: var(--color-emerald-500);
-    }
-    &:focus {
-      --tw-outline-style: none;
-      outline-style: none;
-    }
-    @media (width >= 40rem) {
-      font-size: var(--text-sm);
-      line-height: var(--tw-leading, var(--text-sm--line-height));
-    }
-    &:where(.dark, .dark *) {
-      border-color: var(--color-slate-600);
-    }
-    &:where(.dark, .dark *) {
-      background-color: var(--color-slate-800);
-    }
-    &:where(.dark, .dark *) {
-      color: var(--color-white);
-    }
-    &:where(.dark, .dark *) {
-      &::placeholder {
-        color: var(--color-slate-500);
-      }
-    }
-  }
-  .django-form label {
-    margin-bottom: calc(var(--spacing) * 1.5);
-    display: block;
-    font-size: var(--text-xs);
-    line-height: var(--tw-leading, var(--text-xs--line-height));
-    --tw-font-weight: var(--font-weight-semibold);
-    font-weight: var(--font-weight-semibold);
-    --tw-tracking: var(--tracking-wide);
-    letter-spacing: var(--tracking-wide);
-    color: var(--color-slate-600);
-    text-transform: uppercase;
-    &:where(.dark, .dark *) {
-      color: var(--color-slate-400);
-    }
-  }
-  .django-form ul.errorlist {
-    margin-top: var(--spacing);
-    margin-bottom: calc(var(--spacing) * 4);
-    list-style-type: disc;
-    padding-left: calc(var(--spacing) * 5);
-    font-size: var(--text-sm);
-    line-height: var(--tw-leading, var(--text-sm--line-height));
-    color: var(--color-rose-500);
-  }
-  .django-form .helptext {
-    margin-top: var(--spacing);
-    display: block;
-    font-size: var(--text-xs);
-    line-height: var(--tw-leading, var(--text-xs--line-height));
-    color: var(--color-slate-500);
-    &:where(.dark, .dark *) {
-      color: var(--color-slate-400);
-    }
-  }
-  #cmd-palette-backdrop {
-    backdrop-filter: blur(6px);
-  }
-  #cmd-palette {
-    box-shadow: 0 32px 64px -12px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
-  }
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]), html.dark select, html.dark textarea, .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]), .dark select, .dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
 }
-.privacy-blur .balance-amount, .privacy-blur .tx-amount {
-  filter: blur(8px);
+html.dark input::placeholder, html.dark textarea::placeholder, .dark input::placeholder, .dark textarea::placeholder {
+  color: #64748b !important;
+}
+html.dark input:focus:not([type="checkbox"]):not([type="radio"]), html.dark select:focus, html.dark textarea:focus, .dark input:focus:not([type="checkbox"]):not([type="radio"]), .dark select:focus, .dark textarea:focus {
+  outline: none !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+}
+html.dark .sso-btn, .dark .sso-btn, html.dark button.sso-btn, .dark button.sso-btn {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+html.dark .sso-btn:hover, .dark .sso-btn:hover {
+  background-color: #334155 !important;
+}
+.btn-emerald {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+.btn-emerald:hover {
+  background-color: #10b981 !important;
+}
+html.dark .btn-secondary, .dark .btn-secondary {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+html.dark .btn-secondary:hover, .dark .btn-secondary:hover {
+  background-color: #334155 !important;
+}
+html.dark .card-surface, .dark .card-surface {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: #1e293b !important;
+}
+.privacy-active .hide-amount {
+  filter: blur(7px) !important;
+  user-select: none !important;
   transition: filter 0.2s ease;
-  cursor: pointer;
 }
-.confetti-canvas {
+#cmd-palette-backdrop {
+  backdrop-filter: blur(8px);
+}
+#confetti-canvas {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
 }
-@layer utilities {
-  .fade-in {
-    opacity: 1;
-  }
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
-  }
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 @property --tw-translate-x {
   syntax: "*";
