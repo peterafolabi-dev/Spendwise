@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Budget Envelope{% else %}New Budget Envelope{% endif %} — SpendWise{% endblock %}
+
+{% block content %}
+<div class="w-full overflow-x-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-6 sm:py-10">
+    <div class="w-full max-w-lg mx-auto my-4 sm:my-8 p-6 sm:p-8 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl animate-fade-in-up text-slate-100">
+
+        <!-- Header & Container Polish -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                {% if object %}Edit Budget Envelope{% else %}New Budget Envelope{% endif %}
+            </h1>
+            <p class="mt-1 text-sm text-slate-400">
+                Set spending caps to track your monthly allowance and prevent overspending.
+            </p>
+        </div>
+
+        <form method="POST" class="space-y-6" id="budget-form">
+            {% csrf_token %}
+
+            <!-- Errors Banner -->
+            {% if form.errors %}
+            <div class="rounded-xl bg-rose-500/10 border border-rose-500/30 p-4 text-xs text-rose-400 animate-shake">
+                {% for field in form %}
+                    {% for error in field.errors %}<p><strong class="capitalize">{{ field.label }}:</strong> {{ error }}</p>{% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 1. Category Selector & Dynamic Insight Card -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="id_category" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Expense Category</label>
+                    <a href="{% url 'category_create' %}" class="text-[11px] font-semibold text-emerald-400 hover:underline">+ New Category</a>
+                </div>
+                <select name="category" id="id_category" required class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+                    <option value="">Select an expense category…</option>
+                    {% for cat in form.category.field.queryset %}
+                    <option value="{{ cat.pk }}" {% if form.category.value == cat.pk or form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.icon }} {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Category Insight Helper Card -->
+                <div id="category-insight-card" class="mt-3 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 flex items-start gap-3 text-xs text-slate-300">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        📊
+                    </div>
+                    <div>
+                        <div class="font-medium text-slate-200" id="insight-title">Past 30-Day Activity</div>
+                        <div class="text-slate-400 mt-0.5" id="insight-desc">Select a category above to view recent spending trends.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Hero Limit Amount (Visual Focal Point) -->
+            <div>
+                <label for="id_limit" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Monthly Spending Cap</label>
+                <div class="relative flex items-center rounded-2xl bg-slate-800/60 border border-slate-700/80 px-4 py-3 focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-all">
+                    <span class="text-2xl sm:text-3xl font-black text-emerald-400 mr-2 select-none">₦</span>
+                    <input type="number" step="0.01" name="limit" id="id_limit" required value="{{ form.limit.value|default:'' }}"
+                           placeholder="0.00"
+                           class="w-full bg-transparent text-2xl sm:text-3xl font-bold tracking-tight text-white placeholder-slate-600 focus:outline-none border-none p-0 tabular-nums">
+                </div>
+                <p class="mt-1.5 text-xs text-slate-400">Defines your ceiling allowance for the envelope.</p>
+            </div>
+
+            <!-- 3. Budget Period Selector -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Budget Cycle</label>
+                <div class="grid grid-cols-3 gap-2 p-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-semibold" id="period-selector">
+                    <button type="button" data-period="weekly" class="period-btn py-2 rounded-lg text-slate-400 hover:text-white transition-all">
+                        Weekly
+                    </button>
+                    <button type="button" data-period="monthly" class="period-btn py-2 rounded-lg bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/20 transition-all">
+                        Monthly (Default)
+                    </button>
+                    <button type="button" data-period="annual" class="period-btn py-2 rounded-lg text-slate-400 hover:text-white transition-all">
+                        Annual
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Smart Controls: Rollover & Alert Threshold -->
+            <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span>🔄</span> Rollover Balance
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Automatically carry leftover funds into next cycle</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="rollover-toggle" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+
+                <div class="pt-3 border-t border-slate-700/40">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span>🔔</span> Alert Threshold
+                        </div>
+                        <span id="threshold-badge" class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">80% Limit</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5 text-xs font-semibold" id="threshold-pills">
+                        <button type="button" data-val="70" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">70%</button>
+                        <button type="button" data-val="80" class="thresh-btn py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all font-bold">80%</button>
+                        <button type="button" data-val="90" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">90%</button>
+                        <button type="button" data-val="100" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">100%</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Actions Footer -->
+            <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-800">
+                <a href="{% url 'budget_list' %}" class="px-5 py-2.5 rounded-xl border border-slate-700/80 text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-all">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    {% if object %}Save Envelope{% else %}Create Envelope{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('id_category');
+    const insightTitle = document.getElementById('insight-title');
+    const insightDesc = document.getElementById('insight-desc');
+    const limitInput = document.getElementById('id_limit');
+
+    // Parse category spend JSON passed from backend
+    let categorySpendMap = {};
+    try {
+        const raw = '{{ category_spend_json|default:"{}"|escapejs }}';
+        categorySpendMap = JSON.parse(raw);
+    } catch(e) {
+        categorySpendMap = {};
+    }
+
+    function updateInsight() {
+        const catId = categorySelect.value;
+        if (!catId) {
+            insightTitle.textContent = 'Past 30-Day Activity';
+            insightDesc.textContent = 'Select a category above to view recent spending trends.';
+            return;
+        }
+
+        const selectedText = categorySelect.options[categorySelect.selectedIndex].text;
+        const pastSpend = categorySpendMap[catId] || 0;
+        const formattedSpend = '₦' + pastSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        insightTitle.innerHTML = `Past 30-day spend in <strong>${selectedText}</strong>: <span class="text-rose-400 font-bold">${formattedSpend}</span>`;
+        
+        const limitVal = parseFloat(limitInput.value) || 0;
+        if (limitVal > 0) {
+            const ratio = (pastSpend / limitVal) * 100;
+            if (ratio > 100) {
+                insightDesc.innerHTML = `⚠️ Recent spending exceeded this proposed limit by <strong class="text-rose-400">${(ratio - 100).toFixed(0)}%</strong>. Consider a higher allowance.`;
+            } else {
+                insightDesc.innerHTML = `✅ Fits comfortably! Recent spending accounts for <strong class="text-emerald-400">${ratio.toFixed(0)}%</strong> of this envelope.`;
+            }
+        } else {
+            insightDesc.textContent = pastSpend > 0 
+                ? 'Tip: Set a limit equal to or higher than your historical 30-day run rate.' 
+                : 'No expenses recorded in the past 30 days for this category.';
+        }
+    }
+
+    categorySelect.addEventListener('change', updateInsight);
+    limitInput.addEventListener('input', updateInsight);
+
+    // Period buttons
+    const periodButtons = document.querySelectorAll('.period-btn');
+    periodButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            periodButtons.forEach(b => {
+                b.className = 'period-btn py-2 rounded-lg text-slate-400 hover:text-white transition-all';
+            });
+            btn.className = 'period-btn py-2 rounded-lg bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/20 transition-all';
+        });
+    });
+
+    // Threshold buttons
+    const threshButtons = document.querySelectorAll('.thresh-btn');
+    const threshBadge = document.getElementById('threshold-badge');
+    threshButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = btn.dataset.val;
+            threshButtons.forEach(b => {
+                b.className = 'thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all';
+            });
+            btn.className = 'thresh-btn py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all font-bold';
+            threshBadge.textContent = `${val}% Limit`;
+        });
+    });
+
+    // Initial check
+    updateInsight();
+});
+</script>
+{% endblock %}
