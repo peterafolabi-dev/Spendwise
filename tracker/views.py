@@ -32,7 +32,7 @@ def get_client_ip(request):
 def landing_page(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
-    return render(request, 'tracker/landing.html')
+    return render(request, 'landing.html')
 
 def signup_view(request):
     ip = get_client_ip(request)
@@ -47,7 +47,7 @@ def signup_view(request):
             return redirect('dashboard')
     else:
         form = UserCreationForm()
-    return render(request, 'tracker/signup.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
     ip = get_client_ip(request)
@@ -62,7 +62,7 @@ def login_view(request):
             return redirect('dashboard')
     else:
         form = AuthenticationForm()
-    return render(request, 'tracker/login.html', {'form': form})
+    return render(request, 'login.html', {'form': form})
 
 def logout_view(request):
     if request.method in ['GET', 'POST']:
