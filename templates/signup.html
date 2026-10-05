@@ -17,7 +17,11 @@
             {# Header (Stray secondary [₦] logo removed) #}
             <div class="mb-5 text-center">
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Create your account</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Start tracking your finances in seconds</p>
+                <div class="mt-1.5 text-sm text-slate-600 dark:text-slate-400 min-h-[2.5rem] sm:min-h-[1.75rem] flex items-center justify-center flex-wrap" aria-live="polite">
+                    <span>Start fresh with&nbsp;</span>
+                    <span id="signup-typewriter" class="font-semibold text-emerald-600 dark:text-emerald-400"></span>
+                    <span class="typewriter-cursor text-emerald-500 dark:text-emerald-400 font-bold">|</span>
+                </div>
             </div>
 
             {# Error Banner #}
@@ -136,6 +140,21 @@ document.addEventListener('DOMContentLoaded', () => {
         eyeIcon.innerHTML = show ? eyeClosed : eyeOpen;
         toggleBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
+
+    // Contextual typing animation
+    const signupEl = document.getElementById('signup-typewriter');
+    if (signupEl && typeof initTypewriter === 'function') {
+        initTypewriter(signupEl, [
+            "zero BVN or bank logins required.",
+            "₦0 spreadsheets to manage.",
+            "your exact daily spending limit.",
+            "total peace of mind before month-end."
+        ], {
+            typingSpeed: 45,
+            pauseTime: 2200,
+            backspacingSpeed: 25
+        });
+    }
 });
 </script>
 {% endblock %}

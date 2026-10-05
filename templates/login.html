@@ -16,10 +16,12 @@
 
             {# Header (Stray secondary [₦] logo removed) #}
             <div class="mb-6 text-center">
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Welcome back</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Take control of your <span id="typing-text" class="font-semibold text-emerald-600 dark:text-emerald-400"></span><span class="animate-pulse text-emerald-500">|</span>
-                </p>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Sign In</h1>
+                <div class="mt-1.5 text-sm text-slate-600 dark:text-slate-400 min-h-[2.5rem] sm:min-h-[1.75rem] flex items-center justify-center flex-wrap" aria-live="polite">
+                    <span>Welcome back. Ready to&nbsp;</span>
+                    <span id="login-typewriter" class="font-semibold text-emerald-600 dark:text-emerald-400"></span>
+                    <span class="typewriter-cursor text-emerald-500 dark:text-emerald-400 font-bold">|</span>
+                </div>
             </div>
 
             {# Error Banner #}
@@ -157,23 +159,20 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
 
-    // Typing animation
-    const words = ['spending', 'savings', 'cash flow', 'future'];
-    const el = document.getElementById('typing-text');
-    let wi = 0, ci = 0, deleting = false;
-    function tick() {
-        if (!el) return;
-        const word = words[wi];
-        if (!deleting) {
-            el.textContent = word.slice(0, ++ci);
-            if (ci === word.length) { deleting = true; setTimeout(tick, 1800); return; }
-        } else {
-            el.textContent = word.slice(0, --ci);
-            if (ci === 0) { deleting = false; wi = (wi + 1) % words.length; setTimeout(tick, 400); return; }
-        }
-        setTimeout(tick, deleting ? 40 : 75 + Math.random() * 35);
+    // Contextual typing animation
+    const loginEl = document.getElementById('login-typewriter');
+    if (loginEl && typeof initTypewriter === 'function') {
+        initTypewriter(loginEl, [
+            "check today's safe spending cap?",
+            "see your rollover balance from yesterday?",
+            "log your morning expenses in two taps?",
+            "keep your 30-day runway on track?"
+        ], {
+            typingSpeed: 45,
+            pauseTime: 2200,
+            backspacingSpeed: 25
+        });
     }
-    setTimeout(tick, 600);
 
     // Check for IP address vs domain name for Passkey WebAuthn compliance
     if (window.location.hostname === '127.0.0.1') {
