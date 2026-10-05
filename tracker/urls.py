@@ -1,12 +1,15 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
     path('', views.landing_page, name='landing'),
     path('signup/', views.signup_view, name='signup'),
+    path('register/', views.signup_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('chat/', RedirectView.as_view(url='/dashboard/#copilot', permanent=False), name='copilot_chat'),
     
     path('accounts/', views.AccountListView.as_view(), name='account_list'),
     path('accounts/login/', views.login_view, name='accounts_login'),
