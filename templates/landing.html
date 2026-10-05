@@ -173,9 +173,10 @@
                 <video id="demoVideo"
                        class="w-full h-full object-cover"
                        preload="metadata"
-                       playsinline
-                       poster="/assets/demo-poster.png">
-                    <source src="/videos/spendwise-demo.mp4" type="video/mp4">
+                       playsinline>
+                    <source src="{% static 'videos/spendwise-demo.mp4' %}" type="video/mp4">
+                    <source src="{% static 'spendwise-demo.mp4' %}" type="video/mp4">
+                    <source src="/static/videos/spendwise-demo.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
 
@@ -747,12 +748,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── 5. Video Demo Walkthrough Player & Fallback ──
     const video = document.getElementById('demoVideo');
     const overlay = document.getElementById('demoVideoOverlay');
+    const playBtn = document.getElementById('demoPlayBtn');
     const notice = document.getElementById('video-notice');
 
     if (video && overlay) {
-        overlay.addEventListener('click', (e) => {
-            // Ignore click if clicking direct link inside notice
-            if (e.target.tagName === 'A') return;
+        function triggerPlay(e) {
+            if (e && e.target && e.target.tagName === 'A') return;
+            if (e) e.stopPropagation();
 
             overlay.classList.add('opacity-0', 'pointer-events-none');
             video.controls = true;
@@ -772,7 +774,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
-        });
+        }
+
+        overlay.addEventListener('click', triggerPlay);
+        if (playBtn) playBtn.addEventListener('click', triggerPlay);
 
         // If video encounters an error loading the source
         video.addEventListener('error', () => {
