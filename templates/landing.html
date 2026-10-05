@@ -54,126 +54,227 @@
                 Real-Time Nigerian Naira Ledger
             </span>
         </div>
+    </div>
 
-        <!-- ══════════════════════════════════════════════════════════════════
-             FLOATING DASHBOARD PRODUCT PREVIEW
-             ══════════════════════════════════════════════════════════════════ -->
-        <div class="relative rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 shadow-xl shadow-slate-900/5 dark:shadow-black/40 backdrop-blur-xl p-5 sm:p-8 mt-12 max-w-5xl mx-auto text-left transition-all duration-300">
-            
-            <!-- Window Control Header -->
-            <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                    <span class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                    <span class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                    <span class="ml-2 text-xs font-mono text-slate-400">spendwise.app/dashboard</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live Balance Preview</span>
-                </div>
+    <!-- ══════════════════════════════════════════════════════════════════════
+         HOW IT WORKS INTRO & VIDEO WALKTHROUGH (#how-it-works)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <section id="how-it-works" class="relative max-w-6xl mx-auto mt-24 px-4 sm:px-6 lg:px-8 z-10 scroll-mt-20 text-center animate-fade-in-up">
+        
+        <!-- A. Section Header -->
+        <div class="max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                THE DAILY RITUAL
             </div>
-
-            <!-- Dashboard Mini Snippet Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                
-                <!-- 1. The Daily Number Widget -->
-                <div class="bg-slate-50/80 dark:bg-slate-850/60 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-800 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                            <span class="font-semibold uppercase tracking-wider text-[11px]">Today's Safe Limit</span>
-                            <span class="text-emerald-500 font-medium">14 Days Left</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Your Daily Number</h4>
-                        <p class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums">
-                            ₦18,500<span class="text-xs font-normal text-slate-500 dark:text-slate-400">/day</span>
-                        </p>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800">
-                        <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
-                            <span>Remaining Pool</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">₦259,000</span>
-                        </div>
-                        <div class="w-full bg-slate-200 dark:bg-slate-700/80 rounded-full h-2 overflow-hidden">
-                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 68%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Mini 30-Day Runway Trajectory Chart -->
-                <div id="runway" class="bg-slate-50/80 dark:bg-slate-850/60 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-800 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                            <span class="font-semibold uppercase tracking-wider text-[11px]">Cash Flow</span>
-                            <span class="text-cyan-500 font-medium">Healthy</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Month-End Forecast</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Factors in upcoming bills & rent.</p>
-                    </div>
-
-                    <!-- Mini SVG Area Chart -->
-                    <div class="my-3">
-                        <svg class="w-full h-16" viewBox="0 0 200 60" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="miniRunway" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.3"/>
-                                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M 0,45 Q 60,35 120,25 T 200,10 L 200,60 L 0,60 Z" fill="url(#miniRunway)"/>
-                            <path d="M 0,45 Q 60,35 120,25 T 200,10" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
-                        <span>Day 1: ₦340k</span>
-                        <span class="text-emerald-500 font-semibold">Day 30: +₦510k</span>
-                    </div>
-                </div>
-
-                <!-- 3. Quick Activity Feed -->
-                <div class="bg-slate-50/80 dark:bg-slate-850/60 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-800 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                            <span class="font-semibold uppercase tracking-wider text-[11px]">Recent</span>
-                            <span class="text-slate-400">Live</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Clean Activity</h4>
-                        
-                        <div class="space-y-2.5 text-xs">
-                            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-800">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-md bg-amber-500/10 text-amber-500 flex items-center justify-center text-xs font-semibold">🍽️</span>
-                                    <span class="font-medium text-slate-700 dark:text-slate-200">Campus Lunch</span>
-                                </div>
-                                <span class="font-semibold text-rose-500">-₦3,200</span>
-                            </div>
-                            <div class="flex items-center justify-between py-1 border-b border-slate-200/50 dark:border-slate-800">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center text-xs font-semibold">🎧</span>
-                                    <span class="font-medium text-slate-700 dark:text-slate-200">Spotify Sub</span>
-                                </div>
-                                <span class="font-semibold text-rose-500">-₦1,200</span>
-                            </div>
-                            <div class="flex items-center justify-between py-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xs font-semibold">💼</span>
-                                    <span class="font-medium text-slate-700 dark:text-slate-200">Freelance Gig</span>
-                                </div>
-                                <span class="font-semibold text-emerald-500">+₦85,000</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-2 text-center text-[11px] text-slate-400 border-t border-slate-200/60 dark:border-slate-800">
-                        Categorized automatically
-                    </div>
-                </div>
-
-            </div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                How SpendWise fits into your day in under 10 seconds
+            </h2>
+            <p class="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                No complex accounting. Just three simple steps to stop going broke before month-end.
+            </p>
         </div>
 
-    </div>
+        <!-- B. 3-Step Benefit Cards (Grid: 1 col on mobile, 3 cols on desktop) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12 text-left">
+            
+            <!-- Step 1 Card -->
+            <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            Morning · 2 Seconds
+                        </span>
+                        <span class="text-xs font-mono font-bold text-slate-400 group-hover:text-emerald-500 transition-colors">01</span>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        Check your daily number
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Every morning, wake up to one clear spending target tailored to your current cash balance.
+                    </p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Target safe limit</span>
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">₦18,500 / day</span>
+                </div>
+            </div>
+
+            <!-- Step 2 Card -->
+            <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Anytime · 3 Seconds
+                        </span>
+                        <span class="text-xs font-mono font-bold text-slate-400 group-hover:text-emerald-500 transition-colors">02</span>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        Log purchases in two taps
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Tap '+' and enter the amount. No receipts, no bank sync errors, and zero BVN sharing.
+                    </p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Two-tap quick entry</span>
+                    <span class="font-bold text-rose-500 tabular-nums">-₦3,200 Campus Lunch</span>
+                </div>
+            </div>
+
+            <!-- Step 3 Card -->
+            <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200/60 dark:border-cyan-500/20 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                            Night · Automatic
+                        </span>
+                        <span class="text-xs font-mono font-bold text-slate-400 group-hover:text-emerald-500 transition-colors">03</span>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        Let rollover do the rest
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Spend less today? The surplus rolls into tomorrow. Spend more? Tomorrow adjusts downward so you never run out early.
+                    </p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Automatic recalibration</span>
+                    <span class="font-bold text-cyan-500 tabular-nums">+₦1,500 to Tomorrow</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- C. Embedded Video Demo Player (macOS window container) -->
+        <div class="relative max-w-4xl mx-auto mt-14 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-slate-900 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 overflow-hidden text-left transition-all duration-300">
+            
+            <!-- Top Bar with macOS Window Dots & Title -->
+            <div class="flex items-center justify-between px-5 py-3.5 bg-slate-100/90 dark:bg-slate-850 border-b border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-rose-500/90 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-500/90 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500/90 inline-block"></span>
+                    <span class="ml-2 font-mono text-xs text-slate-500 dark:text-slate-400 font-medium">spendwise-demo-45s.mp4</span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>45s Walkthrough</span>
+                </div>
+            </div>
+
+            <!-- Video & Mockup Viewport Container -->
+            <div class="relative w-full aspect-video bg-slate-950 flex items-center justify-center overflow-hidden">
+                
+                <!-- Standard HTML5 Video Element -->
+                <video id="spendwise-demo-video"
+                       class="w-full h-full object-cover hidden"
+                       controls
+                       preload="metadata"
+                       poster="/assets/demo-poster.png">
+                    <source src="/videos/spendwise-demo.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+
+                <!-- Fallback Overlay: Dark-Mode Dashboard Mockup + Pulsing Play Trigger -->
+                <div id="video-fallback-card" class="absolute inset-0 w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-950 select-none">
+                    
+                    <!-- Background Mockup: Realistic Dashboard Elements with id="runway" -->
+                    <div id="runway" class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-40 sm:opacity-50 pointer-events-none filter blur-[0.5px]">
+                        
+                        <!-- Mockup Card 1: Daily Number -->
+                        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                                <span class="uppercase tracking-wider font-semibold">Today's Cap</span>
+                                <span class="text-emerald-400">14 Days Left</span>
+                            </div>
+                            <div class="text-2xl font-black text-emerald-400">₦18,500<span class="text-xs font-normal text-slate-400">/day</span></div>
+                            <div class="mt-3 w-full bg-slate-700 rounded-full h-1.5">
+                                <div class="bg-emerald-500 h-full rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Mockup Card 2: 30-Day Runway Trajectory -->
+                        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                                <span class="uppercase tracking-wider font-semibold">30-Day Cashflow</span>
+                                <span class="text-cyan-400">Stable</span>
+                            </div>
+                            <div class="h-10 w-full my-1">
+                                <svg class="w-full h-full" viewBox="0 0 160 40" preserveAspectRatio="none">
+                                    <path d="M 0,30 Q 50,22 90,15 T 160,8 L 160,40 L 0,40 Z" fill="#06b6d4" fill-opacity="0.2"/>
+                                    <path d="M 0,30 Q 50,22 90,15 T 160,8" fill="none" stroke="#06b6d4" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400">
+                                <span>Day 1: ₦340k</span>
+                                <span class="text-emerald-400 font-semibold">Day 30: ₦510k</span>
+                            </div>
+                        </div>
+
+                        <!-- Mockup Card 3: Recent Activity -->
+                        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 hidden md:block">
+                            <div class="flex justify-between text-[11px] text-slate-400 mb-2">
+                                <span class="uppercase tracking-wider font-semibold">Recent Spend</span>
+                                <span class="text-slate-400">Live</span>
+                            </div>
+                            <div class="space-y-1.5 text-[11px]">
+                                <div class="flex justify-between text-slate-300">
+                                    <span>🍽️ Campus Lunch</span>
+                                    <span class="text-rose-400 font-semibold">-₦3,200</span>
+                                </div>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>💼 Freelance Gig</span>
+                                    <span class="text-emerald-400 font-semibold">+₦85,000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Centered Glass Action Area: Play Icon Button with Pulsing Ring -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/60 backdrop-blur-[2px]">
+                        
+                        <!-- Pulsing Play Button -->
+                        <div class="relative flex items-center justify-center group cursor-pointer" onclick="handlePlayDemo()">
+                            <span class="absolute w-20 h-20 rounded-full bg-emerald-500/20 animate-ping"></span>
+                            <span class="absolute w-16 h-16 rounded-full bg-emerald-500/30 animate-pulse"></span>
+                            <button type="button" aria-label="Play video walkthrough"
+                                    class="relative z-10 w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white flex items-center justify-center shadow-xl shadow-emerald-600/40 group-hover:scale-105 transition-all duration-300 cursor-pointer">
+                                <svg class="w-7 h-7 ml-1 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </div>
+
+                        <!-- Play Prompt Text -->
+                        <div class="text-center mt-5">
+                            <button type="button" onclick="handlePlayDemo()"
+                                    class="text-sm sm:text-base font-bold text-white hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                                <span>▶ See SpendWise in action (45s)</span>
+                            </button>
+                            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                                Quick product walkthrough · No audio required · Pure workflow
+                            </p>
+                        </div>
+
+                        <!-- Dynamic Notice / Toast when video file is not yet uploaded -->
+                        <div id="video-notice" class="hidden mt-3 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-700 text-xs text-slate-300 shadow-lg animate-fade-in-up flex items-center gap-2">
+                            <span class="text-emerald-400">⚡</span>
+                            <span>Demo video rendering. Try the live interactive simulator below!</span>
+                            <a href="#features" class="text-emerald-400 font-semibold underline underline-offset-2 hover:text-emerald-300">Try it live →</a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
 
     <!-- ══════════════════════════════════════════════════════════════════════
          INTERACTIVE FEATURE SHOWCASE (#features)
@@ -641,6 +742,35 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.appendChild(aiDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }, 300);
+    };
+
+    // ── 5. Video Demo Walkthrough Player & Fallback ──
+    const demoVideo = document.getElementById('spendwise-demo-video');
+    const fallbackCard = document.getElementById('video-fallback-card');
+    const videoNotice = document.getElementById('video-notice');
+
+    window.handlePlayDemo = function() {
+        if (!demoVideo) return;
+
+        demoVideo.classList.remove('hidden');
+        const playPromise = demoVideo.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                if (fallbackCard) fallbackCard.classList.add('hidden');
+            }).catch(() => {
+                // If video fails or does not exist yet
+                demoVideo.classList.add('hidden');
+                if (fallbackCard) fallbackCard.classList.remove('hidden');
+                if (videoNotice) {
+                    videoNotice.classList.remove('hidden');
+                    setTimeout(() => {
+                        const featEl = document.getElementById('features');
+                        if (featEl) featEl.scrollIntoView({ behavior: 'smooth' });
+                    }, 1400);
+                }
+            });
+        }
     };
 
 });
