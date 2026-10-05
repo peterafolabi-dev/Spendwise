@@ -630,6 +630,12 @@
   .max-h-\[220px\] {
     max-height: 220px;
   }
+  .min-h-\[2\.5rem\] {
+    min-height: 2.5rem;
+  }
+  .min-h-\[2rem\] {
+    min-height: 2rem;
+  }
   .min-h-\[220px\] {
     min-height: 220px;
   }
@@ -1444,6 +1450,12 @@
     background-color: color-mix(in srgb, oklch(98.4% 0.003 247.858) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-slate-50) 50%, transparent);
+    }
+  }
+  .bg-slate-50\/90 {
+    background-color: color-mix(in srgb, oklch(98.4% 0.003 247.858) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-slate-50) 90%, transparent);
     }
   }
   .bg-slate-100 {
@@ -2681,6 +2693,9 @@
     }
     .sm\:flex {
       display: flex;
+    }
+    .sm\:min-h-\[1\.75rem\] {
+      min-height: 1.75rem;
     }
     .sm\:w-1\/2 {
       width: calc(1 / 2 * 100%);
