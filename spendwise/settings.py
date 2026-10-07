@@ -10,6 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-s!_qj9swyc*bxo6vo(wv3k77*!clj+veudgtb921ezzlyqct#u')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+WEBAUTHN_RP_ID = os.environ.get('WEBAUTHN_RP_ID', '')
+WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN', '')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -108,5 +110,4 @@ if _email_backend == 'django.core.mail.backends.smtp.EmailBackend':
         'PASSWORD': os.environ.get('EMAIL_HOST_PASSWORD'),
     })
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
-
 

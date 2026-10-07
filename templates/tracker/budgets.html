@@ -45,7 +45,7 @@
                 <div class="{% if budget.is_over_limit %}bg-rose-500{% elif budget.is_near_limit %}bg-amber-500{% else %}bg-emerald-500{% endif %} h-full rounded-full transition-all duration-700" style="width: {{ budget.usage_percent }}%"></div>
             </div>
             {% if budget.is_over_limit %}
-            <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold" role="status">Budget exceeded by ₦{{ budget.spent|add:"-"|add:budget.limit|floatformat:2 }} this month.</p>
+            <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold" role="status">Budget exceeded by ₦{{ budget.overage|floatformat:2 }} this month.</p>
             {% elif budget.is_near_limit %}
             <p class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold" role="status">You’ve used at least 80% of this monthly budget.</p>
             {% else %}

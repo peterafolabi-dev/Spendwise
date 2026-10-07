@@ -22,6 +22,7 @@ from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum, F
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, PasskeyCredential
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
@@ -39,6 +40,7 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
+from webauthn.helpers.exceptions import WebAuthnException
 
 logger = logging.getLogger(__name__)
 
@@ -356,7 +358,7 @@ class TransactionListView(UserOwnedMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        search = self.request.GET.get('q', '').strip()
+        search = self.request.GET.get('q', '').strip()[:100]
         flow_type = self.request.GET.get('type', '')
         account_id = self.request.GET.get('account')
         date_from = self.request.GET.get('date_from', '')
@@ -375,12 +377,20 @@ class TransactionListView(UserOwnedMixin, ListView):
             qs = qs.filter(search_filter)
         if flow_type in {'INCOME', 'EXPENSE'}:
             qs = qs.filter(type=flow_type)
-        if account_id:
+        if account_id and account_id.isdecimal():
             qs = qs.filter(account_id=account_id)
         if date_from:
-            qs = qs.filter(date__gte=date_from)
+            parsed_date = parse_date(date_from)
+            if not parsed_date:
+                return qs.none()
+            qs = qs.filter(date__gte=parsed_date)
         if date_to:
-            qs = qs.filter(date__lte=date_to)
+            parsed_date = parse_date(date_to)
+            if not parsed_date:
+                return qs.none()
+            qs = qs.filter(date__lte=parsed_date)
+        if date_from and date_to and date_from > date_to:
+            return qs.none()
         return qs
 
 class TransactionCreateView(UserOwnedMixin, UserFormMixin, CreateView):
@@ -597,7 +607,8 @@ class BudgetListView(UserOwnedMixin, ListView):
             spent = spent_by_category.get(budget.category_id, Decimal('0.00'))
             budget.spent = spent
             budget.usage_percent = min(int(spent * 100 / budget.limit), 100)
-            budget.is_over_limit = spent >= budget.limit
+            budget.is_over_limit = spent > budget.limit
+            budget.overage = max(spent - budget.limit, Decimal('0.00'))
             budget.is_near_limit = not budget.is_over_limit and spent >= budget.limit * Decimal('0.8')
 
         return budgets
@@ -813,7 +824,7 @@ def import_csv(request):
     return render(request, 'tracker/import_csv.html')
 
 def _webauthn_rp_and_origin(request):
-    origin = getattr(settings, 'WEBAUTHN_ORIGIN', '') or request.build_absolute_uri('/').rstrip('/')
+    origin = (getattr(settings, 'WEBAUTHN_ORIGIN', '') or request.build_absolute_uri('/')).rstrip('/')
     rp_id = getattr(settings, 'WEBAUTHN_RP_ID', '') or urlsplit(origin).hostname
     if not rp_id:
         raise ValueError('Could not determine the WebAuthn relying-party domain.')
@@ -878,6 +889,8 @@ def passkey_verify(request):
 
     try:
         data = json.loads(request.body)
+        if not isinstance(data, dict):
+            return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
         credential_id = data.get('id')
         if not isinstance(credential_id, str) or not credential_id:
             return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
@@ -912,7 +925,7 @@ def passkey_verify(request):
     except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         logger.warning('Invalid WebAuthn authentication response: %s', exc)
         return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
-    except Exception as exc:
+    except WebAuthnException as exc:
         logger.warning('WebAuthn authentication failed: %s', exc)
         return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
 
@@ -985,6 +998,8 @@ def passkey_register_verify(request):
 
     try:
         data = json.loads(request.body)
+        if not isinstance(data, dict):
+            return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
         verified = verify_registration_response(
             credential=data,
             expected_challenge=challenge['challenge_bytes'],
@@ -1043,6 +1058,6 @@ def passkey_register_verify(request):
     except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         logger.warning('Invalid WebAuthn registration response: %s', exc)
         return JsonResponse({'status': 'error', 'message': 'Passkey registration failed. Please try again.'}, status=400)
-    except Exception as exc:
+    except WebAuthnException as exc:
         logger.warning('WebAuthn registration failed: %s', exc)
         return JsonResponse({'status': 'error', 'message': 'Passkey registration failed. Please try again.'}, status=400)
