@@ -19,8 +19,6 @@
     {% if object_list %}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 stagger-container">
         {% for budget in object_list %}
-        {% with spent=budget.category.transactions.all %}
-        {# Ideally the view passes computed spent; here we display the budget card #}
         <div class="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger-item">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
@@ -40,14 +38,20 @@
                 </div>
             </div>
             <div class="flex justify-between text-sm mb-2">
-                <span class="font-medium text-slate-700 dark:text-slate-300">₦{{ budget.limit|floatformat:0 }} limit</span>
+                <span class="font-medium text-slate-700 dark:text-slate-300">₦{{ budget.spent|floatformat:2 }} spent</span>
+                <span class="text-slate-400">of ₦{{ budget.limit|floatformat:2 }}</span>
             </div>
             <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div class="bg-emerald-500 h-full rounded-full transition-all duration-700" style="width: 60%"></div>
+                <div class="{% if budget.is_over_limit %}bg-rose-500{% elif budget.is_near_limit %}bg-amber-500{% else %}bg-emerald-500{% endif %} h-full rounded-full transition-all duration-700" style="width: {{ budget.usage_percent }}%"></div>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Track your {{ budget.category.name }} spending this month</p>
+            {% if budget.is_over_limit %}
+            <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold" role="status">Budget exceeded by ₦{{ budget.spent|add:"-"|add:budget.limit|floatformat:2 }} this month.</p>
+            {% elif budget.is_near_limit %}
+            <p class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold" role="status">You’ve used at least 80% of this monthly budget.</p>
+            {% else %}
+            <p class="text-xs text-slate-400 mt-2">{{ budget.usage_percent }}% of your monthly {{ budget.category.name }} budget used.</p>
+            {% endif %}
         </div>
-        {% endwith %}
         {% endfor %}
     </div>
     {% else %}
