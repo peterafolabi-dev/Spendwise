@@ -124,7 +124,7 @@ class TrackerTests(TestCase):
         )
 
         response = self.client1.get(reverse('budget_list'))
-        budget_in_context = response.context['object_list'].get(pk=budget.pk)
+        budget_in_context = next(item for item in response.context['object_list'] if item.pk == budget.pk)
 
         self.assertEqual(budget_in_context.spent, Decimal('60.00'))
         self.assertEqual(budget_in_context.overage, Decimal('10.00'))

@@ -371,13 +371,17 @@ class TransactionListView(UserOwnedMixin, ListView):
                 | Q(account__name__icontains=search)
             )
             try:
-                search_filter |= Q(amount=Decimal(search.replace(',', '')))
+                search_amount = Decimal(search.replace(',', ''))
+                if search_amount.is_finite():
+                    search_filter |= Q(amount=search_amount)
             except (InvalidOperation, ValueError):
                 pass
             qs = qs.filter(search_filter)
         if flow_type in {'INCOME', 'EXPENSE'}:
             qs = qs.filter(type=flow_type)
-        if account_id and account_id.isdecimal():
+        if account_id and not account_id.isdecimal():
+            return qs.none()
+        if account_id:
             qs = qs.filter(account_id=account_id)
         if date_from:
             parsed_date = parse_date(date_from)
@@ -588,7 +592,7 @@ class BudgetListView(UserOwnedMixin, ListView):
     template_name = 'tracker/budgets.html'
 
     def get_queryset(self):
-        budgets = super().get_queryset().select_related('category')
+        budgets = list(super().get_queryset().select_related('category'))
         today = timezone.localdate()
         month_start = today.replace(day=1)
         spent_by_category = dict(
@@ -596,7 +600,7 @@ class BudgetListView(UserOwnedMixin, ListView):
                 user=self.request.user,
                 type='EXPENSE',
                 date__gte=month_start,
-                category_id__in=budgets.values('category_id'),
+                category_id__in=[budget.category_id for budget in budgets],
             )
             .values('category_id')
             .annotate(total=Sum('amount'))
@@ -825,7 +829,7 @@ def import_csv(request):
 
 def _webauthn_rp_and_origin(request):
     origin = (getattr(settings, 'WEBAUTHN_ORIGIN', '') or request.build_absolute_uri('/')).rstrip('/')
-    rp_id = getattr(settings, 'WEBAUTHN_RP_ID', '') or urlsplit(origin).hostname
+    rp_id = (getattr(settings, 'WEBAUTHN_RP_ID', '') or urlsplit(origin).hostname or '').lower().strip('.')
     if not rp_id:
         raise ValueError('Could not determine the WebAuthn relying-party domain.')
     if rp_id == '127.0.0.1':
@@ -846,7 +850,7 @@ def _new_webauthn_challenge(request, name, rp_id, origin):
 
 def _take_webauthn_challenge(request, name):
     state = request.session.pop(name, None)
-    if not state or state.get('expires_at', 0) < time.time():
+    if not isinstance(state, dict) or state.get('expires_at', 0) < time.time():
         return None
     try:
         state['challenge_bytes'] = base64url_to_bytes(state['challenge'])
@@ -863,6 +867,9 @@ def passkey_challenge(request):
     """Create a single-use WebAuthn assertion challenge."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+    ip = get_client_ip(request) or 'unknown'
+    if not rate_limit(f'passkey_login_{ip}', 10, 300):
+        return JsonResponse({'status': 'error', 'message': 'Too many passkey attempts. Please wait and try again.'}, status=429)
 
     rp_id, origin = _webauthn_rp_and_origin(request)
     challenge = _new_webauthn_challenge(request, 'webauthn_challenge', rp_id, origin)
@@ -942,6 +949,9 @@ def passkey_register_challenge(request):
         request.session['webauthn_reg_user_id'] = request.user.pk
         credentials = request.user.passkeys.all()
     else:
+        ip = get_client_ip(request) or 'unknown'
+        if not rate_limit(f'passkey_signup_{ip}', 5, 3600):
+            return JsonResponse({'status': 'error', 'message': 'Too many signup attempts. Please wait and try again.'}, status=429)
         try:
             request_data = json.loads(request.body or '{}')
         except json.JSONDecodeError:
