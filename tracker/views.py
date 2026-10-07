@@ -953,7 +953,7 @@ def passkey_register_challenge(request):
         user_name = request.user.username
         user_id = str(request.user.pk).encode('utf-8')
         request.session['webauthn_reg_user_id'] = request.user.pk
-        credentials = request.user.passkeys.all()
+        credentials = request.user.passkeys.exclude(public_key='')
     else:
         ip = get_client_ip(request) or 'unknown'
         if not rate_limit(f'passkey_signup_{ip}', 5, 3600):
@@ -1051,16 +1051,29 @@ def passkey_register_verify(request):
                     status=409,
                 )
 
+        existing_credential = PasskeyCredential.objects.filter(credential_id=credential_id).first()
+        if existing_credential and (not user_id or existing_credential.user_id != user_id):
+            return JsonResponse(
+                {'status': 'error', 'message': 'This passkey is already linked to another account.'},
+                status=409,
+            )
+
         with transaction.atomic():
             if not user_id:
                 user = User.objects.create_user(username=username, password=None)
-            PasskeyCredential.objects.create(
-                user=user,
-                credential_id=credential_id,
-                public_key=_base64url_encode(verified.credential_public_key),
-                sign_count=verified.sign_count,
-                device_name=device_name,
-            )
+            if existing_credential:
+                existing_credential.public_key = _base64url_encode(verified.credential_public_key)
+                existing_credential.sign_count = verified.sign_count
+                existing_credential.device_name = device_name
+                existing_credential.save(update_fields=['public_key', 'sign_count', 'device_name'])
+            else:
+                PasskeyCredential.objects.create(
+                    user=user,
+                    credential_id=credential_id,
+                    public_key=_base64url_encode(verified.credential_public_key),
+                    sign_count=verified.sign_count,
+                    device_name=device_name,
+                )
 
         if not user_id:
             login(request, user)

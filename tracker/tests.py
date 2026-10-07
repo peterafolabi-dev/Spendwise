@@ -42,12 +42,9 @@ class TrackerTests(TestCase):
         self.assertEqual(self.acc1.current_balance(), Decimal('105.25'))
         
     def test_budget_limit_detection(self):
-        # We don't have a specific limit detection view method in instructions but let's test if we can save it.
         budget = Budget.objects.create(user=self.user1, category=self.cat1, limit=Decimal('50.00'))
         self.assertEqual(budget.limit, Decimal('50.00'))
-        # Over budget test logic depends on how it's implemented. For models, just math:
         Transaction.objects.create(user=self.user1, account=self.acc1, category=self.cat1, amount=Decimal('60.00'), type='EXPENSE', date=timezone.now().date())
-        # The sum exceeds limit. Usually handled in templates or dashboard. 
         total_spent = Transaction.objects.filter(category=self.cat1).aggregate(t=Sum('amount'))['t']
         self.assertTrue(total_spent > budget.limit)
 
@@ -187,12 +184,19 @@ class TrackerTests(TestCase):
     def test_existing_user_can_add_a_verified_passkey(self):
         client = Client()
         client.force_login(self.user1)
+        credential_id = base64.urlsafe_b64encode(b'existing-user-credential').decode().rstrip('=')
+        legacy_credential = PasskeyCredential.objects.create(
+            user=self.user1,
+            credential_id=credential_id,
+            public_key='',
+        )
         challenge_response = client.post(
             reverse('passkey_register_challenge'),
             data='{}',
             content_type='application/json',
         )
         self.assertEqual(challenge_response.status_code, 200)
+        self.assertFalse(challenge_response.json().get('excludeCredentials'))
 
         verified = SimpleNamespace(
             credential_id=b'existing-user-credential',
@@ -203,12 +207,17 @@ class TrackerTests(TestCase):
             response = client.post(
                 reverse('passkey_register_verify'),
                 data=json.dumps({
-                    'id': base64.urlsafe_b64encode(b'existing-user-credential').decode().rstrip('='),
-                    'rawId': base64.urlsafe_b64encode(b'existing-user-credential').decode().rstrip('='),
+                    'id': credential_id,
+                    'rawId': credential_id,
                     'response': {'attestationObject': 'test', 'clientDataJSON': 'test'},
                 }),
                 content_type='application/json',
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(PasskeyCredential.objects.filter(user=self.user1).exists())
+        self.assertEqual(PasskeyCredential.objects.filter(user=self.user1).count(), 1)
+        legacy_credential.refresh_from_db()
+        self.assertEqual(
+            legacy_credential.public_key,
+            base64.urlsafe_b64encode(b'verified-key').decode().rstrip('='),
+        )
