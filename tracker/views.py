@@ -595,11 +595,13 @@ class BudgetListView(UserOwnedMixin, ListView):
         budgets = list(super().get_queryset().select_related('category'))
         today = timezone.localdate()
         month_start = today.replace(day=1)
+        next_month = (month_start + timezone.timedelta(days=32)).replace(day=1)
         spent_by_category = dict(
             Transaction.objects.filter(
                 user=self.request.user,
                 type='EXPENSE',
                 date__gte=month_start,
+                date__lt=next_month,
                 category_id__in=[budget.category_id for budget in budgets],
             )
             .values('category_id')
@@ -899,7 +901,11 @@ def passkey_verify(request):
         if not isinstance(data, dict):
             return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
         credential_id = data.get('id')
-        if not isinstance(credential_id, str) or not credential_id:
+        if (
+            not isinstance(credential_id, str)
+            or not credential_id
+            or data.get('rawId') != credential_id
+        ):
             return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
         credential = (
             PasskeyCredential.objects.select_related('user')
@@ -1019,6 +1025,8 @@ def passkey_register_verify(request):
             expected_origin=challenge['origin'],
             require_user_verification=True,
         )
+        if base64url_to_bytes(data.get('rawId', '')) != verified.credential_id:
+            return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
         credential_id = _base64url_encode(verified.credential_id)
         device_name = str(data.get('deviceName') or 'Biometric Passkey').strip()[:100]
         user_id = request.session.pop('webauthn_reg_user_id', None)

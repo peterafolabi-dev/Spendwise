@@ -564,7 +564,9 @@ What would you like to explore or optimize next?`;
         });
         const result = await response.json();
         if (!response.ok) {
-            throw new Error(result.message || 'The passkey request could not be completed.');
+            const error = new Error(result.message || 'The passkey request could not be completed.');
+            error.isServerError = true;
+            throw error;
         }
         return result;
     }
@@ -608,7 +610,9 @@ What would you like to explore or optimize next?`;
 
         } catch (err) {
             console.warn('WebAuthn Passkey Error:', err);
-            if (err.name === 'NotAllowedError') {
+            if (err.isServerError) {
+                showToast('❌ ' + err.message);
+            } else if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ No passkey was selected, or the request timed out.');
             } else if (err.name === 'AbortError') {
                 showToast('ℹ️ Passkey sign-in was cancelled.');
@@ -668,7 +672,9 @@ What would you like to explore or optimize next?`;
             }
         } catch (err) {
             console.warn('Registration error:', err);
-            if (err.name === 'NotAllowedError') {
+            if (err.isServerError) {
+                showToast('❌ ' + err.message);
+            } else if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ Registration cancelled or timed out.');
             } else {
                 showToast('⚠️ Passkey registration failed. Please try again.');
