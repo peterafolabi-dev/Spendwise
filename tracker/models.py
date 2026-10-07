@@ -141,8 +141,8 @@ class SavingsGoal(models.Model):
 
 class PasskeyCredential(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='passkeys')
-    credential_id = models.CharField(max_length=255, unique=True)
-    public_key = models.TextField(blank=True)
+    credential_id = models.CharField(max_length=2048, unique=True)
+    public_key = models.TextField()
     sign_count = models.IntegerField(default=0)
     device_name = models.CharField(max_length=100, default='Biometric Passkey')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -193,4 +193,3 @@ def seed_user_defaults(user):
 def create_user_defaults(sender, instance, created, **kwargs):
     if created:
         seed_user_defaults(instance)
-

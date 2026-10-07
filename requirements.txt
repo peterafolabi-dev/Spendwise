@@ -4,3 +4,4 @@ psycopg2-binary
 django-environ
 whitenoise
 Pillow
+webauthn>=2.0,<3
