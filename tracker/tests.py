@@ -143,7 +143,7 @@ class TrackerTests(TestCase):
         with patch('tracker.views.verify_authentication_response', side_effect=WebAuthnException('bad signature')):
             response = client.post(
                 reverse('passkey_verify'),
-                data=json.dumps({'id': credential_id, 'response': {}}),
+                data=json.dumps({'id': credential_id, 'rawId': credential_id, 'response': {}}),
                 content_type='application/json',
             )
 
@@ -169,7 +169,8 @@ class TrackerTests(TestCase):
             response = client.post(
                 reverse('passkey_register_verify'),
                 data=json.dumps({
-                    'id': 'passkey-credential',
+                    'id': base64.urlsafe_b64encode(b'passkey-credential').decode().rstrip('='),
+                    'rawId': base64.urlsafe_b64encode(b'passkey-credential').decode().rstrip('='),
                     'response': {'attestationObject': 'test', 'clientDataJSON': 'test'},
                     'deviceName': 'Test device',
                 }),
@@ -202,7 +203,8 @@ class TrackerTests(TestCase):
             response = client.post(
                 reverse('passkey_register_verify'),
                 data=json.dumps({
-                    'id': 'existing-user-credential',
+                    'id': base64.urlsafe_b64encode(b'existing-user-credential').decode().rstrip('='),
+                    'rawId': base64.urlsafe_b64encode(b'existing-user-credential').decode().rstrip('='),
                     'response': {'attestationObject': 'test', 'clientDataJSON': 'test'},
                 }),
                 content_type='application/json',
