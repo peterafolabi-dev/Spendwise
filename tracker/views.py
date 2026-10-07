@@ -946,6 +946,8 @@ def passkey_register_challenge(request):
             request_data = json.loads(request.body or '{}')
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid registration request.'}, status=400)
+        if not isinstance(request_data, dict):
+            return JsonResponse({'status': 'error', 'message': 'Invalid registration request.'}, status=400)
         username = str(request_data.get('username', '')).strip()
         username_field = User._meta.get_field('username')
         try:

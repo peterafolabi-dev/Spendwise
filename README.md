@@ -65,7 +65,7 @@ SpendWise Architecture
 - **Safe-to-Spend Engine**: Dynamically calculates exact daily spend limits:
   $$\text{Daily Allowance} = \frac{\text{Current Envelope Balance} - \text{Scheduled Recurring Bills}}{\text{Days Remaining in Cycle}}$$
 - **Historical 30-Day Insight**: Contextual helper card showing exact past 30-day spend when configuring budget envelopes.
-- **Envelope Controls**: Configurable rollover balances and automated alert threshold badges (70%, 80%, 90%, 100%).
+- **Envelope Controls**: Monthly category usage bars with near-limit (80%) and over-budget alerts.
 
 ### 4. 📊 Predictive Cash Flow Runway
 - Forward-looking financial runway forecasting analyzing trailing 90-day outflow velocity against liquid cash reserves.
@@ -73,6 +73,7 @@ SpendWise Architecture
 - Visual burn-rate indicators alerting the user when projected outlays threaten their safety runway.
 
 ### 5. 🧾 Intelligent Transaction Ledger & Slide-Over Drawer
+- Search notes, categories, account names, and exact amounts; filter by type, account, and date range.
 - **Click-to-Inspect Drawer**: Clicking any ledger entry slides open a detailed transaction drawer from the right screen edge.
 - **Live Inline Updates**: Edit transaction note, category, account, or amount in real-time with instant AJAX patch verification.
 - **Intelligent Subtitles**: Automatically displays merchant/note as the primary title with clean subtext formatting (`Oct 2, 2026 · Main Checking · Groceries`) without repeating categories.
@@ -84,10 +85,10 @@ SpendWise Architecture
 - **Ledger IOU Integration**: Adjusts the parent transaction down to the user's personal share and automatically records the balance as an active claim under `"IOU & Reimbursements"`.
 
 ### 7. 🔐 WebAuthn / Passkey Biometric Hardware Authentication
-- Full implementation of the **W3C WebAuthn Level 3 (FIDO2)** protocol.
-- Users authenticate using hardware biometrics (Windows Hello, Touch ID, Face ID, or YubiKeys).
-- Zero shared secrets: the server validates public key cryptographic challenge-response signatures and checks monotonic `sign_count` counters to eliminate replay attacks.
-- Robust numeric IP resolution handling domain negotiation between `127.0.0.1` and `localhost` in `DEBUG` environments.
+- Users can create an account with a discoverable passkey or add passkeys to an existing account.
+- Assertions and registrations are validated server-side using WebAuthn challenge, origin, relying-party ID, and public-key signature checks.
+- Credentials are stored as public keys and counters; private keys stay with the authenticator (Windows Hello, Touch ID, Face ID, or security keys).
+- For deployments behind a proxy, configure `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGIN`; WebAuthn requires HTTPS except on localhost.
 
 ### 8. 🤖 Embedded AI Financial Copilot
 - Intelligent in-app financial assistant trained on personal budgeting, engineering expenses, and personal finance rules.
