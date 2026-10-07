@@ -14,6 +14,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, Pass
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import ValidationError
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponse, JsonResponse
@@ -811,115 +812,237 @@ def import_csv(request):
         return redirect('transaction_list')
     return render(request, 'tracker/import_csv.html')
 
-# Passkey & WebAuthn Endpoints
-import secrets
-import base64
+def _webauthn_rp_and_origin(request):
+    origin = getattr(settings, 'WEBAUTHN_ORIGIN', '') or request.build_absolute_uri('/').rstrip('/')
+    rp_id = getattr(settings, 'WEBAUTHN_RP_ID', '') or urlsplit(origin).hostname
+    if not rp_id:
+        raise ValueError('Could not determine the WebAuthn relying-party domain.')
+    if rp_id == '127.0.0.1':
+        rp_id = 'localhost'
+    return rp_id, origin
+
+
+def _new_webauthn_challenge(request, name, rp_id, origin):
+    challenge = secrets.token_bytes(32)
+    request.session[name] = {
+        'challenge': base64.urlsafe_b64encode(challenge).decode('ascii').rstrip('='),
+        'rp_id': rp_id,
+        'origin': origin,
+        'expires_at': int(time.time()) + 300,
+    }
+    return challenge
+
+
+def _take_webauthn_challenge(request, name):
+    state = request.session.pop(name, None)
+    if not state or state.get('expires_at', 0) < time.time():
+        return None
+    try:
+        state['challenge_bytes'] = base64url_to_bytes(state['challenge'])
+    except (KeyError, ValueError):
+        return None
+    return state
+
+
+def _base64url_encode(value):
+    return base64.urlsafe_b64encode(value).decode('ascii').rstrip('=')
+
 
 def passkey_challenge(request):
-    """Generates an authentication challenge for WebAuthn navigator.credentials.get()."""
-    challenge_bytes = secrets.token_bytes(32)
-    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
-    request.session['webauthn_challenge'] = challenge_b64
-    host = request.get_host().split(':')[0]
-    if (host == '127.0.0.1' or host == 'localhost') and settings.DEBUG:
-        host = 'localhost'
-    
-    return JsonResponse({
-        'challenge': challenge_b64,
-        'rpId': host,
-        'timeout': 60000,
-        'userVerification': 'preferred',
-    })
+    """Create a single-use WebAuthn assertion challenge."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+    rp_id, origin = _webauthn_rp_and_origin(request)
+    challenge = _new_webauthn_challenge(request, 'webauthn_challenge', rp_id, origin)
+    options = generate_authentication_options(
+        rp_id=rp_id,
+        challenge=challenge,
+        timeout=60000,
+        user_verification=UserVerificationRequirement.REQUIRED,
+    )
+    return JsonResponse(json.loads(options_to_json(options)))
+
 
 def passkey_verify(request):
-    """Verifies a WebAuthn credential assertion and logs the user in."""
+    """Verify a WebAuthn assertion before creating an authenticated session."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
-    
-    saved_challenge = request.session.get('webauthn_challenge')
-    if not saved_challenge:
-        return JsonResponse({'status': 'error', 'message': 'Authentication session expired. Please try again.'}, status=400)
-    
+
+    challenge = _take_webauthn_challenge(request, 'webauthn_challenge')
+    if not challenge:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Authentication challenge expired. Please try again.'},
+            status=400,
+        )
+
     try:
         data = json.loads(request.body)
-        cred_id = data.get('id') or data.get('rawId')
-        
-        credential = PasskeyCredential.objects.filter(credential_id=cred_id).select_related('user').first()
-        if not credential:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'No registered passkey found on this device for SpendWise. Please sign in with your password and register a passkey in Settings.'
-            }, status=400)
-        
-        user = credential.user
-        login(request, user)
-        if 'webauthn_challenge' in request.session:
-            del request.session['webauthn_challenge']
-            
+        credential_id = data.get('id')
+        if not isinstance(credential_id, str) or not credential_id:
+            return JsonResponse({'status': 'error', 'message': 'Invalid passkey response.'}, status=400)
+        credential = (
+            PasskeyCredential.objects.select_related('user')
+            .filter(credential_id=credential_id)
+            .first()
+        )
+        if not credential or not credential.public_key:
+            return JsonResponse(
+                {'status': 'error', 'message': 'No usable passkey was found. Sign in and register it again.'},
+                status=400,
+            )
+
+        verified = verify_authentication_response(
+            credential=data,
+            expected_challenge=challenge['challenge_bytes'],
+            expected_rp_id=challenge['rp_id'],
+            expected_origin=challenge['origin'],
+            credential_public_key=base64url_to_bytes(credential.public_key),
+            credential_current_sign_count=credential.sign_count,
+            require_user_verification=True,
+        )
+        credential.sign_count = verified.new_sign_count
+        credential.save(update_fields=['sign_count'])
+        login(request, credential.user)
         return JsonResponse({
             'status': 'success',
-            'message': f'Welcome back, {user.username}!',
-            'redirect_url': '/dashboard/'
+            'message': f'Welcome back, {credential.user.username}!',
+            'redirect_url': '/dashboard/',
         })
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        logger.warning('Invalid WebAuthn authentication response: %s', exc)
+        return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
+    except Exception as exc:
+        logger.warning('WebAuthn authentication failed: %s', exc)
+        return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
 
-@login_required
+
 def passkey_register_challenge(request):
-    """Generates a registration challenge for navigator.credentials.create()."""
-    challenge_bytes = secrets.token_bytes(32)
-    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
-    request.session['webauthn_reg_challenge'] = challenge_b64
-    host = request.get_host().split(':')[0]
-    if (host == '127.0.0.1' or host == 'localhost') and settings.DEBUG:
-        host = 'localhost'
-    user_handle = base64.urlsafe_b64encode(str(request.user.id).encode('utf-8')).decode('utf-8').rstrip('=')
-    
-    return JsonResponse({
-        'challenge': challenge_b64,
-        'rp': {
-            'name': 'SpendWise',
-            'id': host,
-        },
-        'user': {
-            'id': user_handle,
-            'name': request.user.username,
-            'displayName': request.user.get_full_name() or request.user.username,
-        },
-        'pubKeyCredParams': [
-            {'type': 'public-key', 'alg': -7},
-            {'type': 'public-key', 'alg': -257},
-        ],
-        'timeout': 60000,
-        'attestation': 'none',
-        'authenticatorSelection': {
-            'userVerification': 'preferred',
-            'residentKey': 'preferred',
-        }
-    })
-
-@login_required
-def passkey_register_verify(request):
-    """Saves a newly created WebAuthn credential."""
+    """Create a registration challenge for an existing or new user."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
-    
+
+    rp_id, origin = _webauthn_rp_and_origin(request)
+    if request.user.is_authenticated:
+        user_name = request.user.username
+        user_id = str(request.user.pk).encode('utf-8')
+        request.session['webauthn_reg_user_id'] = request.user.pk
+        credentials = request.user.passkeys.all()
+    else:
+        try:
+            request_data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid registration request.'}, status=400)
+        username = str(request_data.get('username', '')).strip()
+        username_field = User._meta.get_field('username')
+        try:
+            username = username_field.clean(username, None)
+        except ValidationError as exc:
+            return JsonResponse({'status': 'error', 'message': str(exc)}, status=400)
+        if User.objects.filter(username__iexact=username).exists():
+            return JsonResponse(
+                {'status': 'error', 'message': 'That username is already taken. Choose another or sign in.'},
+                status=409,
+            )
+        user_name = username
+        user_id = secrets.token_bytes(32)
+        request.session['webauthn_reg_username'] = username
+        request.session['webauthn_reg_user_handle'] = _base64url_encode(user_id)
+        credentials = PasskeyCredential.objects.none()
+
+    challenge = _new_webauthn_challenge(request, 'webauthn_reg_challenge', rp_id, origin)
+    options = generate_registration_options(
+        rp_id=rp_id,
+        rp_name='SpendWise',
+        user_id=user_id,
+        user_name=user_name,
+        user_display_name=user_name,
+        challenge=challenge,
+        timeout=60000,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            resident_key=ResidentKeyRequirement.REQUIRED,
+            user_verification=UserVerificationRequirement.REQUIRED,
+        ),
+        exclude_credentials=[
+            PublicKeyCredentialDescriptor(id=base64url_to_bytes(item.credential_id))
+            for item in credentials
+        ],
+    )
+    return JsonResponse(json.loads(options_to_json(options)))
+
+
+def passkey_register_verify(request):
+    """Verify a registration before storing a credential or creating an account."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+    challenge = _take_webauthn_challenge(request, 'webauthn_reg_challenge')
+    if not challenge:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Registration challenge expired. Please try again.'},
+            status=400,
+        )
+
     try:
         data = json.loads(request.body)
-        cred_id = data.get('id') or data.get('rawId')
-        device_name = data.get('deviceName', 'Biometric Device')
-        
-        PasskeyCredential.objects.update_or_create(
-            credential_id=cred_id,
-            defaults={
-                'user': request.user,
-                'device_name': device_name,
-                'public_key': data.get('publicKey', ''),
-            }
+        verified = verify_registration_response(
+            credential=data,
+            expected_challenge=challenge['challenge_bytes'],
+            expected_rp_id=challenge['rp_id'],
+            expected_origin=challenge['origin'],
+            require_user_verification=True,
         )
-        if 'webauthn_reg_challenge' in request.session:
-            del request.session['webauthn_reg_challenge']
-            
+        credential_id = _base64url_encode(verified.credential_id)
+        device_name = str(data.get('deviceName') or 'Biometric Passkey').strip()[:100]
+        user_id = request.session.pop('webauthn_reg_user_id', None)
+        username = request.session.pop('webauthn_reg_username', None)
+        user_handle = request.session.pop('webauthn_reg_user_handle', None)
+
+        if user_id:
+            if not request.user.is_authenticated or request.user.pk != user_id:
+                return JsonResponse(
+                    {'status': 'error', 'message': 'Sign in again before registering this passkey.'},
+                    status=403,
+                )
+            user = request.user
+        else:
+            if request.user.is_authenticated or not username or not user_handle:
+                return JsonResponse({'status': 'error', 'message': 'Signup expired. Please try again.'}, status=400)
+            username_field = User._meta.get_field('username')
+            username = username_field.clean(username, None)
+            if User.objects.filter(username__iexact=username).exists():
+                return JsonResponse(
+                    {'status': 'error', 'message': 'That username is already taken. Choose another.'},
+                    status=409,
+                )
+
+        with transaction.atomic():
+            if not user_id:
+                user = User.objects.create_user(username=username, password=None)
+            PasskeyCredential.objects.create(
+                user=user,
+                credential_id=credential_id,
+                public_key=_base64url_encode(verified.credential_public_key),
+                sign_count=verified.sign_count,
+                device_name=device_name,
+            )
+
+        if not user_id:
+            login(request, user)
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Your account and passkey are ready!',
+                'redirect_url': '/dashboard/',
+            })
         return JsonResponse({'status': 'success', 'message': 'Passkey registered successfully!'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    except IntegrityError:
+        return JsonResponse(
+            {'status': 'error', 'message': 'That username or passkey is already registered.'},
+            status=409,
+        )
+    except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        logger.warning('Invalid WebAuthn registration response: %s', exc)
+        return JsonResponse({'status': 'error', 'message': 'Passkey registration failed. Please try again.'}, status=400)
+    except Exception as exc:
+        logger.warning('WebAuthn registration failed: %s', exc)
+        return JsonResponse({'status': 'error', 'message': 'Passkey registration failed. Please try again.'}, status=400)
