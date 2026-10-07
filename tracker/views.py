@@ -1,22 +1,40 @@
 import csv
 import json
+import base64
+import secrets
 from decimal import Decimal
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
-from django.db.models import Sum, F
+from django.db import IntegrityError, transaction
+from django.db.models import Q, Sum, F
 from django.utils import timezone
 from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, PasskeyCredential
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
+from webauthn import (
+    base64url_to_bytes,
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers.structs import (
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
+)
 
 def rate_limit(key, limit, period):
     count = cache.get(key, 0)
@@ -332,9 +350,31 @@ class TransactionListView(UserOwnedMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
+        search = self.request.GET.get('q', '').strip()
+        flow_type = self.request.GET.get('type', '')
         account_id = self.request.GET.get('account')
+        date_from = self.request.GET.get('date_from', '')
+        date_to = self.request.GET.get('date_to', '')
+
+        if search:
+            search_filter = (
+                Q(note__icontains=search)
+                | Q(category__name__icontains=search)
+                | Q(account__name__icontains=search)
+            )
+            try:
+                search_filter |= Q(amount=Decimal(search.replace(',', '')))
+            except Exception:
+                pass
+            qs = qs.filter(search_filter)
+        if flow_type in {'INCOME', 'EXPENSE'}:
+            qs = qs.filter(type=flow_type)
         if account_id:
             qs = qs.filter(account_id=account_id)
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
         return qs
 
 class TransactionCreateView(UserOwnedMixin, UserFormMixin, CreateView):
@@ -530,6 +570,31 @@ def quick_add_transaction(request):
 class BudgetListView(UserOwnedMixin, ListView):
     model = Budget
     template_name = 'tracker/budgets.html'
+
+    def get_queryset(self):
+        budgets = super().get_queryset().select_related('category')
+        today = timezone.localdate()
+        month_start = today.replace(day=1)
+        spent_by_category = dict(
+            Transaction.objects.filter(
+                user=self.request.user,
+                type='EXPENSE',
+                date__gte=month_start,
+                category_id__in=budgets.values('category_id'),
+            )
+            .values('category_id')
+            .annotate(total=Sum('amount'))
+            .values_list('category_id', 'total')
+        )
+
+        for budget in budgets:
+            spent = spent_by_category.get(budget.category_id, Decimal('0.00'))
+            budget.spent = spent
+            budget.usage_percent = min(int(spent * 100 / budget.limit), 100)
+            budget.is_over_limit = spent >= budget.limit
+            budget.is_near_limit = not budget.is_over_limit and spent >= budget.limit * Decimal('0.8')
+
+        return budgets
 
 class BudgetCreateView(UserOwnedMixin, UserFormMixin, CreateView):
     model = Budget
@@ -853,4 +918,3 @@ def passkey_register_verify(request):
         return JsonResponse({'status': 'success', 'message': 'Passkey registered successfully!'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
