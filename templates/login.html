@@ -93,19 +93,6 @@
                     <span>Sign in with Passkey / Face ID / Touch ID</span>
                 </button>
 
-                {# IP Domain Notice for Passkeys #}
-                <div id="ip-domain-warning" class="hidden mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-left animate-fade-in-up">
-                    <div class="flex items-start gap-2.5">
-                        <span class="text-base shrink-0">⚠️</span>
-                        <div class="flex-1">
-                            <p class="text-xs font-semibold text-amber-300">WebAuthn Domain Notice</p>
-                            <p class="text-[11px] text-amber-300/80 leading-relaxed mt-0.5">Biometric authentication requires a valid domain. If using Windows Hello or Touch ID, switch to localhost.</p>
-                            <a href="http://localhost:8000/login/" class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-[11px] font-semibold text-amber-200 transition-colors">
-                                Switch to localhost:8000 →
-                            </a>
-                        </div>
-                    </div>
-                </div>
             </form>
 
             {# Divider #}
@@ -174,10 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Check for IP address vs domain name for Passkey WebAuthn compliance
-    if (window.location.hostname === '127.0.0.1') {
-        document.getElementById('ip-domain-warning')?.classList.remove('hidden');
-    }
 });
 </script>
 {% endblock %}

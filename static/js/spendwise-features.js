@@ -278,7 +278,7 @@
             return `🔐 **WebAuthn & Hardware Biometrics in SpendWise**:
 SpendWise implements the **W3C WebAuthn (FIDO2)** protocol:
 1. **Asymmetric Cryptography**: A private key stays inside your device's hardware Secure Enclave or TPM.
-2. **Zero Shared Secrets**: The server only holds your public key and a cryptographic signature counter (`sign_count`). Phishing is mathematically impossible.
+2. **Zero Shared Secrets**: The server only holds your public key and a cryptographic signature counter (sign_count). Phishing is mathematically impossible.
 3. **One-Touch Access**: Sign in instantly using Touch ID, Face ID, or Windows Hello.
 ⚙️ *Management*: Register or delete passkey devices anytime under **Settings &rarr; Security & Passkeys**.`;
         }
@@ -523,12 +523,9 @@ What would you like to explore or optimize next?`;
             return;
         }
 
-        // WebAuthn strictly forbids numeric IP addresses (127.0.0.1)
+        // Use localhost as the relying-party domain for local development.
         if (window.location.hostname === '127.0.0.1') {
-            showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1. Redirecting…');
-            setTimeout(() => {
-                window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
-            }, 1000);
+            window.location.hostname = 'localhost';
             return;
         }
 
@@ -601,9 +598,7 @@ What would you like to explore or optimize next?`;
 
         } catch (err) {
             console.warn('WebAuthn Passkey Error:', err);
-            if (err.name === 'SecurityError' || (err.message && (err.message.toLowerCase().includes('domain') || err.message.toLowerCase().includes('rpid')))) {
-                showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1.');
-            } else if (err.name === 'NotAllowedError') {
+            if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ No passkey registered on this device, or scan was cancelled.');
             } else if (err.name === 'AbortError') {
                 showToast('ℹ️ Biometric scan was cancelled.');
@@ -620,10 +615,7 @@ What would you like to explore or optimize next?`;
         }
 
         if (window.location.hostname === '127.0.0.1') {
-            showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1. Redirecting…');
-            setTimeout(() => {
-                window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
-            }, 1000);
+            window.location.hostname = 'localhost';
             return;
         }
 
@@ -684,9 +676,7 @@ What would you like to explore or optimize next?`;
             }
         } catch (err) {
             console.warn('Registration error:', err);
-            if (err.name === 'SecurityError' || (err.message && (err.message.toLowerCase().includes('domain') || err.message.toLowerCase().includes('rpid')))) {
-                showToast('⚠️ Passkeys require accessing the app via http://localhost:8000 rather than 127.0.0.1.');
-            } else if (err.name === 'NotAllowedError') {
+            if (err.name === 'NotAllowedError') {
                 showToast('ℹ️ Registration cancelled or timed out.');
             } else {
                 showToast('⚠️ Registration error: ' + err.message);

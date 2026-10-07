@@ -253,18 +253,6 @@
                         </button>
                     </div>
 
-                    {# Domain Mismatch Warning if accessed via 127.0.0.1 #}
-                    <div id="settings-ip-warning" class="hidden mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-base">⚠️</span>
-                            <div>
-                                <p class="font-semibold">WebAuthn Domain Notice</p>
-                                <p class="text-amber-300/80 mt-0.5">Biometric hardware registration requires accessing via a domain name (http://localhost:8000) rather than 127.0.0.1.</p>
-                                <a href="http://localhost:8000/profile/#security" class="inline-block mt-1 font-semibold underline text-amber-300 hover:text-white">Switch to localhost:8000 →</a>
-                            </div>
-                        </div>
-                    </div>
-
                     {# Registered Devices List #}
                     <div class="space-y-3">
                         {% if passkeys %}
@@ -548,11 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchSettingsTab(hash);
     }
 
-    // IP Domain warning check for passkeys
-    if (window.location.hostname === '127.0.0.1') {
-        document.getElementById('settings-ip-warning')?.classList.remove('hidden');
-    }
-
     // Sync settings dark mode toggle with main theme switch
     const settingsToggle = document.getElementById('settings-theme-toggle');
     settingsToggle?.addEventListener('click', () => {
@@ -561,4 +544,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
-
