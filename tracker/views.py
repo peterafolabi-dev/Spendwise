@@ -1,8 +1,11 @@
 import csv
 import json
 import base64
+import logging
 import secrets
-from decimal import Decimal
+import time
+from decimal import Decimal, InvalidOperation
+from urllib.parse import urlsplit
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -35,6 +38,8 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
+
+logger = logging.getLogger(__name__)
 
 def rate_limit(key, limit, period):
     count = cache.get(key, 0)
@@ -364,7 +369,7 @@ class TransactionListView(UserOwnedMixin, ListView):
             )
             try:
                 search_filter |= Q(amount=Decimal(search.replace(',', '')))
-            except Exception:
+            except (InvalidOperation, ValueError):
                 pass
             qs = qs.filter(search_filter)
         if flow_type in {'INCOME', 'EXPENSE'}:
