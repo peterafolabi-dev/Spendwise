@@ -149,6 +149,28 @@ class TrackerTests(TestCase):
             APPLE_OAUTH_KEY_ID='apple-key-id',
             APPLE_OAUTH_TEAM_ID='apple-team-id',
             APPLE_OAUTH_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
+            SOCIALACCOUNT_PROVIDERS={
+                'google': {
+                    'APPS': [{
+                        'client_id': 'google-client-id',
+                        'secret': 'google-client-secret',
+                        'key': '',
+                    }],
+                    'SCOPE': ['profile', 'email'],
+                    'AUTH_PARAMS': {'access_type': 'online'},
+                    'OAUTH_PKCE_ENABLED': True,
+                },
+                'apple': {
+                    'APPS': [{
+                        'client_id': 'apple-service-id',
+                        'secret': 'apple-key-id',
+                        'key': 'apple-team-id',
+                        'settings': {
+                            'certificate_key': '-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
+                        },
+                    }],
+                },
+            },
         ):
             for page in ('login', 'signup'):
                 with self.subTest(page=page):
