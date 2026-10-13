@@ -299,19 +299,24 @@ class TrackerTests(TestCase):
             HTTP_HOST='spendwise.example.com',
             HTTP_X_FORWARDED_PROTO='https',
         )
+        with override_settings(ALLOWED_HOSTS=['spendwise.example.com']):
+            self.assertEqual(
+                _webauthn_rp_and_origin(request),
+                ('spendwise.example.com', 'https://spendwise.example.com'),
+            )
 
     def test_passkey_authentication_only_offers_local_platform_credentials(self):
         credential_id = base64.urlsafe_b64encode(b'platform-credential').decode().rstrip('=')
         PasskeyCredential.objects.create(
-        user=self.user1,
-        credential_id=credential_id,
-        public_key=base64.urlsafe_b64encode(b'public-key').decode().rstrip('='),
+            user=self.user1,
+            credential_id=credential_id,
+            public_key=base64.urlsafe_b64encode(b'public-key').decode().rstrip('='),
         )
 
         response = Client().post(
-        reverse('passkey_challenge'),
-        data='{}',
-        content_type='application/json',
+            reverse('passkey_challenge'),
+            data='{}',
+            content_type='application/json',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -319,29 +324,23 @@ class TrackerTests(TestCase):
         self.assertEqual(options['hints'], ['client-device'])
         self.assertEqual(options['userVerification'], 'required')
         self.assertEqual(
-        options['allowCredentials'],
-        [{
-            'type': 'public-key',
-            'id': credential_id,
-            'transports': ['internal'],
-        }],
+            options['allowCredentials'],
+            [{
+                'type': 'public-key',
+                'id': credential_id,
+                'transports': ['internal'],
+            }],
         )
 
     def test_passkey_authentication_requires_a_registered_credential(self):
         response = Client().post(
-        reverse('passkey_challenge'),
-        data='{}',
-        content_type='application/json',
+            reverse('passkey_challenge'),
+            data='{}',
+            content_type='application/json',
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('platform passkey', response.json()['message'])
-
-        with override_settings(ALLOWED_HOSTS=['spendwise.example.com']):
-            self.assertEqual(
-                _webauthn_rp_and_origin(request),
-                ('spendwise.example.com', 'https://spendwise.example.com'),
-            )
 
     def test_login_page_exposes_passkey_feedback_and_script(self):
         response = Client().get(reverse('login'))
