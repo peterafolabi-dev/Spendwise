@@ -2,13 +2,11 @@ import csv
 import json
 import base64
 import logging
-import re
 import secrets
 import time
-import urllib.error
 import urllib.request
 from decimal import Decimal, InvalidOperation
-from urllib.parse import quote, urlsplit
+from urllib.parse import urlsplit
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -351,7 +349,7 @@ def copilot_context(request):
     return JsonResponse({'greeting': greeting})
 
 
-def _generate_gemini_copilot_reply(question, history, metrics):
+def _generate_groq_copilot_reply(question, history, metrics):
     financial_snapshot = {
         'currency': 'NGN (Nigerian naira)',
         'as_of_date': metrics['today'].isoformat(),
@@ -383,28 +381,28 @@ def _generate_gemini_copilot_reply(question, history, metrics):
     )
     contents = [
         {
-            'role': item['role'],
-            'parts': [{'text': item['text']}],
+            'role': 'assistant' if item['role'] == 'model' else 'user',
+            'content': item['text'],
         }
         for item in history
     ]
-    contents.append({'role': 'user', 'parts': [{'text': question}]})
+    messages = [
+        {'role': 'system', 'content': system_instruction},
+        *contents,
+        {'role': 'user', 'content': question},
+    ]
     payload = {
-        'system_instruction': {'parts': [{'text': system_instruction}]},
-        'contents': contents,
-        'generationConfig': {
-            'temperature': 0.7,
-            'maxOutputTokens': 512,
-            'thinkingConfig': {'thinkingLevel': 'low'},
-        },
+        'model': settings.GROQ_MODEL,
+        'messages': messages,
+        'temperature': 0.7,
+        'max_completion_tokens': 512,
     }
-    model = quote(settings.GEMINI_MODEL, safe='')
     request = urllib.request.Request(
-        f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+        'https://api.groq.com/openai/v1/chat/completions',
         data=json.dumps(payload).encode('utf-8'),
         headers={
             'Content-Type': 'application/json',
-            'x-goog-api-key': settings.GEMINI_API_KEY,
+            'Authorization': f'Bearer {settings.GROQ_API_KEY}',
         },
         method='POST',
     )
@@ -412,23 +410,16 @@ def _generate_gemini_copilot_reply(question, history, metrics):
         result = json.loads(response.read().decode('utf-8'))
 
     if not isinstance(result, dict):
-        raise ValueError('Gemini returned an invalid response.')
-    candidates = result.get('candidates')
-    if not isinstance(candidates, list) or not candidates or not isinstance(candidates[0], dict):
-        raise ValueError('Gemini returned no response candidates.')
-    content = candidates[0].get('content')
-    if not isinstance(content, dict):
-        raise ValueError('Gemini returned an invalid response.')
-    parts = content.get('parts')
-    if not isinstance(parts, list):
-        raise ValueError('Gemini returned an invalid response.')
-    reply = '\n'.join(
-        part['text'].strip()
-        for part in parts
-        if isinstance(part, dict) and isinstance(part.get('text'), str) and part['text'].strip()
-    )
+        raise ValueError('Groq returned an invalid response.')
+    choices = result.get('choices')
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        raise ValueError('Groq returned no response choices.')
+    message = choices[0].get('message')
+    if not isinstance(message, dict) or not isinstance(message.get('content'), str):
+        raise ValueError('Groq returned an invalid response.')
+    reply = message['content'].strip()
     if not reply:
-        raise ValueError('Gemini returned an empty response.')
+        raise ValueError('Groq returned an empty response.')
     return reply[:4000]
 
 
@@ -465,11 +456,11 @@ def copilot_chat(request):
         for item in history
     ]
 
-    if not settings.GEMINI_API_KEY:
+    if not settings.GROQ_API_KEY:
         return JsonResponse(
             {
                 'status': 'error',
-                'message': 'The AI coach is not configured yet. Add a Gemini API key as GEMINI_API_KEY to the server environment.',
+                'message': 'The AI coach is not configured yet. Add a Groq API key as GROQ_API_KEY to the server environment.',
             },
             status=503,
         )
@@ -481,9 +472,9 @@ def copilot_chat(request):
 
     metrics = _copilot_metrics(request.user)
     try:
-        reply = _generate_gemini_copilot_reply(question, history, metrics)
+        reply = _generate_groq_copilot_reply(question, history, metrics)
     except (OSError, json.JSONDecodeError, ValueError) as error:
-        logger.warning('Gemini copilot request failed for user id=%s: %s', request.user.pk, error)
+        logger.warning('Groq copilot request failed for user id=%s: %s', request.user.pk, error)
         return JsonResponse(
             {'status': 'error', 'message': 'The AI coach is temporarily unavailable. Please try again shortly.'},
             status=502,

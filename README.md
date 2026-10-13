@@ -72,10 +72,10 @@ SpendWise Architecture
 
 ### 8. 💬 Personalized Money Coach
 - Shows recorded account balance, month-to-date spending, and the highest-spend category for the signed-in user.
-- Uses Google Gemini to answer general chat and financial questions conversationally, grounded in the user's recorded account balance, month-to-date spending, remaining monthly category budgets, and highest-spend category.
-- Configure `GEMINI_API_KEY` in the local `.env` file and in the production host's environment variables. `GEMINI_MODEL` defaults to `gemini-3.8-flash` and can be changed if needed.
-- The coach sends only those financial summary figures and the current chat messages to Google Gemini; it does not send the transaction ledger, account names, or login credentials. Users should not enter passwords or banking credentials into chat. AI replies can be inaccurate and are educational, not professional financial advice. Without `GEMINI_API_KEY`, the chat reports that it is not configured rather than returning a fake AI answer.
-- Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey), add it to `.env` locally, and add `GEMINI_API_KEY` as a secret environment variable in Render. Never commit or paste the key into browser code or chat. The endpoint limits each signed-in user to 20 coach requests per 10 minutes.
+- Uses Groq-hosted chat completions to answer general chat and financial questions conversationally, grounded in the user's recorded account balance, month-to-date spending, remaining monthly category budgets, and highest-spend category.
+- Configure `GROQ_API_KEY` in the local `.env` file and in the production host's environment variables. `GROQ_MODEL` defaults to `openai/gpt-oss-120b` and can be changed to another model enabled for the Groq account.
+- The coach sends only those financial summary figures and the current chat messages to Groq; it does not send the transaction ledger, account names, or login credentials. Users should not enter passwords or banking credentials into chat. AI replies can be inaccurate and are educational, not professional financial advice. Without `GROQ_API_KEY`, the chat reports that it is not configured rather than returning a fake AI answer.
+- Create an API key in [Groq Console](https://console.groq.com/keys), add it to `.env` locally, and add `GROQ_API_KEY` as a secret environment variable in Render. Set `GROQ_MODEL` to an active model available to your account. Never commit or paste the key into browser code or chat. The endpoint limits each signed-in user to 20 coach requests per 10 minutes.
 
 ### 9. 👁️ One-Click Privacy Mode (`Ctrl + P` / Eye Toggle)
 - Non-destructive client-side privacy shield applying `filter: blur(8px)` across all `.currency-val` elements.

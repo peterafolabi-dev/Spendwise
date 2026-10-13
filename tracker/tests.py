@@ -341,14 +341,12 @@ class TrackerTests(TestCase):
 
         greeting = self.client1.get(reverse('copilot_context'))
         response_body = {
-            'candidates': [{
-                'content': {
-                    'parts': [{'text': 'Food is your highest spending category this month: ₦28,500.00.'}],
-                },
+            'choices': [{
+                'message': {'content': 'Food is your highest spending category this month: ₦28,500.00.'},
             }],
         }
         with (
-            override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test'),
+            override_settings(GROQ_API_KEY='test-groq-key', GROQ_MODEL='test-model'),
             patch('tracker.views.urllib.request.urlopen') as mocked_urlopen,
         ):
             mocked_urlopen.return_value.__enter__.return_value.read.return_value = json.dumps(response_body).encode('utf-8')
@@ -366,15 +364,17 @@ class TrackerTests(TestCase):
         self.assertNotIn('**', answer.json()['reply'])
         sent_request = mocked_urlopen.call_args.args[0]
         sent_payload = json.loads(sent_request.data.decode('utf-8'))
-        self.assertEqual(sent_request.get_header('X-goog-api-key'), 'test-gemini-key')
+        self.assertEqual(sent_request.full_url, 'https://api.groq.com/openai/v1/chat/completions')
+        self.assertEqual(sent_request.get_header('Authorization'), 'Bearer test-groq-key')
         self.assertEqual(
-            sent_payload['contents'][-1]['parts'][0]['text'],
+            sent_payload['messages'][-1]['content'],
             'What was my top spending this month?',
         )
-        self.assertIn('"recorded_account_balance": "21500.00"', sent_payload['system_instruction']['parts'][0]['text'])
+        self.assertEqual(sent_payload['model'], 'test-model')
+        self.assertIn('"recorded_account_balance": "21500.00"', sent_payload['messages'][0]['content'])
 
-    @override_settings(GEMINI_API_KEY='')
-    def test_copilot_requires_gemini_api_key_instead_of_faking_ai(self):
+    @override_settings(GROQ_API_KEY='')
+    def test_copilot_requires_groq_api_key_instead_of_faking_ai(self):
         response = self.client1.post(
             reverse('copilot_chat_api'),
             data=json.dumps({'message': 'hi'}),
@@ -382,13 +382,13 @@ class TrackerTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 503)
-        self.assertIn('not configured', response.json()['message'])
+        self.assertIn('GROQ_API_KEY', response.json()['message'])
 
-    @override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test')
-    def test_copilot_passes_conversation_history_to_gemini(self):
+    @override_settings(GROQ_API_KEY='test-groq-key', GROQ_MODEL='test-model')
+    def test_copilot_passes_conversation_history_to_groq(self):
         response_body = {
-            'candidates': [{
-                'content': {'parts': [{'text': 'Yes, based on the figures I just shared.'}]},
+            'choices': [{
+                'message': {'content': 'Yes, based on the figures I just shared.'},
             }],
         }
         with patch('tracker.views.urllib.request.urlopen') as mocked_urlopen:
@@ -406,11 +406,11 @@ class TrackerTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        contents = json.loads(mocked_urlopen.call_args.args[0].data.decode('utf-8'))['contents']
-        self.assertEqual([item['role'] for item in contents], ['user', 'model', 'user'])
-        self.assertEqual(contents[-1]['parts'][0]['text'], 'Can you explain that?')
+        messages = json.loads(mocked_urlopen.call_args.args[0].data.decode('utf-8'))['messages']
+        self.assertEqual([item['role'] for item in messages], ['system', 'user', 'assistant', 'user'])
+        self.assertEqual(messages[-1]['content'], 'Can you explain that?')
 
-    @override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test')
+    @override_settings(GROQ_API_KEY='test-groq-key', GROQ_MODEL='test-model')
     def test_copilot_reports_provider_failures_without_faking_reply(self):
         with patch('tracker.views.urllib.request.urlopen', side_effect=OSError('provider offline')):
             response = self.client1.post(

@@ -37,8 +37,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 WEBAUTHN_RP_ID = os.environ.get('WEBAUTHN_RP_ID', '')
 WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN', '')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '').strip()
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-3.8-flash').strip()
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '').strip()
+GROQ_MODEL = os.environ.get('GROQ_MODEL', 'openai/gpt-oss-120b').strip()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
