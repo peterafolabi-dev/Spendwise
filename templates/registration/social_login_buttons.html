@@ -1,0 +1,40 @@
+<div class="my-5 space-y-3" aria-label="Social sign in">
+    <div class="flex items-center gap-3 text-xs text-slate-400">
+        <span class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></span>
+        <span>OR CONTINUE WITH</span>
+        <span class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></span>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+        {% if google_login_enabled %}
+        <form method="post" action="{% url 'google_login' %}">
+            {% csrf_token %}
+            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" aria-label="Continue with Google">
+                <svg class="h-4 w-4" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11c-.5 2.5-1.9 4.6-4.1 6v5h6.6c3.9-3.6 6.1-8.8 6.1-14.7z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4h-6.8v5.2C9.2 39.5 16.1 44 24 44z"/><path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4v-5.2H5.8a20 20 0 0 0 0 17.8z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4 16.1 4 9.2 8.5 5.8 15.1l6.8 5.2C14.2 15.6 18.7 12 24 12z"/></svg>
+                Google
+            </button>
+        </form>
+        {% else %}
+        <button type="button" disabled aria-disabled="true" title="Add Google OAuth credentials in Render to enable sign-in" class="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-500" aria-label="Google sign-in not configured">
+            <svg class="h-4 w-4 opacity-60" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11c-.5 2.5-1.9 4.6-4.1 6v5h6.6c3.9-3.6 6.1-8.8 6.1-14.7z"/></svg>
+            Google
+        </button>
+        {% endif %}
+        {% if apple_login_enabled %}
+        <form method="post" action="{% url 'apple_login' %}">
+            {% csrf_token %}
+            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" aria-label="Continue with Apple">
+                <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 12.19c.02 2.2 1.93 2.93 1.95 2.94-.02.05-.31 1.07-1.01 2.12-.61.91-1.24 1.81-2.23 1.83-.97.02-1.28-.59-2.39-.59-1.11 0-1.46.57-2.38.61-.95.04-1.67-.99-2.28-1.9-1.24-1.8-2.19-5.08-.92-7.3.63-1.1 1.76-1.8 2.98-1.82.93-.02 1.81.64 2.39.64.58 0 1.66-.79 2.8-.67.48.02 1.83.19 2.7 1.52-.07.04-1.61.94-1.61 2.62ZM14.52 5.9c.5-.6.84-1.44.75-2.28-.72.03-1.59.48-2.1 1.08-.46.53-.87 1.39-.76 2.21.8.06 1.61-.41 2.11-1.01Z"/></svg>
+                Apple
+            </button>
+        </form>
+        {% else %}
+        <button type="button" disabled aria-disabled="true" title="Add Apple OAuth credentials in Render to enable sign-in" class="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-500" aria-label="Apple sign-in not configured">
+            <svg class="h-4 w-4 fill-current opacity-60" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 12.19c.02 2.2 1.93 2.93 1.95 2.94-.02.05-.31 1.07-1.01 2.12-.61.91-1.24 1.81-2.23 1.83-.97.02-1.28-.59-2.39-.59-1.11 0-1.46.57-2.38.61-.95.04-1.67-.99-2.28-1.9-1.24-1.8-2.19-5.08-.92-7.3.63-1.1 1.76-1.8 2.98-1.82.93-.02 1.81.64 2.39.64.58 0 1.66-.79 2.8-.67.48.02 1.83.19 2.7 1.52-.07.04-1.61.94-1.61 2.62ZM14.52 5.9c.5-.6.84-1.44.75-2.28-.72.03-1.59.48-2.1 1.08-.46.53-.87 1.39-.76 2.21.8.06 1.61-.41 2.11-1.01Z"/></svg>
+            Apple
+        </button>
+        {% endif %}
+    </div>
+    {% if not google_login_enabled or not apple_login_enabled %}
+    <p class="text-center text-xs text-slate-400">Social sign-in buttons activate after their provider credentials are added in Render.</p>
+    {% endif %}
+</div>
