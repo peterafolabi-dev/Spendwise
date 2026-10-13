@@ -37,7 +37,9 @@ from webauthn import (
     verify_registration_response,
 )
 from webauthn.helpers.structs import (
+    AuthenticatorAttachment,
     AuthenticatorSelectionCriteria,
+    AuthenticatorTransport,
     PublicKeyCredentialDescriptor,
     ResidentKeyRequirement,
     UserVerificationRequirement,
@@ -1112,14 +1114,36 @@ def passkey_challenge(request):
         return JsonResponse({'status': 'error', 'message': 'Too many passkey attempts. Please wait and try again.'}, status=429)
 
     rp_id, origin = _webauthn_rp_and_origin(request)
+    credentials = list(
+        PasskeyCredential.objects.exclude(public_key='')
+        .values_list('credential_id', flat=True)
+    )
+    if not credentials:
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': 'No registered passkey is available. Sign in with your password and create a platform passkey first.',
+            },
+            status=400,
+        )
+
     challenge = _new_webauthn_challenge(request, 'webauthn_challenge', rp_id, origin)
     options = generate_authentication_options(
         rp_id=rp_id,
         challenge=challenge,
         timeout=60000,
+        allow_credentials=[
+            PublicKeyCredentialDescriptor(
+                id=base64url_to_bytes(credential_id),
+                transports=[AuthenticatorTransport.INTERNAL],
+            )
+            for credential_id in credentials
+        ],
         user_verification=UserVerificationRequirement.REQUIRED,
     )
-    return JsonResponse(json.loads(options_to_json(options)))
+    response_options = json.loads(options_to_json(options))
+    response_options['hints'] = ['client-device']
+    return JsonResponse(response_options)
 
 
 def passkey_verify(request):
@@ -1229,6 +1253,7 @@ def passkey_register_challenge(request):
         challenge=challenge,
         timeout=60000,
         authenticator_selection=AuthenticatorSelectionCriteria(
+            authenticator_attachment=AuthenticatorAttachment.PLATFORM,
             resident_key=ResidentKeyRequirement.REQUIRED,
             user_verification=UserVerificationRequirement.REQUIRED,
         ),
