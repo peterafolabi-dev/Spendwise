@@ -482,7 +482,7 @@ def copilot_chat(request):
     metrics = _copilot_metrics(request.user)
     try:
         reply = _generate_gemini_copilot_reply(question, history, metrics)
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError) as error:
+    except (OSError, json.JSONDecodeError, ValueError) as error:
         logger.warning('Gemini copilot request failed for user id=%s: %s', request.user.pk, error)
         return JsonResponse(
             {'status': 'error', 'message': 'The AI coach is temporarily unavailable. Please try again shortly.'},

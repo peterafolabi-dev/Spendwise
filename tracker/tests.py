@@ -340,26 +340,23 @@ class TrackerTests(TestCase):
         )
 
         greeting = self.client1.get(reverse('copilot_context'))
-        provider_response = patch(
-            'tracker.views.urllib.request.urlopen',
-        )
-        mocked_urlopen = provider_response.start()
-        mocked_urlopen.return_value.__enter__.return_value.read.return_value = json.dumps({
+        response_body = {
             'candidates': [{
                 'content': {
                     'parts': [{'text': 'Food is your highest spending category this month: ₦28,500.00.'}],
                 },
             }],
-        }).encode('utf-8')
-        try:
-            with override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test'):
-                answer = self.client1.post(
-                    reverse('copilot_chat_api'),
-                    data=json.dumps({'message': 'What was my top spending this month?'}),
-                    content_type='application/json',
-                )
-        finally:
-            provider_response.stop()
+        }
+        with (
+            override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test'),
+            patch('tracker.views.urllib.request.urlopen') as mocked_urlopen,
+        ):
+            mocked_urlopen.return_value.__enter__.return_value.read.return_value = json.dumps(response_body).encode('utf-8')
+            answer = self.client1.post(
+                reverse('copilot_chat_api'),
+                data=json.dumps({'message': 'What was my top spending this month?'}),
+                content_type='application/json',
+            )
 
         self.assertEqual(greeting.status_code, 200)
         self.assertIn('₦21,500.00', greeting.json()['greeting'])
