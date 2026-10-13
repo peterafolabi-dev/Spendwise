@@ -1,9 +1,11 @@
 import base64
 import json
+import re
 from io import StringIO
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
+from django.core import mail
 from django.test import TestCase, Client, RequestFactory, override_settings
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -70,6 +72,51 @@ class TrackerTests(TestCase):
         self.assertContains(logout_response, 'You have been logged out.')
         self.assertContains(logout_response, 'data-toast-message')
         self.assertNotIn('_auth_user_id', client.session)
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_password_reset_sends_email_and_completes_password_change(self):
+        user = User.objects.create_user(
+            username='reset-user',
+            email='reset@example.com',
+            password='OldStrongPassword!846',
+        )
+        reset_request = self.client.post(
+            reverse('password_reset'),
+            {'email': user.email},
+            follow=True,
+        )
+
+        self.assertEqual(reset_request.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('reset-user', mail.outbox[0].body)
+        self.assertIn('/reset/', mail.outbox[0].body)
+
+        reset_path = re.search(r'http://testserver(/reset/[^\\s]+)', mail.outbox[0].body).group(1)
+        confirm_page = self.client.get(reset_path)
+        self.assertEqual(confirm_page.status_code, 200)
+        self.assertContains(confirm_page, 'Set a new password')
+
+        usable_reset_path = confirm_page.redirect_chain[-1][0] if confirm_page.redirect_chain else reset_path
+        confirm = self.client.post(
+            usable_reset_path,
+            {'new_password1': 'NewStrongPassword!864', 'new_password2': 'NewStrongPassword!864'},
+            follow=True,
+        )
+        user.refresh_from_db()
+
+        self.assertEqual(confirm.status_code, 200)
+        self.assertContains(confirm, 'Your password has been set')
+        self.assertTrue(user.check_password('NewStrongPassword!864'))
+
+    def test_password_reset_pages_are_available_without_email_delivery_configured(self):
+        reset_form = Client().get(reverse('password_reset'))
+        reset_done = Client().get(reverse('password_reset_done'))
+        reset_complete = Client().get(reverse('password_reset_complete'))
+
+        self.assertEqual(reset_form.status_code, 200)
+        self.assertContains(reset_form, 'Reset your password')
+        self.assertEqual(reset_done.status_code, 200)
+        self.assertEqual(reset_complete.status_code, 200)
         
     def test_ownership(self):
         # User 1 should not see User 2's account
