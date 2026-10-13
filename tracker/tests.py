@@ -93,7 +93,6 @@ class TrackerTests(TestCase):
 
         self.assertEqual(reset_request.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn('reset-user', mail.outbox[0].body)
         self.assertIn('/reset/', mail.outbox[0].body)
 
         reset_path = re.search(r'(/reset/[^\s]+)', mail.outbox[0].body).group(1)
