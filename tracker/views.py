@@ -525,6 +525,18 @@ def profile_view(request):
         elif action == 'revoke_sessions':
             messages.success(request, 'All other active browser sessions have been revoked.')
             return redirect('profile')
+
+        elif action == 'remove_passkey':
+            credential_id = request.POST.get('credential_id', '')
+            deleted, _ = PasskeyCredential.objects.filter(
+                user=user,
+                credential_id=credential_id,
+            ).delete()
+            if deleted:
+                messages.success(request, 'Passkey removed. You can register it again from this page.')
+            else:
+                messages.error(request, 'That passkey was not found on your account.')
+            return redirect('profile')
             
         elif action == 'delete_account':
             user.delete()
@@ -1297,7 +1309,20 @@ def passkey_verify(request):
         return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
     except WebAuthnException as exc:
         logger.warning('WebAuthn authentication failed: %s', exc)
-        return JsonResponse({'status': 'error', 'message': 'Passkey verification failed. Please try again.'}, status=400)
+        reason = str(exc)
+        if 'Unexpected client data origin' in reason or 'Unexpected RP ID hash' in reason:
+            message = (
+                'This passkey was registered for a different website address. Open the original '
+                'SpendWise address, or sign in with your password and register a passkey for this address.'
+            )
+        elif 'Could not verify authentication signature' in reason or 'Response sign count' in reason:
+            message = (
+                'This passkey no longer matches its saved credential. Sign in with your password, '
+                'remove this passkey in Settings, and register it again.'
+            )
+        else:
+            message = 'Passkey verification failed. Please try again or sign in with your password.'
+        return JsonResponse({'status': 'error', 'message': message}, status=400)
 
 
 def passkey_register_challenge(request):
