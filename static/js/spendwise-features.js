@@ -562,29 +562,49 @@ What would you like to explore or optimize next?`;
             },
             body: JSON.stringify(data),
         });
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
         if (!response.ok) {
-            const error = new Error(result.message || 'The passkey request could not be completed.');
+            const error = new Error(result.message || `Passkey request failed (${response.status}).`);
             error.isServerError = true;
             throw error;
         }
         return result;
     }
 
-    window.triggerBiometricAuth = async function () {
-        if (!window.PublicKeyCredential) {
-            showToast('⚠️ Passkeys are not supported by this browser.');
-            return;
+    function showPasskeyStatus(message, isError = false) {
+        const status = document.getElementById('passkey-status');
+        if (status) {
+            status.textContent = message;
+            status.classList.toggle('text-rose-500', isError);
+            status.classList.toggle('text-emerald-600', !isError);
+            status.classList.remove('hidden');
         }
+        showToast(message);
+    }
 
-        // Use localhost as the relying-party domain for local development.
-        if (window.location.hostname === '127.0.0.1') {
-            window.location.hostname = 'localhost';
-            return;
+    function ensurePasskeyContext() {
+        if (!window.PublicKeyCredential || !navigator.credentials) {
+            showPasskeyStatus('This browser does not support passkeys. Sign in with your password instead.', true);
+            return false;
         }
+        if (!window.isSecureContext) {
+            showPasskeyStatus('Passkeys require HTTPS. Open the secure SpendWise URL and try again.', true);
+            return false;
+        }
+        if (window.location.hostname === '127.0.0.1') {
+            const localUrl = new URL(window.location.href);
+            localUrl.hostname = 'localhost';
+            window.location.replace(localUrl.href);
+            return false;
+        }
+        return true;
+    }
+
+    window.triggerBiometricAuth = async function () {
+        if (!ensurePasskeyContext()) return;
 
         try {
-            showToast('🔐 Waiting for passkey…');
+            showPasskeyStatus('Waiting for a passkey…');
             const options = await postPasskeyJson('/api/passkey/challenge/', {});
             options.challenge = base64UrlToBytes(options.challenge);
             options.allowCredentials = (options.allowCredentials || []).map(item => ({
@@ -593,7 +613,7 @@ What would you like to explore or optimize next?`;
             }));
             const credential = await navigator.credentials.get({ publicKey: options });
             if (!credential) {
-                showToast('ℹ️ No passkey selected.');
+                showPasskeyStatus('No passkey was selected. Try again or sign in with your password.', true);
                 return;
             }
 
@@ -611,36 +631,28 @@ What would you like to explore or optimize next?`;
         } catch (err) {
             console.warn('WebAuthn Passkey Error:', err);
             if (err.isServerError) {
-                showToast('❌ ' + err.message);
+                showPasskeyStatus(err.message, true);
             } else if (err.name === 'NotAllowedError') {
-                showToast('ℹ️ No passkey was selected, or the request timed out.');
+                showPasskeyStatus('No passkey was selected, or the request timed out. Try again or use your password.', true);
             } else if (err.name === 'AbortError') {
-                showToast('ℹ️ Passkey sign-in was cancelled.');
+                showPasskeyStatus('Passkey sign-in was cancelled.', true);
             } else {
-                showToast('⚠️ Passkey sign-in failed. Please try again.');
+                showPasskeyStatus(err.message || 'Passkey sign-in failed. Please try again.', true);
             }
         }
     };
 
     window.registerPasskeyDevice = async function (deviceName = 'Biometric Passkey', username = '') {
-        if (!window.PublicKeyCredential) {
-            showToast('⚠️ Passkeys are not supported by this browser.');
-            return;
-        }
-
-        if (window.location.hostname === '127.0.0.1') {
-            window.location.hostname = 'localhost';
-            return;
-        }
+        if (!ensurePasskeyContext()) return;
 
         try {
             const isSignup = Boolean(document.getElementById('signup-typewriter'));
             if (isSignup && !username.trim()) {
-                showToast('Enter a username to create your account.');
+                showPasskeyStatus('Enter a username to create your account.', true);
                 document.getElementById('id_username')?.focus();
                 return;
             }
-            showToast(isSignup ? '🔐 Creating your account passkey…' : '🔐 Starting passkey registration…');
+            showPasskeyStatus(isSignup ? 'Creating your account passkey…' : 'Starting passkey registration…');
             const options = await postPasskeyJson('/api/passkey/register/challenge/', { username });
             options.challenge = base64UrlToBytes(options.challenge);
             options.user.id = base64UrlToBytes(options.user.id);
@@ -651,7 +663,7 @@ What would you like to explore or optimize next?`;
 
             const credential = await navigator.credentials.create({ publicKey: options });
             if (!credential) {
-                showToast('ℹ️ Passkey registration was cancelled.');
+                showPasskeyStatus('Passkey registration was cancelled.', true);
                 return;
             }
 
@@ -673,11 +685,11 @@ What would you like to explore or optimize next?`;
         } catch (err) {
             console.warn('Registration error:', err);
             if (err.isServerError) {
-                showToast('❌ ' + err.message);
+                showPasskeyStatus(err.message, true);
             } else if (err.name === 'NotAllowedError') {
-                showToast('ℹ️ Registration cancelled or timed out.');
+                showPasskeyStatus('Registration was cancelled or timed out. Try again.', true);
             } else {
-                showToast('⚠️ Passkey registration failed. Please try again.');
+                showPasskeyStatus(err.message || 'Passkey registration failed. Please try again.', true);
             }
         }
     };

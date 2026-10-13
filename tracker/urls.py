@@ -10,6 +10,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('chat/', RedirectView.as_view(url='/dashboard/#copilot', permanent=False), name='copilot_chat'),
+    path('api/copilot/context/', views.copilot_context, name='copilot_context'),
+    path('api/copilot/chat/', views.copilot_chat, name='copilot_chat_api'),
     
     path('accounts/', views.AccountListView.as_view(), name='account_list'),
     path('accounts/login/', views.login_view, name='accounts_login'),
@@ -61,4 +63,3 @@ urlpatterns = [
     path('api/passkey/register/challenge/', views.passkey_register_challenge, name='passkey_register_challenge'),
     path('api/passkey/register/verify/', views.passkey_register_verify, name='passkey_register_verify'),
 ]
-

@@ -24,6 +24,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum, F
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, PasskeyCredential
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
@@ -229,7 +230,7 @@ def dashboard_view(request):
         }
         for days in (0, 30, 60, 90)
     ] if historical_income or historical_expenses else []
-    projected_balance = Decimal(str(forecast[-1]['balance'])) if forecast else None
+    projected_balance = total_balance + average_daily_net * Decimal('90') if forecast else None
 
     recurring_bills = RecurringTransaction.objects.filter(user=user).order_by('next_due_date')[:4]
 
@@ -245,6 +246,10 @@ def dashboard_view(request):
         'safe_to_spend_today': safe_to_spend_today,
         'budget_remaining': budget_remaining,
         'total_budget_limit': total_budget_limit,
+        'budget_remaining_ratio': (
+            min(100, int(budget_remaining / total_budget_limit * 100))
+            if total_budget_limit > 0 else 0
+        ),
         'days_left': days_left,
         'roundup_estimate': roundup_estimate,
         'cat_data_json': json.dumps(cat_data),
@@ -320,6 +325,7 @@ def _copilot_metrics(user):
 
 
 @login_required
+@ensure_csrf_cookie
 def copilot_context(request):
     metrics = _copilot_metrics(request.user)
     greeting = (
@@ -1051,7 +1057,10 @@ def import_csv(request):
     return render(request, 'tracker/import_csv.html')
 
 def _webauthn_rp_and_origin(request):
-    origin = (getattr(settings, 'WEBAUTHN_ORIGIN', '') or request.build_absolute_uri('/')).rstrip('/')
+    origin = (
+        getattr(settings, 'WEBAUTHN_ORIGIN', '')
+        or request.build_absolute_uri('/')
+    ).rstrip('/')
     rp_id = (getattr(settings, 'WEBAUTHN_RP_ID', '') or urlsplit(origin).hostname or '').lower().strip('.')
     if not rp_id:
         raise ValueError('Could not determine the WebAuthn relying-party domain.')
