@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.auth.models import User
 from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal
 
 class AccountForm(forms.ModelForm):
