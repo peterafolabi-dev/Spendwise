@@ -45,10 +45,16 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.apple',
     'tracker',
 ]
 
@@ -59,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -86,6 +93,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'tracker.context_processors.social_login_providers',
             ],
         },
     },
@@ -146,6 +154,7 @@ STORAGES = {
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
+SITE_ID = 1
 LOGOUT_REDIRECT_URL = 'landing'
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
@@ -160,7 +169,7 @@ EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
     (
         'django.core.mail.backends.smtp.EmailBackend'
-        if EMAIL_HOST
+        if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
         else (
             'django.core.mail.backends.console.EmailBackend'
             if DEBUG
@@ -168,3 +177,47 @@ EMAIL_BACKEND = os.environ.get(
         )
     ),
 )
+
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '').strip()
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '').strip()
+APPLE_OAUTH_CLIENT_ID = os.environ.get('APPLE_OAUTH_CLIENT_ID', '').strip()
+APPLE_OAUTH_KEY_ID = os.environ.get('APPLE_OAUTH_KEY_ID', '').strip()
+APPLE_OAUTH_TEAM_ID = os.environ.get('APPLE_OAUTH_TEAM_ID', '').strip()
+APPLE_OAUTH_PRIVATE_KEY = os.environ.get('APPLE_OAUTH_PRIVATE_KEY', '').replace('\\n', '\n').strip()
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APPS': (
+            [{
+                'client_id': GOOGLE_OAUTH_CLIENT_ID,
+                'secret': GOOGLE_OAUTH_CLIENT_SECRET,
+                'key': '',
+            }]
+            if GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET
+            else []
+        ),
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'OAUTH_PKCE_ENABLED': True,
+    },
+    'apple': {
+        'APPS': (
+            [{
+                'client_id': APPLE_OAUTH_CLIENT_ID,
+                'secret': APPLE_OAUTH_KEY_ID,
+                'key': APPLE_OAUTH_TEAM_ID,
+                'settings': {'certificate_key': APPLE_OAUTH_PRIVATE_KEY},
+            }]
+            if all((
+                APPLE_OAUTH_CLIENT_ID,
+                APPLE_OAUTH_KEY_ID,
+                APPLE_OAUTH_TEAM_ID,
+                APPLE_OAUTH_PRIVATE_KEY,
+            ))
+            else []
+        ),
+    },
+}
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_LOGIN_METHODS = {'username'}
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'email*', 'password1*', 'password2*']

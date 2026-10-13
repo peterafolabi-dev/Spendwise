@@ -91,12 +91,12 @@ class TrackerTests(TestCase):
         self.assertIn('reset-user', mail.outbox[0].body)
         self.assertIn('/reset/', mail.outbox[0].body)
 
-        reset_path = re.search(r'http://testserver(/reset/[^\\s]+)', mail.outbox[0].body).group(1)
-        confirm_page = self.client.get(reset_path)
+        reset_path = re.search(r'(/reset/[^\s]+)', mail.outbox[0].body).group(1)
+        confirm_page = self.client.get(reset_path, follow=True)
         self.assertEqual(confirm_page.status_code, 200)
         self.assertContains(confirm_page, 'Set a new password')
 
-        usable_reset_path = confirm_page.redirect_chain[-1][0] if confirm_page.redirect_chain else reset_path
+        usable_reset_path = confirm_page.request['PATH_INFO']
         confirm = self.client.post(
             usable_reset_path,
             {'new_password1': 'NewStrongPassword!864', 'new_password2': 'NewStrongPassword!864'},
@@ -117,6 +117,22 @@ class TrackerTests(TestCase):
         self.assertContains(reset_form, 'Reset your password')
         self.assertEqual(reset_done.status_code, 200)
         self.assertEqual(reset_complete.status_code, 200)
+
+    def test_social_login_buttons_only_appear_when_provider_credentials_are_configured(self):
+        with override_settings(
+            GOOGLE_OAUTH_CLIENT_ID='google-client-id',
+            GOOGLE_OAUTH_CLIENT_SECRET='google-client-secret',
+            APPLE_OAUTH_CLIENT_ID='apple-service-id',
+            APPLE_OAUTH_KEY_ID='apple-key-id',
+            APPLE_OAUTH_TEAM_ID='apple-team-id',
+            APPLE_OAUTH_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
+        ):
+            response = Client().get(reverse('login'))
+
+        self.assertContains(response, 'Continue with Google')
+        self.assertContains(response, 'Continue with Apple')
+        self.assertContains(response, reverse('google_login'))
+        self.assertContains(response, reverse('apple_login'))
         
     def test_ownership(self):
         # User 1 should not see User 2's account
