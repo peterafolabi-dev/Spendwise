@@ -501,7 +501,7 @@ What would you like to explore or optimize next?`;
         });
     };
 
-    // ── 6. RECEIPT SCANNER & OCR ────────────────────────────────────────────────
+    // ── 6. RECEIPT ATTACHMENT INFORMATION ───────────────────────────────────────
     window.openReceiptScanner = function () {
         const modal = document.getElementById('receipt-scanner-modal');
         if (modal) modal.classList.remove('hidden');
@@ -510,40 +510,6 @@ What would you like to explore or optimize next?`;
     window.closeReceiptScanner = function () {
         const modal = document.getElementById('receipt-scanner-modal');
         if (modal) modal.classList.add('hidden');
-    };
-
-    window.handleReceiptUpload = function (event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const status = document.getElementById('ocr-status');
-        const preview = document.getElementById('ocr-preview-container');
-        if (status) status.innerHTML = `<span class="animate-pulse text-emerald-500 font-semibold">🔍 Scanning receipt text with OCR engine…</span>`;
-
-        // Simulate intelligent OCR extraction
-        setTimeout(() => {
-            const simulatedMerchants = ['Mega Supermarket', 'Domino’s Pizza', 'Uber Trip', 'Shell Petrol Station', 'Starbucks Coffee'];
-            const randomMerchant = simulatedMerchants[Math.floor(Math.random() * simulatedMerchants.length)];
-            const randomAmount = (Math.floor(Math.random() * 85) + 15) * 100; // e.g. 4500
-
-            if (status) {
-                status.innerHTML = `
-                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-left">
-                        <p class="text-xs uppercase font-bold text-emerald-500 tracking-wider">OCR Scan Success</p>
-                        <p class="text-sm font-semibold text-slate-800 dark:text-white mt-1">Merchant: ${randomMerchant}</p>
-                        <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Total: ₦${randomAmount.toLocaleString()}.00</p>
-                        <button onclick="applyOcrToTransaction('${randomMerchant}', ${randomAmount})" class="mt-2 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">
-                            Use in New Transaction →
-                        </button>
-                    </div>
-                `;
-            }
-        }, 1200);
-    };
-
-    window.applyOcrToTransaction = function (merchant, amount) {
-        closeReceiptScanner();
-        window.location.href = `/transactions/create/?note=${encodeURIComponent(merchant)}&amount=${amount}`;
     };
 
     // ── 7. REAL WEBAUTHN BIOMETRIC & PASSKEY AUTHENTICATOR ───────────────────────

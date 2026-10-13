@@ -5,13 +5,14 @@ from io import StringIO
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
-from django.test import TestCase, Client
+from django.test import TestCase, Client, RequestFactory, override_settings
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Sum
 from webauthn.helpers.exceptions import WebAuthnException
 from .models import Account, Category, Transaction, Budget, RecurringTransaction, PasskeyCredential
+from .views import _webauthn_rp_and_origin
 
 class TrackerTests(TestCase):
     def setUp(self):
@@ -282,20 +283,23 @@ class TrackerTests(TestCase):
         self.assertNotIn('**', answer.json()['reply'])
 
     def test_passkey_challenge_uses_https_origin_from_render_proxy(self):
-        response = self.client.post(
-            reverse('passkey_challenge'),
-            data='{}',
-            content_type='application/json',
+        request = RequestFactory().post(
+            '/api/passkey/challenge/',
             HTTP_HOST='spendwise.example.com',
             HTTP_X_FORWARDED_PROTO='https',
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['rpId'], 'spendwise.example.com')
+        with override_settings(ALLOWED_HOSTS=['spendwise.example.com']):
+            self.assertEqual(
+                _webauthn_rp_and_origin(request),
+                ('spendwise.example.com', 'https://spendwise.example.com'),
+            )
 
     def test_login_page_exposes_passkey_feedback_and_script(self):
         response = Client().get(reverse('login'))
 
         self.assertContains(response, 'Sign in with Passkey / Face ID / Touch ID')
         self.assertContains(response, 'id="passkey-status"')
-        self.assertContains(response, 'static/js/spendwise-features.js')
+        self.assertContains(response, 'spendwise-features.')
+        self.assertNotContains(response, '>Google</button>')
+        self.assertNotContains(response, '>Apple</button>')

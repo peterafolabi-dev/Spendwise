@@ -1,50 +1,33 @@
-# 💸 SpendWise — Autonomous Financial Engine & Predictive Runway
+# 💸 SpendWise — Personal Finance Tracker & Cash-Flow Planner
 
-> **Portfolio Project — Designed & Engineered by a Computer Engineering Student**  
-> An executive-grade personal finance operating system engineered with **Django 6.1**, **Tailwind CSS v4**, **Vanilla ES6+ JavaScript**, and **W3C WebAuthn (FIDO2) Hardware Biometrics**.
+> **Portfolio project**  
+> A Django personal-finance tracker focused on NGN budgeting, account balances, spending history, and passkey authentication.
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![Django 6.1](https://img.shields.io/badge/Django-6.1-092E20?style=flat&logo=django&logoColor=white)](https://djangoproject.com)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![WebAuthn FIDO2](https://img.shields.io/badge/Security-WebAuthn_FIDO2-green?style=flat&logo=fido&logoColor=white)](https://fidoalliance.org)
-[![PWA Ready](https://img.shields.io/badge/PWA-Installable_&_Offline_Ready-purple?style=flat&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
-[![Test Suite](https://img.shields.io/badge/Tests-7%20Passed%20(100%25)-brightgreen?style=flat&logo=pytest&logoColor=white)]()
 
 ---
 
 ## 📌 Executive Summary & Engineering Motivation
 
-As a **Computer Engineering student**, managing irregular cash flows, tech investments (laptops, servers, cloud credits), tuition milestones, and peer-shared expenses highlighted a major gap in existing financial software: **most apps are glorified digital receipts with zero forward-looking intelligence, no hardware security, and bloated third-party dependencies**.
+SpendWise is a personal-finance project for recording accounts and transactions, setting category budgets, and tracking savings goals. It is designed for NGN-based use and does not connect to bank accounts.
 
-**SpendWise** was engineered from the ground up as a zero-compromise financial operating system. It merges rigorous software engineering principles with fintech capabilities:
-1. **Mathematical Precision**: Replaced IEEE 754 floating-point inaccuracies with Python `Decimal` fixed-point arithmetic throughout all ledger balances and aggregations.
-2. **Hardware-Anchored Security**: Integrated W3C WebAuthn Level 3 (FIDO2) for hardware biometric passkeys (Windows Hello, Touch ID, Face ID), eliminating password credential theft.
-3. **Predictive Analytics**: Implemented a forward-looking cash flow runway model and a dynamic "Safe-to-Spend" daily envelope calculator.
-4. **Zero-Bloat Vanilla UI**: Handcrafted responsive SVG area/donut charts and interactive UI flows without relying on heavy chart or component libraries, achieving sub-millisecond rendering speeds and offline PWA capability.
+Implemented capabilities include decimal-based account calculations, user-scoped Django views, category budgets, recurring-payment schedules, CSV transaction import/export, and optional WebAuthn passkeys. The dashboard includes an indicative 90-day projection based on the user's recent average net cash flow; it is not a financial forecast or guarantee.
 
 ---
 
 ## 🏛️ System Architecture
 
-SpendWise is structured as a modular Django application with clean separation between relational data modeling, asynchronous AJAX controllers, client-side progressive enhancement, and static pipeline bundling.
+SpendWise is a Django application with server-rendered pages, user-scoped financial records, and JavaScript enhancements for interactive charts and selected actions.
 
 ```
 SpendWise Architecture
-├── WebAuthn / FIDO2 Authenticator (Hardware TPM / Touch ID / Windows Hello)
-│       └── Cryptographic Challenge & Signature Verification (RP ID: localhost)
-├── Presentation Layer (Tailwind CSS v4 + Vanilla JS + PWA Service Worker)
-│   ├── Global Command Palette (⌘K / Ctrl+K Spotlight Bar)
-│   ├── One-Click Privacy Mode (Non-destructive CSS Blur Engine)
-│   ├── Interactive Slide-Over Ledger Drawer & Split Bill Modal
-│   ├── Dynamic SVG Financial Charts (6-Month Trend & Predictive Runway)
-│   └── Embedded AI Financial Copilot (Contextual Natural Language Assistant)
-├── Application Layer (Django 6.1 MTV Architecture)
-│   ├── Strict User-Scoped Mixins (Insecure Direct Object Reference Defense)
-│   ├── Sliding-Window IP Rate Limiter (Brute-Force Attack Mitigation)
-│   ├── Formula Injection-Proof CSV & JSON Audit Serialization
-│   └── Dynamic Category Reassignment on Cascade Deletions
-└── Data Layer (SQLite in Development / PostgreSQL in Production)
-    └── 8 Normalized Relational Entities with Atomic Transactions
+├── Presentation: Django templates, Tailwind CSS, and JavaScript
+├── Application: Django views, forms, authentication, and financial calculations
+├── Authentication: Django sessions and optional WebAuthn passkeys
+└── Storage: SQLite for local development; PostgreSQL on the Render blueprint
 ```
 
 ---
@@ -56,21 +39,18 @@ SpendWise Architecture
 - Keyboard-first navigation: jump between Ledger, Envelopes, Predictive Runway, Reports, and Account Settings without touching the mouse.
 - Quick actions: Launch the Bill Splitter, toggle Privacy Mode, trigger Quick Add (`N`), or view shortcut cheatsheets (`?`).
 
-### 2. 🏦 Unified Multi-Account & Multi-Currency Ledger
-- Aggregate bank accounts, petty cash wallets, virtual credit cards, and locked savings vaults in a consolidated net worth view.
-- Real-time live multi-currency converter supporting **NGN (₦)**, **USD ($)**, **GBP (£)**, and **EUR (€)**.
-- Full support for historical baselines, starting balances, and color tags.
+### 2. 🏦 NGN Account Ledger
+- Track cash, bank, card, and savings accounts with opening balances and transactions.
+- All balances are currently treated as NGN. Account-specific currencies and exchange-rate conversion are not implemented.
 
 ### 3. 🎯 Smart Budget Envelopes & "Safe-to-Spend" Dial
-- **Safe-to-Spend Engine**: Dynamically calculates exact daily spend limits:
-  $$\text{Daily Allowance} = \frac{\text{Current Envelope Balance} - \text{Scheduled Recurring Bills}}{\text{Days Remaining in Cycle}}$$
+- **Safe-to-Spend estimate**: Divides remaining category budget after current-month recorded spending and scheduled recurring expenses by the remaining calendar days. It is an estimate, not a guarantee.
 - **Historical 30-Day Insight**: Contextual helper card showing exact past 30-day spend when configuring budget envelopes.
 - **Envelope Controls**: Monthly category usage bars with near-limit (80%) and over-budget alerts.
 
-### 4. 📊 Predictive Cash Flow Runway
-- Forward-looking financial runway forecasting analyzing trailing 90-day outflow velocity against liquid cash reserves.
-- Custom smooth curved SVG gradient area charts projecting net financial trajectory 3 to 6 months into the future.
-- Visual burn-rate indicators alerting the user when projected outlays threaten their safety runway.
+### 4. 📊 Indicative 90-Day Cash-Flow Projection
+- Projects account balance using the average daily net income/expense recorded over the trailing 90 days.
+- The dashboard labels this as an estimate and shows no projection until there is transaction history.
 
 ### 5. 🧾 Intelligent Transaction Ledger & Slide-Over Drawer
 - Search notes, categories, account names, and exact amounts; filter by type, account, and date range.
@@ -90,38 +70,32 @@ SpendWise Architecture
 - Credentials are stored as public keys and counters; private keys stay with the authenticator (Windows Hello, Touch ID, Face ID, or security keys).
 - For deployments behind a proxy, configure `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGIN`; WebAuthn requires HTTPS except on localhost.
 
-### 8. 🤖 Embedded AI Financial Copilot
-- Intelligent in-app financial assistant trained on personal budgeting, engineering expenses, and personal finance rules.
-- **Capabilities**:
-  - **Dynamic Calculations**: Parses queries like *"If I save ₦30,000 for 8 months"* into real-time compounding projection tables.
-  - **50/30/20 Rule Analysis**: Tailors advice for students, developers, and young professionals.
-  - **Tech Investment Reviews**: Analyzes purchases (MacBooks, monitors, servers) with amortization advice.
-  - **Debt Payoff & Splitting**: Explains debt snowball methods, IOU tracking, and inflation hedging strategies.
-  - **System Navigation**: Explains all shortcuts, passkey setup, and export tools.
+### 8. 💬 Personalized Money Coach
+- Shows recorded account balance, month-to-date spending, and the highest-spend category for the signed-in user.
+- Answers a limited set of questions with server-side rules and `Decimal` calculations, including simple contribution-times-months savings scenarios.
+- This is not a generative AI model and does not provide financial advice. It does not send financial data to an AI provider.
 
 ### 9. 👁️ One-Click Privacy Mode (`Ctrl + P` / Eye Toggle)
 - Non-destructive client-side privacy shield applying `filter: blur(8px)` across all `.currency-val` elements.
 - State persists in `localStorage` with inline boot scripts to prevent content flash during page loads.
 - Perfect for working in university libraries, cafes, or presenting over screen shares.
 
-### 10. 📸 OCR Receipt Scanner
-- Upload receipt photos or PDFs to automatically extract merchant name, transaction date, and total amount.
-- 1-click transition from scanned receipt into a pre-filled transaction form.
+### 10. 📸 Receipt Attachments
+- Transaction forms support receipt image attachments.
+- Automatic OCR is not implemented; the receipt helper says so rather than inventing extracted values.
 
 ### 11. 🔁 Recurring Commitments & Subscriptions
-- Auto-tracking for subscriptions (Netflix, Spotify, Starlink), quarterly bills, and annual rent.
-- Real-time commitment calculator projecting annualized obligations (e.g. `₦25,000/mo = ₦300,000/yr total commitment`).
-- Visual upcoming bill radar with warnings 3 days prior to due dates.
+- Track weekly, biweekly, monthly, and yearly commitments and see upcoming due dates.
+- Monthly commitment totals normalize each schedule frequency; scheduled entries are not automatically posted as transactions.
 
 ### 12. 🔒 Savings Vaults & Milestone Pacing
-- Create dedicated goal vaults (Emergency Buffer, Tech Gear, Rent, Investments).
-- Quick preset target chips (`3 Months`, `6 Months`, `End of Year`).
-- Real-time pace projector calculating required monthly and weekly contributions.
+- Set a savings target linked to an account and track its target date.
+- Progress uses the linked account's current balance; goals do not reserve or transfer money.
 
 ### 13. 🛡️ Data Sovereignty & Audit Tools
 - **Sanitized CSV Export**: Automatically escapes dangerous formula characters (`=`, `+`, `-`, `@`) to protect against Excel CSV injection attacks.
-- **Full JSON Backup**: One-click complete database export of all models.
-- **CSV Bank Statement Importer**: Upload statements with automated malformed row skipping and validation error logs.
+- **JSON transaction export**: Download the user's transaction records.
+- **CSV transaction importer**: Import compatible transaction rows; invalid rows are skipped.
 
 ---
 
@@ -214,13 +188,11 @@ erDiagram
 
 | Threat Vector | Mitigation Strategy Implemented in SpendWise |
 |---|---|
-| **Insecure Direct Object Reference (IDOR)** | Custom `UserOwnedMixin` strictly scopes every database query (`filter(user=request.user)`). Cross-user access returns an immediate HTTP 404. |
-| **Formula Injection (CSV Injection)** | `escape_csv_formula()` prepends a single quote `'` to any cell starting with `=`, `+`, `-`, or `@` prior to CSV generation. |
-| **Credential Phishing & Replay** | W3C WebAuthn public-key authentication ensures private keys never leave client hardware; monotonic signature counters reject cloned assertions. |
-| **Data Cascade Deletion** | Deleting a category automatically cascades past transactions into an `"Uncategorised"` category instead of wiping financial history. |
-| **Brute Force & Rate Exhaustion** | Sliding-window cache rate limiters throttle authentication endpoints (login capped at 10 requests / 5 mins; signups at 5 / hour). |
-| **Floating-Point Imprecision** | All currency operations strictly enforce Python `Decimal` fixed-point representations up to 12 digits and 2 decimal places. |
-| **Public Balance Peeking** | One-Click Privacy Mode non-destructively masks sensitive balances using hardware-accelerated CSS blurring. |
+| **Account ownership** | Financial views scope records to the authenticated user; tests cover cross-user account visibility. |
+| **CSV formula injection** | CSV export escapes formula-leading cell values before writing rows. |
+| **Passkey verification** | WebAuthn challenges and signatures are verified server-side; a regression test ensures an invalid assertion does not authenticate a user. |
+| **Financial arithmetic** | Monetary values and balance calculations use Python `Decimal` rather than binary floating point. |
+| **Sensitive balance display** | Privacy mode visually blurs amounts in the browser. This is a presentation feature, not an access-control or encryption boundary. |
 
 ---
 
@@ -228,13 +200,12 @@ erDiagram
 
 | Layer | Technologies |
 |---|---|
-| **Backend Framework** | Python 3.12, Django 6.1.1 (MTV Pattern) |
+| **Backend Framework** | Python 3.10+, Django 5+ |
 | **Database** | SQLite (Development) / PostgreSQL via `dj-database-url` (Production) |
 | **Frontend Styling** | Tailwind CSS v4.3 (JIT CLI compiler, custom `@theme` palette) |
-| **Frontend Scripting** | Vanilla ES6+ JavaScript (Zero chart libraries, zero jQuery, pure DOM APIs) |
+| **Frontend Scripting** | Vanilla JavaScript |
 | **Authentication** | Django Auth (PBKDF2-SHA256) + W3C WebAuthn / FIDO2 Hardware Biometrics |
-| **Static Assets** | WhiteNoise with custom Lenient Compressed Manifest Storage |
-| **Offline & PWA** | Web App Manifest (`manifest.webmanifest`) + Caching Service Worker (`sw.js`) |
+| **Static Assets** | WhiteNoise |
 
 ---
 
@@ -267,7 +238,7 @@ erDiagram
 3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
-   npm install
+   npm ci
    ```
 
 4. **Run Migrations & Compile Assets**:
@@ -277,14 +248,11 @@ erDiagram
    python manage.py collectstatic --noinput
    ```
 
-5. **Seed Demo Data**:
-   Populate the database with realistic demo accounts, categories, transactions, budgets, and goals:
+5. **Optional: Seed Demo Data**:
+   This command creates a `demo` user with sample records. Do not run it in production. If a `demo` user already exists, the command deletes that user and recreates the demo account.
    ```bash
    python manage.py seed_demo
    ```
-   > **Demo Credentials**:
-   > - **Username**: `demo`
-   > - **Password**: `demo12345`
 
 6. **Launch the Development Server**:
    ```bash
@@ -294,22 +262,25 @@ erDiagram
 
 ---
 
+## 🚀 Deploying to Render
+
+The repository includes a `render.yaml` Blueprint for a Django web service and PostgreSQL database. Push the project to GitHub, create a Blueprint from the repository in Render, review the generated resources, and apply it. The configured build script installs dependencies, builds Tailwind assets, collects static files, and applies migrations.
+
+Render generates the production `SECRET_KEY` and connects the managed database through the Blueprint. For a custom domain, set `WEBAUTHN_RP_ID` to the domain and `WEBAUTHN_ORIGIN` to its HTTPS origin so passkeys use the same origin as the deployed site.
+
+Receipt uploads are stored on the web service's local media directory. They are not guaranteed to persist across service replacement or redeployment; configure persistent storage before relying on receipt attachments in production. To send password-reset emails, configure the `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, and `DEFAULT_FROM_EMAIL` environment variables.
+
+---
+
 ## 🧪 Automated Testing & Verification
 
-SpendWise features comprehensive unit and integration tests covering ownership isolation, decimal arithmetic precision, budget threshold detection, recurring schedule processing, CSV formula escaping, malformed statement recovery, and category deletion fallbacks:
+Run the Django test suite with:
 
 ```bash
 python manage.py test
 ```
 
-**Test Suite Coverage**:
-- `test_ownership_isolation`: Ensures users cannot access another user's accounts, transactions, or budgets.
-- `test_decimal_math_correctness`: Verifies currency math eliminates floating-point rounding errors.
-- `test_budget_limit_detection`: Validates budget overflow calculation logic.
-- `test_recurring_transaction_generation`: Confirms frequency intervals and schedule rules.
-- `test_csv_export_escaping`: Proves injection formula cells (`=CMD()`, `@SUM()`) are neutralized.
-- `test_csv_import_malformed_rows`: Tests robust error skipping on dirty CSV bank statements.
-- `test_category_deletion_fallback`: Validates auto-reassignment to `"Uncategorised"`.
+The suite covers account ownership visibility, decimal balance calculations, budget spending, CSV import/export, category deletion, passkey verification and registration, dashboard calculations, the personalized money-coach endpoints, and the HTTPS proxy origin used by passkeys.
 
 ---
 
@@ -330,11 +301,6 @@ python manage.py test
 **SpendWise** was conceived, architected, and built by a **Computer Engineering student** passionate about building robust, high-performance distributed systems, cryptographic security, and human-centric software.
 
 Key engineering takeaways demonstrated in this project:
-- **Zero-Dependency Frontend**: Writing high-performance charting, math, and UI interactivity in Vanilla JS rather than outsourcing basic browser capabilities to multi-megabyte npm dependencies.
+- **Progressive Enhancement**: Server-rendered Django pages with JavaScript for interactive charts and selected UI workflows.
 - **Hardware-Software Interface**: Bridging browser Web APIs with hardware biometrics (TPMs, Touch ID, Windows Hello) via W3C WebAuthn.
-- **Defensive API & Database Design**: Protecting against IDOR, SQL injection, formula injection, and denial-of-service through strict architectural guardrails.
-
----
-
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+- **Financial Data Integrity**: Decimal-based currency calculations and CSV export escaping for spreadsheet formula characters.

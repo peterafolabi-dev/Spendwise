@@ -917,8 +917,15 @@ class RecurringListView(UserOwnedMixin, ListView):
         user = self.request.user
         qs = self.get_queryset()
         
-        # Total monthly commitments (expenses)
-        monthly_commitments = qs.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        monthly_commitments = Decimal('0.00')
+        monthly_factors = {
+            'WEEKLY': Decimal(52) / Decimal(12),
+            'BIWEEKLY': Decimal(26) / Decimal(12),
+            'MONTHLY': Decimal(1),
+            'YEARLY': Decimal(1) / Decimal(12),
+        }
+        for recurring in qs.filter(type='EXPENSE'):
+            monthly_commitments += recurring.amount * monthly_factors[recurring.frequency]
         active_count = qs.count()
         next_bill = qs.filter(next_due_date__gte=timezone.now().date()).order_by('next_due_date').first() or qs.first()
         
