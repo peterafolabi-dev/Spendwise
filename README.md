@@ -260,6 +260,12 @@ erDiagram
    ```
    Open your browser to: **`http://localhost:8000`** (or `http://127.0.0.1:8000`).
 
+### Optional local WebAuthn test domain
+
+To test a different RP label on Windows, add `127.0.0.1 spendwise.test` to `C:\Windows\System32\drivers\etc\hosts` using an elevated editor. Serve `spendwise.test` over HTTPS with a locally trusted development certificate and a local TLS reverse proxy to Django; browsers only treat `localhost` as a secure HTTP origin by default, not arbitrary hosts-file names.
+
+Set the local environment to `ALLOWED_HOSTS=spendwise.test`, `CSRF_TRUSTED_ORIGINS=https://spendwise.test:8000`, `WEBAUTHN_RP_ID=spendwise.test`, and `WEBAUTHN_ORIGIN=https://spendwise.test:8000` (use the actual external HTTPS port, or omit it for port 443). `WEBAUTHN_RP_ID` is only the bare host name; `WEBAUTHN_ORIGIN` is the full HTTPS origin. Open the site using that exact host and origin. Passkeys registered for `localhost` are scoped to a different RP ID and must be registered again for `spendwise.test`.
+
 ---
 
 ## 🚀 Deploying to Render
