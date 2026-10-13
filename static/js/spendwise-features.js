@@ -611,7 +611,7 @@ What would you like to explore or optimize next?`;
         if (!ensurePasskeyContext()) return;
 
         try {
-            showPasskeyStatus('Waiting for a passkey…');
+            showPasskeyStatus('Choose a passkey, or select “Use another device” in your browser prompt. Keep Bluetooth on to use a nearby phone.');
             const options = await postPasskeyJson('/api/passkey/challenge/', {});
             options.challenge = base64UrlToBytes(options.challenge);
             options.allowCredentials = (options.allowCredentials || []).map(item => ({
