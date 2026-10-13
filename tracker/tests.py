@@ -244,6 +244,9 @@ class TrackerTests(TestCase):
         response = self.client1.get(reverse('dashboard'))
 
         self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'date-range-dropdown-wrapper')
+        self.assertNotContains(response, 'Oct 2026')
+        self.assertNotContains(response, 'Zero duplicate charges')
         self.assertEqual(response.context['total_balance'], Decimal('25.00'))
         self.assertEqual(response.context['monthly_expenses'], Decimal('75.00'))
         self.assertEqual(response.context['budget_remaining'], Decimal('65.00'))

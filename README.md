@@ -88,9 +88,9 @@ SpendWise Architecture
 - Track weekly, biweekly, monthly, and yearly commitments and see upcoming due dates.
 - Monthly commitment totals normalize each schedule frequency; scheduled entries are not automatically posted as transactions.
 
-### 12. 🔒 Savings Vaults & Milestone Pacing
+### 12. 🔒 Savings Goals
 - Set a savings target linked to an account and track its target date.
-- Progress uses the linked account's current balance; goals do not reserve or transfer money.
+- Progress uses the linked account's full current balance; goals do not earmark, reserve, or transfer money.
 
 ### 13. 🛡️ Data Sovereignty & Audit Tools
 - **Sanitized CSV Export**: Automatically escapes dangerous formula characters (`=`, `+`, `-`, `@`) to protect against Excel CSV injection attacks.
