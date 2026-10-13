@@ -29,6 +29,45 @@ class TrackerTests(TestCase):
         self.acc2 = Account.objects.create(user=self.user2, name='Acc2', type='CASH', starting_balance=Decimal('200.00'))
         
         self.cat1 = Category.objects.create(user=self.user1, name='Food', type='EXPENSE')
+
+    def test_signup_creates_account_shows_message_and_redirects_to_login(self):
+        client = Client()
+
+        response = client.post(
+            reverse('signup'),
+            {
+                'username': 'new-user',
+                'password1': 'StrongTestPassword!846',
+                'password2': 'StrongTestPassword!846',
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.redirect_chain, [(reverse('login'), 302)])
+        self.assertContains(response, 'Account created successfully. Please sign in.')
+        self.assertFalse(User.objects.get(username='new-user').is_authenticated)
+        self.assertNotIn('_auth_user_id', client.session)
+
+    def test_login_welcomes_user_and_logout_shows_confirmation(self):
+        user = User.objects.create_user(
+            username='welcome-user',
+            password='StrongTestPassword!846',
+            first_name='Welcome',
+        )
+        client = Client()
+
+        login_response = client.post(
+            reverse('login'),
+            {'username': user.username, 'password': 'StrongTestPassword!846'},
+            follow=True,
+        )
+        self.assertEqual(login_response.redirect_chain, [(reverse('dashboard'), 302)])
+        self.assertContains(login_response, 'Welcome back, Welcome!')
+
+        logout_response = client.get(reverse('logout'), follow=True)
+        self.assertEqual(logout_response.redirect_chain, [(reverse('landing'), 302)])
+        self.assertContains(logout_response, 'You have been logged out.')
+        self.assertNotIn('_auth_user_id', client.session)
         
     def test_ownership(self):
         # User 1 should not see User 2's account

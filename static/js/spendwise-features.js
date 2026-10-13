@@ -786,7 +786,7 @@ What would you like to explore or optimize next?`;
             toast.className = 'fixed bottom-6 right-6 z-50 bg-slate-900/90 dark:bg-slate-800/95 text-white border border-slate-700/80 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl text-sm font-medium transition-all duration-300 transform translate-y-12 opacity-0 flex items-center gap-2';
             document.body.appendChild(toast);
         }
-        toast.innerHTML = msg;
+        toast.textContent = msg;
         toast.classList.remove('translate-y-12', 'opacity-0');
         setTimeout(() => {
             toast.classList.add('translate-y-12', 'opacity-0');

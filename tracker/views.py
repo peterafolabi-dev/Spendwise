@@ -74,9 +74,9 @@ def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('dashboard')
+            form.save()
+            messages.success(request, 'Account created successfully. Please sign in.')
+            return redirect('login')
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
@@ -91,6 +91,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
             return redirect('dashboard')
     else:
         form = AuthenticationForm()
@@ -99,6 +100,7 @@ def login_view(request):
 def logout_view(request):
     if request.method in ['GET', 'POST']:
         logout(request)
+        messages.success(request, 'You have been logged out.')
     return redirect('landing')
 
 @login_required
@@ -1339,11 +1341,11 @@ def passkey_register_verify(request):
                 )
 
         if not user_id:
-            login(request, user)
+            messages.success(request, 'Account created successfully with your passkey. Please sign in.')
             return JsonResponse({
                 'status': 'success',
-                'message': 'Your account and passkey are ready!',
-                'redirect_url': '/dashboard/',
+                'message': 'Account created successfully. Please sign in with your new passkey.',
+                'redirect_url': '/login/',
             })
         return JsonResponse({'status': 'success', 'message': 'Passkey registered successfully!'})
     except IntegrityError:
