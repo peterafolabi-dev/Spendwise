@@ -406,7 +406,7 @@ class TrackerTests(TestCase):
         response = Client().get(reverse('login'))
 
         self.assertContains(response, 'Sign in with Passkey / Face ID / Touch ID')
-        self.assertContains(response, 'secure passkey handoff, not a website link')
+        self.assertNotContains(response, 'To use your phone, choose')
         self.assertContains(response, 'id="passkey-status"')
         self.assertContains(response, 'spendwise-features.')
         self.assertNotContains(response, '>Google</button>')
