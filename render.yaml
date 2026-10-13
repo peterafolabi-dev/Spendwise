@@ -24,3 +24,7 @@ services:
         value: "True"
       - key: SECURE_HSTS_SECONDS
         value: "31536000"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
