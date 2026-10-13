@@ -322,7 +322,10 @@ class TrackerTests(TestCase):
         client = Client()
         client.post(reverse('passkey_challenge'), data='{}', content_type='application/json')
 
-        with patch('tracker.views.verify_authentication_response', side_effect=WebAuthnException('bad signature')):
+        with patch(
+            'tracker.views.verify_authentication_response',
+            side_effect=WebAuthnException('Could not verify authentication signature'),
+        ):
             response = client.post(
                 reverse('passkey_verify'),
                 data=json.dumps({'id': credential_id, 'rawId': credential_id, 'response': {}}),
@@ -330,7 +333,53 @@ class TrackerTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 400)
+        self.assertIn('remove this passkey in Settings', response.json()['message'])
         self.assertNotIn('_auth_user_id', client.session)
+
+    def test_passkey_authentication_reports_site_mismatch_safely(self):
+        credential_id = base64.urlsafe_b64encode(b'test-credential').decode().rstrip('=')
+        PasskeyCredential.objects.create(
+            user=self.user1, credential_id=credential_id,
+            public_key=base64.urlsafe_b64encode(b'public-key').decode().rstrip('='),
+        )
+        client = Client()
+        client.post(reverse('passkey_challenge'), data='{}', content_type='application/json')
+
+        with patch(
+            'tracker.views.verify_authentication_response',
+            side_effect=WebAuthnException('Unexpected RP ID hash'),
+        ):
+            response = client.post(
+                reverse('passkey_verify'),
+                data=json.dumps({'id': credential_id, 'rawId': credential_id, 'response': {}}),
+                content_type='application/json',
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('different website address', response.json()['message'])
+        self.assertNotIn('Unexpected RP ID hash', response.json()['message'])
+
+    def test_user_can_remove_only_their_own_passkey(self):
+        own_credential = PasskeyCredential.objects.create(
+            user=self.user1,
+            credential_id=base64.urlsafe_b64encode(b'user1-credential').decode().rstrip('='),
+            public_key='test-key',
+        )
+        other_credential = PasskeyCredential.objects.create(
+            user=self.user2,
+            credential_id=base64.urlsafe_b64encode(b'user2-credential').decode().rstrip('='),
+            public_key='test-key',
+        )
+
+        response = self.client1.post(
+            reverse('profile'),
+            {'action': 'remove_passkey', 'credential_id': own_credential.credential_id},
+        )
+
+        self.assertRedirects(response, reverse('profile'))
+        self.assertFalse(PasskeyCredential.objects.filter(pk=own_credential.pk).exists())
+        self.assertTrue(PasskeyCredential.objects.filter(pk=other_credential.pk).exists())
+        self.assertContains(self.client1.get(reverse('profile')), 'Passkey removed.')
 
     def test_passwordless_signup_creates_account_only_after_verification(self):
         client = Client()
