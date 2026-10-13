@@ -185,6 +185,7 @@
     };
 
     let copilotContextLoaded = false;
+    let copilotHistory = [];
 
     window.openCopilotModal = function () {
         const modal = document.getElementById('copilot-modal');
@@ -236,7 +237,7 @@
 
         addMessage(text, true);
         if (input) input.value = '';
-        const pending = addMessage('Checking your recorded figures…', false);
+        const pending = addMessage('Thinking…', false);
         try {
             const response = await fetch('/api/copilot/chat/', {
                 method: 'POST',
@@ -244,11 +245,19 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCsrfToken(),
                 },
-                body: JSON.stringify({ message: text }),
+                body: JSON.stringify({
+                    message: text,
+                    history: copilotHistory.slice(-8),
+                }),
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Could not answer that question.');
             pending.textContent = result.reply;
+            copilotHistory.push(
+                { role: 'user', text },
+                { role: 'model', text: result.reply },
+            );
+            copilotHistory = copilotHistory.slice(-8);
         } catch (error) {
             console.error('Copilot chat request failed:', error);
             pending.textContent = error.message || 'Could not reach the money coach. Please try again.';

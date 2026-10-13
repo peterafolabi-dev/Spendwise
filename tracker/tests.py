@@ -340,11 +340,26 @@ class TrackerTests(TestCase):
         )
 
         greeting = self.client1.get(reverse('copilot_context'))
-        answer = self.client1.post(
-            reverse('copilot_chat_api'),
-            data=json.dumps({'message': 'What was my top spending this month?'}),
-            content_type='application/json',
+        provider_response = patch(
+            'tracker.views.urllib.request.urlopen',
         )
+        mocked_urlopen = provider_response.start()
+        mocked_urlopen.return_value.__enter__.return_value.read.return_value = json.dumps({
+            'candidates': [{
+                'content': {
+                    'parts': [{'text': 'Food is your highest spending category this month: ₦28,500.00.'}],
+                },
+            }],
+        }).encode('utf-8')
+        try:
+            with override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test'):
+                answer = self.client1.post(
+                    reverse('copilot_chat_api'),
+                    data=json.dumps({'message': 'What was my top spending this month?'}),
+                    content_type='application/json',
+                )
+        finally:
+            provider_response.stop()
 
         self.assertEqual(greeting.status_code, 200)
         self.assertIn('₦21,500.00', greeting.json()['greeting'])
@@ -352,6 +367,63 @@ class TrackerTests(TestCase):
         self.assertEqual(answer.status_code, 200)
         self.assertIn('₦28,500.00', answer.json()['reply'])
         self.assertNotIn('**', answer.json()['reply'])
+        sent_request = mocked_urlopen.call_args.args[0]
+        sent_payload = json.loads(sent_request.data.decode('utf-8'))
+        self.assertEqual(sent_request.get_header('X-goog-api-key'), 'test-gemini-key')
+        self.assertEqual(
+            sent_payload['contents'][-1]['parts'][0]['text'],
+            'What was my top spending this month?',
+        )
+        self.assertIn('"recorded_account_balance": "21500.00"', sent_payload['system_instruction']['parts'][0]['text'])
+
+    @override_settings(GEMINI_API_KEY='')
+    def test_copilot_requires_gemini_api_key_instead_of_faking_ai(self):
+        response = self.client1.post(
+            reverse('copilot_chat_api'),
+            data=json.dumps({'message': 'hi'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('not configured', response.json()['message'])
+
+    @override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test')
+    def test_copilot_passes_conversation_history_to_gemini(self):
+        response_body = {
+            'candidates': [{
+                'content': {'parts': [{'text': 'Yes, based on the figures I just shared.'}]},
+            }],
+        }
+        with patch('tracker.views.urllib.request.urlopen') as mocked_urlopen:
+            mocked_urlopen.return_value.__enter__.return_value.read.return_value = json.dumps(response_body).encode('utf-8')
+            response = self.client1.post(
+                reverse('copilot_chat_api'),
+                data=json.dumps({
+                    'message': 'Can you explain that?',
+                    'history': [
+                        {'role': 'user', 'text': 'What is my balance?'},
+                        {'role': 'model', 'text': 'Your recorded balance is ₦100.00.'},
+                    ],
+                }),
+                content_type='application/json',
+            )
+
+        self.assertEqual(response.status_code, 200)
+        contents = json.loads(mocked_urlopen.call_args.args[0].data.decode('utf-8'))['contents']
+        self.assertEqual([item['role'] for item in contents], ['user', 'model', 'user'])
+        self.assertEqual(contents[-1]['parts'][0]['text'], 'Can you explain that?')
+
+    @override_settings(GEMINI_API_KEY='test-gemini-key', GEMINI_MODEL='gemini-test')
+    def test_copilot_reports_provider_failures_without_faking_reply(self):
+        with patch('tracker.views.urllib.request.urlopen', side_effect=OSError('provider offline')):
+            response = self.client1.post(
+                reverse('copilot_chat_api'),
+                data=json.dumps({'message': 'hi'}),
+                content_type='application/json',
+            )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertIn('temporarily unavailable', response.json()['message'])
 
     def test_passkey_challenge_uses_https_origin_from_render_proxy(self):
         request = RequestFactory().post(

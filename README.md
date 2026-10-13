@@ -72,8 +72,9 @@ SpendWise Architecture
 
 ### 8. 💬 Personalized Money Coach
 - Shows recorded account balance, month-to-date spending, and the highest-spend category for the signed-in user.
-- Answers a limited set of questions with server-side rules and `Decimal` calculations, including simple contribution-times-months savings scenarios.
-- This is not a generative AI model and does not provide financial advice. It does not send financial data to an AI provider.
+- Uses Google Gemini to answer general chat and financial questions conversationally, grounded in the user's recorded account balance, month-to-date spending, remaining monthly category budgets, and highest-spend category.
+- Configure `GEMINI_API_KEY` in the local `.env` file and in the production host's environment variables. `GEMINI_MODEL` defaults to `gemini-3.8-flash` and can be changed if needed.
+- The coach sends only those financial summary figures and the current chat messages to Google Gemini; it does not send the transaction ledger, account names, or login credentials. Users should not enter passwords or banking credentials into chat. AI replies can be inaccurate and are educational, not professional financial advice. Without `GEMINI_API_KEY`, the chat reports that it is not configured rather than returning a fake AI answer.
 
 ### 9. 👁️ One-Click Privacy Mode (`Ctrl + P` / Eye Toggle)
 - Non-destructive client-side privacy shield applying `filter: blur(8px)` across all `.currency-val` elements.

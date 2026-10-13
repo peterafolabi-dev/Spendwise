@@ -37,6 +37,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 WEBAUTHN_RP_ID = os.environ.get('WEBAUTHN_RP_ID', '')
 WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN', '')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '').strip()
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-3.8-flash').strip()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
