@@ -336,6 +336,44 @@ class TrackerTests(TestCase):
         self.assertIn('remove this passkey in Settings', response.json()['message'])
         self.assertNotIn('_auth_user_id', client.session)
 
+    def test_passkey_authentication_logs_in_with_explicit_backend(self):
+        credential_id = base64.urlsafe_b64encode(b'valid-test-credential').decode().rstrip('=')
+        credential = PasskeyCredential.objects.create(
+            user=self.user1,
+            credential_id=credential_id,
+            public_key=base64.urlsafe_b64encode(b'public-key').decode().rstrip('='),
+        )
+        client = Client()
+        challenge_response = client.post(
+            reverse('passkey_challenge'),
+            data='{}',
+            content_type='application/json',
+        )
+        self.assertEqual(challenge_response.status_code, 200)
+
+        with patch(
+            'tracker.views.verify_authentication_response',
+            return_value=SimpleNamespace(new_sign_count=1),
+        ):
+            response = client.post(
+                reverse('passkey_verify'),
+                data=json.dumps({
+                    'id': credential_id,
+                    'rawId': credential_id,
+                    'response': {},
+                }),
+                content_type='application/json',
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
+        self.assertEqual(
+            client.session['_auth_user_backend'],
+            'django.contrib.auth.backends.ModelBackend',
+        )
+        credential.refresh_from_db()
+        self.assertEqual(credential.sign_count, 1)
+
     def test_passkey_authentication_reports_site_mismatch_safely(self):
         credential_id = base64.urlsafe_b64encode(b'test-credential').decode().rstrip('=')
         PasskeyCredential.objects.create(
