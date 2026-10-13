@@ -15,6 +15,12 @@ if not SECRET_KEY:
         raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is disabled.')
     SECRET_KEY = 'django-insecure-local-development-key-only'
 
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+if not DEBUG and not DATABASE_URL:
+    raise ImproperlyConfigured(
+        'DATABASE_URL must point to persistent PostgreSQL when DEBUG is disabled.'
+    )
+
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
@@ -59,8 +65,12 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
-SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+SECURE_SSL_REDIRECT = os.environ.get(
+    'SECURE_SSL_REDIRECT', 'False' if DEBUG else 'True'
+).lower() == 'true'
+SECURE_HSTS_SECONDS = int(
+    os.environ.get('SECURE_HSTS_SECONDS', '0' if DEBUG else '31536000')
+)
 
 ROOT_URLCONF = 'spendwise.urls'
 
@@ -83,11 +93,15 @@ WSGI_APPLICATION = 'spendwise.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}' if DEBUG else None,
         conn_max_age=600,
         conn_health_checks=True,
     )
 }
+if not DEBUG and DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
+    raise ImproperlyConfigured(
+        'Production DATABASE_URL must use PostgreSQL; SQLite is only supported for local development.'
+    )
 
 CACHES = {
     'default': {
