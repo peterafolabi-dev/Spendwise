@@ -617,10 +617,18 @@ What would you like to explore or optimize next?`;
             options.allowCredentials = (options.allowCredentials || []).map(item => ({
                 ...item,
                 id: base64UrlToBytes(item.id),
+                transports: ['internal'],
             }));
+            if (!options.allowCredentials.length) {
+                throw new Error('No local platform passkey is registered. Sign in with your password and create one first.');
+            }
             const credential = await navigator.credentials.get({ publicKey: options });
             if (!credential) {
                 showPasskeyStatus('No passkey was selected. Try again or sign in with your password.', true);
+                return;
+            }
+            if (credential.authenticatorAttachment !== 'platform') {
+                showPasskeyStatus('This passkey was not supplied by a local device authenticator. Use a platform passkey such as Windows Hello.', true);
                 return;
             }
 
@@ -663,6 +671,10 @@ What would you like to explore or optimize next?`;
             const options = await postPasskeyJson('/api/passkey/register/challenge/', { username });
             options.challenge = base64UrlToBytes(options.challenge);
             options.user.id = base64UrlToBytes(options.user.id);
+            options.authenticatorSelection = {
+                ...options.authenticatorSelection,
+                authenticatorAttachment: 'platform',
+            };
             options.excludeCredentials = (options.excludeCredentials || []).map(item => ({
                 ...item,
                 id: base64UrlToBytes(item.id),
@@ -671,6 +683,10 @@ What would you like to explore or optimize next?`;
             const credential = await navigator.credentials.create({ publicKey: options });
             if (!credential) {
                 showPasskeyStatus('Passkey registration was cancelled.', true);
+                return;
+            }
+            if (credential.authenticatorAttachment !== 'platform') {
+                showPasskeyStatus('This browser did not create a local platform passkey. Use Windows Hello or another built-in authenticator.', true);
                 return;
             }
 
