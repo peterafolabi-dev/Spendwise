@@ -1298,7 +1298,11 @@ def passkey_verify(request):
         )
         credential.sign_count = verified.new_sign_count
         credential.save(update_fields=['sign_count'])
-        login(request, credential.user)
+        login(
+            request,
+            credential.user,
+            backend='django.contrib.auth.backends.ModelBackend',
+        )
         return JsonResponse({
             'status': 'success',
             'message': f'Welcome back, {credential.user.username}!',
