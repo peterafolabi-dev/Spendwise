@@ -73,7 +73,12 @@ class TrackerTests(TestCase):
         self.assertContains(logout_response, 'data-toast-message')
         self.assertNotIn('_auth_user_id', client.session)
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        EMAIL_HOST='smtp.gmail.com',
+        EMAIL_HOST_USER='sender@example.com',
+        EMAIL_HOST_PASSWORD='test-app-password',
+    )
     def test_password_reset_sends_email_and_completes_password_change(self):
         user = User.objects.create_user(
             username='reset-user',
