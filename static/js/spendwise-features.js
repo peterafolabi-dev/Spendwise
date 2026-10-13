@@ -424,6 +424,79 @@ You can ask me anything about:
 What would you like to explore or optimize next?`;
     }
 
+    let copilotContextLoaded = false;
+
+    window.openCopilotModal = function () {
+        const modal = document.getElementById('copilot-modal');
+        if (modal) modal.classList.remove('hidden');
+        if (copilotContextLoaded) return;
+        copilotContextLoaded = true;
+        fetch('/api/copilot/context/')
+            .then(async response => {
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Could not load your snapshot.');
+                const greeting = document.getElementById('copilot-greeting');
+                if (greeting) greeting.textContent = result.greeting;
+            })
+            .catch(error => {
+                console.error('Copilot context request failed:', error);
+                const greeting = document.getElementById('copilot-greeting');
+                if (greeting) greeting.textContent = 'Your spending snapshot could not be loaded. Try reopening the assistant.';
+                copilotContextLoaded = false;
+            });
+    };
+
+    window.sendCopilotQuery = async function (prefilledText) {
+        const input = document.getElementById('copilot-input');
+        const text = (prefilledText || (input ? input.value : '')).trim();
+        const chatBox = document.getElementById('copilot-chat-messages');
+        if (!text || !chatBox) return;
+
+        const addMessage = (message, isUser) => {
+            const row = document.createElement('div');
+            row.className = isUser
+                ? 'flex justify-end mb-3'
+                : 'flex items-start gap-2.5 mb-4 animate-fade-in-up';
+            if (!isUser) {
+                const icon = document.createElement('div');
+                icon.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0';
+                icon.textContent = '🤖';
+                row.appendChild(icon);
+            }
+            const bubble = document.createElement('div');
+            bubble.className = isUser
+                ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-none px-4 py-2 text-sm max-w-[80%] shadow-sm whitespace-pre-line'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-sm max-w-[85%] shadow-sm border border-slate-200/50 dark:border-slate-700/50 leading-relaxed whitespace-pre-line';
+            bubble.textContent = message;
+            row.appendChild(bubble);
+            chatBox.appendChild(row);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return bubble;
+        };
+
+        addMessage(text, true);
+        if (input) input.value = '';
+        const pending = addMessage('Checking your recorded figures…', false);
+        try {
+            const response = await fetch('/api/copilot/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ message: text }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Could not answer that question.');
+            pending.textContent = result.reply;
+        } catch (error) {
+            console.error('Copilot chat request failed:', error);
+            pending.textContent = error.message || 'Could not reach the money coach. Please try again.';
+            pending.classList.add('text-rose-500');
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
     // ── 5. BILL SPLITTER & SHARED EXPENSES ───────────────────────────────────────
     window.openBillSplitter = function () {
         const modal = document.getElementById('bill-splitter-modal');
