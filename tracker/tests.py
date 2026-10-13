@@ -45,7 +45,8 @@ class TrackerTests(TestCase):
 
         self.assertEqual(response.redirect_chain, [(reverse('login'), 302)])
         self.assertContains(response, 'Account created successfully. Please sign in.')
-        self.assertFalse(User.objects.get(username='new-user').is_authenticated)
+        self.assertContains(response, 'data-toast-message')
+        self.assertTrue(User.objects.filter(username='new-user').exists())
         self.assertNotIn('_auth_user_id', client.session)
 
     def test_login_welcomes_user_and_logout_shows_confirmation(self):
@@ -63,10 +64,12 @@ class TrackerTests(TestCase):
         )
         self.assertEqual(login_response.redirect_chain, [(reverse('dashboard'), 302)])
         self.assertContains(login_response, 'Welcome back, Welcome!')
+        self.assertContains(login_response, 'data-toast-message')
 
         logout_response = client.get(reverse('logout'), follow=True)
         self.assertEqual(logout_response.redirect_chain, [(reverse('landing'), 302)])
         self.assertContains(logout_response, 'You have been logged out.')
+        self.assertContains(logout_response, 'data-toast-message')
         self.assertNotIn('_auth_user_id', client.session)
         
     def test_ownership(self):
@@ -226,8 +229,10 @@ class TrackerTests(TestCase):
         user = User.objects.get(username='passkey-user')
         self.assertFalse(user.has_usable_password())
         self.assertTrue(PasskeyCredential.objects.filter(user=user, sign_count=1).exists())
-        self.assertEqual(response.json()['redirect_url'], '/dashboard/')
-        self.assertEqual(client.session['_auth_user_id'], str(user.pk))
+        self.assertEqual(response.json()['redirect_url'], '/login/')
+        self.assertNotIn('_auth_user_id', client.session)
+        login_page = client.get(reverse('login'))
+        self.assertContains(login_page, 'Account created successfully with your passkey. Please sign in.')
 
     def test_existing_user_can_add_a_verified_passkey(self):
         client = Client()
