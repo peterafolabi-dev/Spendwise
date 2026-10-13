@@ -221,3 +221,81 @@ class TrackerTests(TestCase):
             legacy_credential.public_key,
             base64.urlsafe_b64encode(b'verified-key').decode().rstrip('='),
         )
+
+    def test_dashboard_uses_recorded_spending_and_recurring_bills(self):
+        self.acc1.starting_balance = Decimal('100.00')
+        self.acc1.save(update_fields=['starting_balance'])
+        Budget.objects.create(user=self.user1, category=self.cat1, limit=Decimal('100.00'))
+        today = timezone.localdate()
+        Transaction.objects.create(
+            user=self.user1, account=self.acc1, category=self.cat1,
+            amount=Decimal('25.00'), type='EXPENSE', date=today,
+        )
+        Transaction.objects.create(
+            user=self.user1, account=self.acc1,
+            amount=Decimal('50.00'), type='EXPENSE', date=today,
+        )
+        RecurringTransaction.objects.create(
+            user=self.user1, account=self.acc1, amount=Decimal('10.00'),
+            type='EXPENSE', frequency='MONTHLY', next_due_date=today,
+        )
+
+        response = self.client1.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_balance'], Decimal('25.00'))
+        self.assertEqual(response.context['monthly_expenses'], Decimal('75.00'))
+        self.assertEqual(response.context['budget_remaining'], Decimal('65.00'))
+        self.assertEqual(
+            response.context['safe_to_spend_today'],
+            Decimal('65.00') / Decimal(response.context['days_left']),
+        )
+        self.assertEqual(
+            json.loads(response.context['cat_data_json']),
+            [{'label': 'Food', 'value': 25.0, 'icon': '', 'color': '#10b981'}],
+        )
+        forecast = json.loads(response.context['forecast_json'])
+        self.assertEqual(len(forecast), 4)
+        self.assertEqual(forecast[0]['balance'], 25.0)
+        self.assertEqual(forecast[-1]['balance'], -50.0)
+
+    def test_copilot_uses_authenticated_users_real_financial_data(self):
+        self.acc1.starting_balance = Decimal('50000.00')
+        self.acc1.save(update_fields=['starting_balance'])
+        Transaction.objects.create(
+            user=self.user1, account=self.acc1, category=self.cat1,
+            amount=Decimal('28500.00'), type='EXPENSE', date=timezone.localdate(),
+        )
+
+        greeting = self.client1.get(reverse('copilot_context'))
+        answer = self.client1.post(
+            reverse('copilot_chat_api'),
+            data=json.dumps({'message': 'What was my top spending this month?'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(greeting.status_code, 200)
+        self.assertIn('₦21,500.00', greeting.json()['greeting'])
+        self.assertIn('Food at ₦28,500.00', greeting.json()['greeting'])
+        self.assertEqual(answer.status_code, 200)
+        self.assertIn('₦28,500.00', answer.json()['reply'])
+        self.assertNotIn('**', answer.json()['reply'])
+
+    def test_passkey_challenge_uses_https_origin_from_render_proxy(self):
+        response = self.client.post(
+            reverse('passkey_challenge'),
+            data='{}',
+            content_type='application/json',
+            HTTP_HOST='spendwise.example.com',
+            HTTP_X_FORWARDED_PROTO='https',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['rpId'], 'spendwise.example.com')
+
+    def test_login_page_exposes_passkey_feedback_and_script(self):
+        response = Client().get(reverse('login'))
+
+        self.assertContains(response, 'Sign in with Passkey / Face ID / Touch ID')
+        self.assertContains(response, 'id="passkey-status"')
+        self.assertContains(response, 'static/js/spendwise-features.js')

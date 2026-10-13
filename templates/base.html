@@ -68,11 +68,6 @@
                         <kbd class="ml-1 font-mono text-[10px] bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 shadow-2xs">⌘K</kbd>
                     </button>
 
-                    <!-- Currency Switcher Badge -->
-                    <button onclick="cycleCurrency()" type="button" class="currency-toggle-badge px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-500/30 hover:scale-105 active:scale-95 transition-all" title="Click to swap currency">
-                        ₦ NGN
-                    </button>
-
                     <!-- Privacy Mode Toggle -->
                     <button id="privacy-toggle-btn" onclick="togglePrivacyMode()" type="button" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Privacy Mode (Hide Balances)">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -269,14 +264,10 @@
                 </div>
                 <button onclick="closeReceiptScanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">✕</button>
             </div>
-            <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 hover:border-emerald-500 transition-colors cursor-pointer" onclick="document.getElementById('receipt-file-input').click()">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6">
                 <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-3 text-xl">📄</div>
-                <p class="text-sm font-semibold text-slate-900 dark:text-white">Upload receipt or snap photo</p>
-                <p class="text-xs text-slate-400 mt-1">PNG, JPG, or PDF. We'll automatically extract total, date, and merchant.</p>
-                <input id="receipt-file-input" type="file" accept="image/*" class="hidden" onchange="handleReceiptUpload(event)">
-            </div>
-            <div id="ocr-status" class="mt-4 text-xs text-slate-500">
-                Ready to scan.
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">Automatic receipt scanning is not available yet</p>
+                <p class="text-xs text-slate-400 mt-1">Create a transaction and attach a receipt image there. No receipt values will be guessed.</p>
             </div>
         </div>
     </div>

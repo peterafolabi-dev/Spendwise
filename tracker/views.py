@@ -141,7 +141,7 @@ def dashboard_view(request):
         )
     )
 
-    total_budget_limit = budgets.aggregate(total=Sum('limit'))['total'] or Decimal('0.00')
+    total_budget_limit = Budget.objects.filter(user=user).aggregate(total=Sum('limit'))['total'] or Decimal('0.00')
     budget_remaining = sum(
         (
             max(Decimal('0.00'), budget.limit - (budget.month_spent or Decimal('0.00')))
@@ -249,6 +249,10 @@ def dashboard_view(request):
         'budget_remaining_ratio': (
             min(100, int(budget_remaining / total_budget_limit * 100))
             if total_budget_limit > 0 else 0
+        ),
+        'budget_gauge_offset': (
+            119.38 * (1 - min(100, int(budget_remaining / total_budget_limit * 100)) / 100)
+            if total_budget_limit > 0 else 119.38
         ),
         'days_left': days_left,
         'roundup_estimate': roundup_estimate,
@@ -447,10 +451,8 @@ def profile_view(request):
                     messages.error(request, error.as_text())
                     
         elif action == 'update_preferences':
-            currency = request.POST.get('currency', 'NGN')
             payday = request.POST.get('payday', '1st')
             privacy_mode = request.POST.get('privacy_mode') == 'on'
-            request.session['spendwise_currency'] = currency
             request.session['spendwise_payday'] = payday
             request.session['spendwise_privacy_mode'] = privacy_mode
             messages.success(request, 'Financial and app preferences updated.')
@@ -479,7 +481,6 @@ def profile_view(request):
         'passkeys': passkeys,
         'accounts_count': Account.objects.filter(user=user).count(),
         'transactions_count': Transaction.objects.filter(user=user).count(),
-        'selected_currency': request.session.get('spendwise_currency', 'NGN'),
         'selected_payday': request.session.get('spendwise_payday', '1st'),
         'default_privacy': request.session.get('spendwise_privacy_mode', False),
     }

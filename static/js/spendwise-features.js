@@ -3,10 +3,9 @@
  * Includes:
  * 1. Global Command Palette (Cmd/Ctrl + K)
  * 2. One-Click Privacy Mode (Shift + P & Eye toggle)
- * 3. Multi-Currency Live Converter (NGN, USD, GBP, EUR)
- * 4. AI Financial Copilot
+ * 3. User-specific financial coach
  * 5. Bill Splitting & Shared Expense Calculator
- * 6. Receipt Scanner & OCR Auto-filler
+ * 6. Receipt attachment entry point
  * 7. WebAuthn Biometric & Passkey Authenticator
  * 8. Confetti Celebration Engine
  * 9. Quick Add Transaction Drawer with Optimistic UI
@@ -61,10 +60,9 @@
         { title: 'New Transaction', category: 'Actions', icon: '➕', action: () => openQuickAddModal() },
         { title: 'Ask AI Copilot', category: 'Intelligence', icon: '🤖', action: () => openCopilotModal() },
         { title: 'Split a Bill / Expenses', category: 'Tools', icon: '🧾', action: () => openBillSplitter() },
-        { title: 'Scan Receipt / OCR', category: 'Tools', icon: '📸', action: () => openReceiptScanner() },
+        { title: 'Receipt attachment information', category: 'Tools', icon: '📸', action: () => openReceiptScanner() },
         { title: 'Toggle Privacy Mode', category: 'Settings', icon: '👁️', action: () => window.togglePrivacyMode() },
         { title: 'Toggle Dark / Light Theme', category: 'Settings', icon: '🌓', action: () => document.getElementById('theme-toggle')?.click() },
-        { title: 'Switch Currency (USD / GBP / EUR / NGN)', category: 'Currency', icon: '💱', action: () => cycleCurrency() },
         { title: 'Dashboard', category: 'Navigation', icon: '📊', url: '/dashboard/' },
         { title: 'Transactions Ledger', category: 'Navigation', icon: '💳', url: '/transactions/' },
         { title: 'Accounts & Wallets', category: 'Navigation', icon: '🏦', url: '/accounts/' },
@@ -179,36 +177,6 @@
             });
         }
     };
-
-    // ── 3. MULTI-CURRENCY CONVERTER ──────────────────────────────────────────────
-    const currencies = [
-        { code: 'NGN', symbol: '₦', rate: 1.0 },
-        { code: 'USD', symbol: '$', rate: 1 / 1550 },
-        { code: 'GBP', symbol: '£', rate: 1 / 2020 },
-        { code: 'EUR', symbol: '€', rate: 1 / 1680 }
-    ];
-    let currentCurrencyIdx = 0;
-
-    window.cycleCurrency = function () {
-        currentCurrencyIdx = (currentCurrencyIdx + 1) % currencies.length;
-        const cur = currencies[currentCurrencyIdx];
-        localStorage.setItem('spendwise_currency', cur.code);
-        updateCurrencyUI(cur);
-        showToast(`💱 Currency Swapped: ${cur.code} (${cur.symbol})`);
-    };
-
-    function updateCurrencyUI(cur) {
-        const badges = document.querySelectorAll('.currency-toggle-badge');
-        badges.forEach(b => b.textContent = `${cur.symbol} ${cur.code}`);
-
-        // Update all amount spans marked with data-ngn-amount
-        document.querySelectorAll('[data-ngn-amount]').forEach(el => {
-            const rawNgn = parseFloat(el.getAttribute('data-ngn-amount')) || 0;
-            const converted = rawNgn * cur.rate;
-            const prefix = el.getAttribute('data-prefix') || '';
-            el.textContent = `${prefix}${cur.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        });
-    }
 
     // ── 4. AI FINANCIAL COPILOT ──────────────────────────────────────────────────
     window.openCopilotModal = function () {
@@ -854,15 +822,6 @@ What would you like to explore or optimize next?`;
         initPrivacyMode();
         initCommandPalette();
 
-        // Restore currency if saved
-        const savedCur = localStorage.getItem('spendwise_currency');
-        if (savedCur) {
-            const found = currencies.find(c => c.code === savedCur);
-            if (found) {
-                currentCurrencyIdx = currencies.indexOf(found);
-                updateCurrencyUI(found);
-            }
-        }
     });
 
 })();
