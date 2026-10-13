@@ -113,9 +113,10 @@ class TrackerTests(TestCase):
         f = StringIO(csv_data)
         f.name = "test.csv"
         
-        self.client1.post(reverse('import_csv'), {'csv_file': f})
+        response = self.client1.post(reverse('import_csv'), {'csv_file': f}, follow=True)
         # bad_amount row should be skipped, so 0 new transactions
         self.assertEqual(Transaction.objects.count(), 0)
+        self.assertContains(response, 'Skipped 1 invalid CSV row.')
 
     def test_csv_import_creates_valid_transaction(self):
         csv_data = (

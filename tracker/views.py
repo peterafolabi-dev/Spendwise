@@ -667,7 +667,7 @@ class TransactionDeleteView(UserOwnedMixin, DeleteView):
     template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('transaction_list')
 
-    def delete(self, request, *_args, **_kwargs):
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         tx_id = self.object.id
         self.object.delete()
@@ -1058,27 +1058,34 @@ def import_csv(request):
                     transaction_date is None
                     or transaction_type not in {'INCOME', 'EXPENSE'}
                     or not account_name
+                    or not transaction_amount.is_finite()
                     or transaction_amount <= Decimal('0.00')
+                    or transaction_date > timezone.now().date() + timezone.timedelta(days=7)
                 ):
                     skipped += 1
                     continue
 
                 with transaction.atomic():
+                    category = None
+                    if category_name and category_name != 'None':
+                        category = Category.objects.filter(
+                            user=request.user,
+                            name=category_name,
+                        ).first()
+                        if category and category.type != transaction_type:
+                            skipped += 1
+                            continue
+                        if category is None:
+                            category = Category.objects.create(
+                                user=request.user,
+                                name=category_name,
+                                type=transaction_type,
+                            )
                     account, _ = Account.objects.get_or_create(
                         user=request.user,
                         name=account_name,
                         defaults={'type': 'CASH'},
                     )
-                    category = None
-                    if category_name and category_name != 'None':
-                        category, _ = Category.objects.get_or_create(
-                            user=request.user,
-                            name=category_name,
-                            defaults={'type': transaction_type},
-                        )
-                        if category.type != transaction_type:
-                            skipped += 1
-                            continue
 
                     Transaction.objects.create(
                         user=request.user,

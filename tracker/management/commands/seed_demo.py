@@ -9,7 +9,7 @@ import random
 class Command(BaseCommand):
     help = 'Seeds the database with demo user and realistic data'
 
-    def handle(self, *_args, **_kwargs):
+    def handle(self, *args, **kwargs):
         # Create Demo User
         if User.objects.filter(username='demo').exists():
             self.stdout.write(self.style.WARNING('Demo user already exists.'))

@@ -190,6 +190,6 @@ def seed_user_defaults(user):
 
 
 @receiver(post_save, sender=User)
-def create_user_defaults(_sender, instance, created, **_kwargs):
+def create_user_defaults(sender, instance, created, **kwargs):
     if created:
         seed_user_defaults(instance)
