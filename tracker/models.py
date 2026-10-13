@@ -159,7 +159,7 @@ def seed_user_defaults(user):
             user=user,
             name="Main Checking / Cash Wallet",
             type="BANK",
-            starting_balance=Decimal('50000.00')
+            starting_balance=Decimal('0.00')
         )
 
     # Seed default categories

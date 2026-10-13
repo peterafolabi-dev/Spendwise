@@ -2,6 +2,7 @@ import csv
 import json
 import base64
 import logging
+import re
 import secrets
 import time
 from decimal import Decimal, InvalidOperation
@@ -101,77 +102,137 @@ def logout_view(request):
 def dashboard_view(request):
     user = request.user
     accounts = Account.objects.filter(user=user)
-    total_balance = sum(account.current_balance() for account in accounts) if accounts.exists() else Decimal('0.00')
-    
     today = timezone.now().date()
     current_month_start = today.replace(day=1)
-    
-    # Days left in current month
+
+    account_balances = accounts.annotate(
+        income=Sum('transactions__amount', filter=Q(transactions__type='INCOME')),
+        expenses=Sum('transactions__amount', filter=Q(transactions__type='EXPENSE')),
+    )
+    total_balance = sum(
+        (
+            account.starting_balance
+            + (account.income or Decimal('0.00'))
+            - (account.expenses or Decimal('0.00'))
+            for account in account_balances
+        ),
+        Decimal('0.00'),
+    )
+
     import calendar
     _, last_day = calendar.monthrange(today.year, today.month)
     days_left = max(1, last_day - today.day + 1)
-    
+
     transactions = Transaction.objects.filter(user=user, date__gte=current_month_start)
     income = transactions.filter(type='INCOME').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     expenses = transactions.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     recent_transactions = Transaction.objects.filter(user=user).order_by('-date', '-created_at')[:8]
-    budgets = Budget.objects.filter(user=user).select_related('category')
-    
+    budgets = Budget.objects.filter(user=user).select_related('category').annotate(
+        month_spent=Sum(
+            'category__transactions__amount',
+            filter=Q(
+                category__transactions__user=user,
+                category__transactions__type='EXPENSE',
+                category__transactions__date__gte=current_month_start,
+                category__transactions__date__lte=today,
+            ),
+        )
+    )
+
     total_budget_limit = budgets.aggregate(total=Sum('limit'))['total'] or Decimal('0.00')
-    budget_remaining = max(Decimal('0.00'), total_budget_limit - expenses)
-    safe_to_spend_today = (budget_remaining / Decimal(days_left)) if budget_remaining > 0 else Decimal('0.00')
-    
+    budget_remaining = sum(
+        (
+            max(Decimal('0.00'), budget.limit - (budget.month_spent or Decimal('0.00')))
+            for budget in budgets
+        ),
+        Decimal('0.00'),
+    )
+    recurring_due = RecurringTransaction.objects.filter(
+        user=user,
+        type='EXPENSE',
+        next_due_date__gte=today,
+        next_due_date__lte=today.replace(day=last_day),
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    budget_remaining = max(Decimal('0.00'), budget_remaining - recurring_due)
+    safe_to_spend_today = budget_remaining / Decimal(days_left)
+
     # Savings goals & Round-ups
     savings_goals = SavingsGoal.objects.filter(user=user)
     primary_goal = savings_goals.first()
-    
+
     # Estimated spare change round-ups (to nearest 100)
     roundup_estimate = Decimal('0.00')
     for tx in transactions.filter(type='EXPENSE'):
         cents = tx.amount % Decimal('100.00')
         if cents > 0:
             roundup_estimate += (Decimal('100.00') - cents)
-            
+
     # Category spending breakdown for SVG Donut
     cat_data = []
     cat_colors = ['#10b981', '#06b6d4', '#f43f5e', '#8b5cf6', '#f59e0b', '#3b82f6', '#ec4899']
-    for idx, cat in enumerate(Category.objects.filter(user=user, type='EXPENSE')):
-        cat_total = transactions.filter(category=cat).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        if cat_total > 0:
-            cat_data.append({
-                'label': cat.name,
-                'value': float(cat_total),
-                'icon': cat.icon,
-                'color': cat_colors[idx % len(cat_colors)]
-            })
-            
-    # Fallback categories if empty
-    if not cat_data:
-        cat_data = [
-            {'label': 'Groceries', 'value': 28500, 'icon': '🍔', 'color': '#10b981'},
-            {'label': 'Transport', 'value': 14200, 'icon': '🚕', 'color': '#06b6d4'},
-            {'label': 'Data & Airtime', 'value': 8500, 'icon': '📱', 'color': '#8b5cf6'},
-            {'label': 'Entertainment', 'value': 12000, 'icon': '🎮', 'color': '#f59e0b'},
-        ]
-        
-    # 6-Month Trend Data
+    monthly_categories = Category.objects.filter(
+        user=user,
+        type='EXPENSE',
+    ).annotate(
+        total=Sum(
+            'transactions__amount',
+            filter=Q(
+                transactions__user=user,
+                transactions__type='EXPENSE',
+                transactions__date__gte=current_month_start,
+                transactions__date__lte=today,
+            ),
+        )
+    ).filter(total__gt=0).order_by('-total')
+    for idx, category in enumerate(monthly_categories):
+        cat_data.append({
+            'label': category.name,
+            'value': float(category.total),
+            'icon': category.icon,
+            'color': cat_colors[idx % len(cat_colors)],
+        })
+
     months_trend = []
-    for i in range(5, -1, -1):
-        m_date = (today.replace(day=1) - timezone.timedelta(days=i * 28)).replace(day=1)
-        m_end = (m_date + timezone.timedelta(days=32)).replace(day=1)
+    first_month = current_month_start
+    month_starts = [first_month]
+    for _ in range(5):
+        previous_month = month_starts[0] - timezone.timedelta(days=1)
+        month_starts.insert(0, previous_month.replace(day=1))
+    for m_date in month_starts:
+        m_end = (m_date.replace(day=28) + timezone.timedelta(days=4)).replace(day=1)
         m_tx = Transaction.objects.filter(user=user, date__gte=m_date, date__lt=m_end)
-        m_inc = m_tx.filter(type='INCOME').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
-        m_exp = m_tx.filter(type='EXPENSE').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
+        m_inc = m_tx.filter(type='INCOME').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        m_exp = m_tx.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
         months_trend.append({
             'label': m_date.strftime('%b'),
             'income': float(m_inc),
             'expense': float(m_exp),
         })
-        
-    # Recurring subscriptions / upcoming
+
+    history_start = today - timezone.timedelta(days=89)
+    history = Transaction.objects.filter(
+        user=user,
+        date__gte=history_start,
+        date__lte=today,
+    ).aggregate(
+        income=Sum('amount', filter=Q(type='INCOME')),
+        expenses=Sum('amount', filter=Q(type='EXPENSE')),
+    )
+    historical_income = history['income'] or Decimal('0.00')
+    historical_expenses = history['expenses'] or Decimal('0.00')
+    average_daily_net = (historical_income - historical_expenses) / Decimal('90')
+    forecast = [
+        {
+            'days': days,
+            'balance': float(total_balance + average_daily_net * Decimal(days)),
+        }
+        for days in (0, 30, 60, 90)
+    ] if historical_income or historical_expenses else []
+    projected_balance = Decimal(str(forecast[-1]['balance'])) if forecast else None
+
     recurring_bills = RecurringTransaction.objects.filter(user=user).order_by('next_due_date')[:4]
-    
+
     context = {
         'total_balance': total_balance,
         'monthly_income': income,
@@ -188,9 +249,169 @@ def dashboard_view(request):
         'roundup_estimate': roundup_estimate,
         'cat_data_json': json.dumps(cat_data),
         'months_trend_json': json.dumps(months_trend),
+        'forecast_json': json.dumps(forecast),
+        'projected_balance': projected_balance,
+        'forecast_has_data': bool(forecast),
         'recurring_bills': recurring_bills,
     }
     return render(request, 'tracker/dashboard.html', context)
+
+
+def _copilot_metrics(user):
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    account_balances = Account.objects.filter(user=user).annotate(
+        income=Sum('transactions__amount', filter=Q(transactions__type='INCOME')),
+        expenses=Sum('transactions__amount', filter=Q(transactions__type='EXPENSE')),
+    )
+    balance = sum(
+        (
+            account.starting_balance
+            + (account.income or Decimal('0.00'))
+            - (account.expenses or Decimal('0.00'))
+            for account in account_balances
+        ),
+        Decimal('0.00'),
+    )
+    transactions = Transaction.objects.filter(
+        user=user,
+        date__gte=month_start,
+        date__lte=today,
+    )
+    month_expenses = transactions.filter(type='EXPENSE').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    top_category = Category.objects.filter(
+        user=user,
+        type='EXPENSE',
+    ).annotate(
+        spent=Sum(
+            'transactions__amount',
+            filter=Q(
+                transactions__user=user,
+                transactions__type='EXPENSE',
+                transactions__date__gte=month_start,
+                transactions__date__lte=today,
+            ),
+        )
+    ).filter(spent__gt=0).order_by('-spent').first()
+    budget_total = Decimal('0.00')
+    budgets = Budget.objects.filter(user=user).select_related('category').annotate(
+        spent=Sum(
+            'category__transactions__amount',
+            filter=Q(
+                category__transactions__user=user,
+                category__transactions__type='EXPENSE',
+                category__transactions__date__gte=month_start,
+                category__transactions__date__lte=today,
+            ),
+        )
+    )
+    for budget in budgets:
+        budget_total += max(
+            Decimal('0.00'),
+            budget.limit - (budget.spent or Decimal('0.00')),
+        )
+    return {
+        'today': today,
+        'balance': balance,
+        'month_expenses': month_expenses,
+        'top_category': top_category,
+        'budget_remaining': budget_total,
+    }
+
+
+@login_required
+def copilot_context(request):
+    metrics = _copilot_metrics(request.user)
+    greeting = (
+        f"Hi {request.user.first_name or request.user.username}! Here is your recorded snapshot:\n"
+        f"💰 Account balance: ₦{metrics['balance']:,.2f}\n"
+        f"📊 Spending this month: ₦{metrics['month_expenses']:,.2f}"
+    )
+    if metrics['top_category']:
+        category = metrics['top_category']
+        greeting += f"\n🛒 Top category: {category.name} at ₦{category.spent:,.2f}"
+    else:
+        greeting += "\n🛒 No categorized expenses recorded this month yet."
+    return JsonResponse({'greeting': greeting})
+
+
+@login_required
+def copilot_chat(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required.'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Send a valid JSON question.'}, status=400)
+    if not isinstance(data, dict) or not isinstance(data.get('message'), str):
+        return JsonResponse({'status': 'error', 'message': 'Enter a question to continue.'}, status=400)
+    question = data['message'].strip()[:500]
+    if not question:
+        return JsonResponse({'status': 'error', 'message': 'Enter a question to continue.'}, status=400)
+
+    metrics = _copilot_metrics(request.user)
+    lowered = question.casefold()
+    if any(term in lowered for term in ('safe to spend', 'daily limit', 'daily budget', 'today')):
+        reply = (
+            f"📅 YOUR CURRENT BUDGET\n"
+            f"About ₦{metrics['budget_remaining']:,.2f} remains across your monthly category budgets after recorded spending.\n"
+            "Upcoming recurring bills are not included in this chat estimate. Check the dashboard before making a spending decision."
+        )
+    elif any(term in lowered for term in ('grocer', 'food', 'category', 'top spend')):
+        category = metrics['top_category']
+        if category:
+            reply = (
+                f"📊 THIS MONTH'S TOP SPENDING\n"
+                f"{category.name}: ₦{category.spent:,.2f}\n"
+                f"All recorded expenses this month: ₦{metrics['month_expenses']:,.2f}."
+            )
+        else:
+            reply = "📊 No categorized expenses are recorded for this month yet. Add transactions with categories to see a useful breakdown."
+    elif 'balance' in lowered or 'net worth' in lowered or 'runway' in lowered:
+        reply = (
+            f"💰 RECORDED ACCOUNT BALANCE\n"
+            f"Your accounts currently total ₦{metrics['balance']:,.2f}, based on their starting balances and recorded transactions.\n"
+            "This is not a full net-worth calculation; debts and assets outside SpendWise are not included."
+        )
+    elif 'save' in lowered or 'saving' in lowered:
+        amount_match = re.search(r'(?:₦|ngn)?\s*(\d[\d,]*(?:\.\d{1,2})?)', lowered)
+        months_match = re.search(r'(\d+)\s*(?:months?|mos?|mo)\b', lowered)
+        if amount_match and months_match:
+            monthly_amount = Decimal(amount_match.group(1).replace(',', ''))
+            months = int(months_match.group(1))
+            if monthly_amount > 0 and 1 <= months <= 600:
+                reply = (
+                    f"🎯 SAVINGS SCENARIO\n"
+                    f"Saving ₦{monthly_amount:,.2f} each month for {months} months adds "
+                    f"₦{monthly_amount * months:,.2f}, before interest or fees.\n"
+                    "Set a target in Savings Goals and compare the contribution with your actual budget."
+                )
+            else:
+                reply = "Enter a positive monthly amount and a timeframe of 1–600 months for a simple savings estimate."
+        else:
+            reply = (
+                f"🎯 SAVINGS NEXT STEP\n"
+                f"Your recorded monthly budget balance is ₦{metrics['budget_remaining']:,.2f} before upcoming bills.\n"
+                "Choose a monthly contribution that leaves room for essentials, then track it as a savings goal."
+            )
+    elif any(term in lowered for term in ('tip', 'advice', 'budget', 'help')):
+        reply = (
+            f"💡 A PRACTICAL NEXT STEP\n"
+            f"You have recorded ₦{metrics['month_expenses']:,.2f} in expenses this month"
+            + (
+                f", with {metrics['top_category'].name} currently highest at ₦{metrics['top_category'].spent:,.2f}."
+                if metrics['top_category'] else "."
+            )
+            + "\nReview that category's budget and upcoming commitments before changing your spending plan."
+        )
+    else:
+        reply = (
+            "I can help explain your recorded account balance, this month's top spending, budget remainder, "
+            "or a simple savings scenario. I use rules and your recorded totals—not a generative AI model—and "
+            "this is educational guidance, not financial advice."
+        )
+
+    return JsonResponse({'status': 'success', 'reply': reply})
 
 @login_required
 def profile_view(request):
