@@ -157,6 +157,13 @@ class TrackerTests(TestCase):
                     self.assertContains(response, 'Continue with Apple')
                     self.assertContains(response, f'action="{reverse("google_login")}"')
                     self.assertContains(response, f'action="{reverse("apple_login")}"')
+            google_start = Client().post(reverse('google_login'))
+            apple_start = Client().post(reverse('apple_login'))
+
+        self.assertEqual(google_start.status_code, 302)
+        self.assertIn('accounts.google.com', google_start['Location'])
+        self.assertEqual(apple_start.status_code, 302)
+        self.assertIn('appleid.apple.com', apple_start['Location'])
 
     def test_social_buttons_remain_visible_but_disabled_until_credentials_are_configured(self):
         client = Client()
