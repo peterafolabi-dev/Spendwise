@@ -374,12 +374,13 @@ class TrackerTests(TestCase):
         response = self.client1.post(
             reverse('profile'),
             {'action': 'remove_passkey', 'credential_id': own_credential.credential_id},
+            follow=True,
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertEqual(response.redirect_chain, [(reverse('profile'), 302)])
         self.assertFalse(PasskeyCredential.objects.filter(pk=own_credential.pk).exists())
         self.assertTrue(PasskeyCredential.objects.filter(pk=other_credential.pk).exists())
-        self.assertContains(self.client1.get(reverse('profile')), 'Passkey removed.')
+        self.assertContains(response, 'Passkey removed.')
 
     def test_passwordless_signup_creates_account_only_after_verification(self):
         client = Client()
