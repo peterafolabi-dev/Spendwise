@@ -141,7 +141,7 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'Password reset email is not configured yet')
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_social_login_buttons_only_appear_when_provider_credentials_are_configured(self):
+    def test_social_login_buttons_work_on_login_and_signup_when_configured(self):
         with override_settings(
             GOOGLE_OAUTH_CLIENT_ID='google-client-id',
             GOOGLE_OAUTH_CLIENT_SECRET='google-client-secret',
@@ -150,12 +150,23 @@ class TrackerTests(TestCase):
             APPLE_OAUTH_TEAM_ID='apple-team-id',
             APPLE_OAUTH_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
         ):
-            response = Client().get(reverse('login'))
+            for page in ('login', 'signup'):
+                with self.subTest(page=page):
+                    response = Client().get(reverse(page))
+                    self.assertContains(response, 'Continue with Google')
+                    self.assertContains(response, 'Continue with Apple')
+                    self.assertContains(response, f'action="{reverse("google_login")}"')
+                    self.assertContains(response, f'action="{reverse("apple_login")}"')
 
-        self.assertContains(response, 'Continue with Google')
-        self.assertContains(response, 'Continue with Apple')
-        self.assertContains(response, reverse('google_login'))
-        self.assertContains(response, reverse('apple_login'))
+    def test_social_buttons_remain_visible_but_disabled_until_credentials_are_configured(self):
+        client = Client()
+        for page in ('login', 'signup'):
+            with self.subTest(page=page):
+                response = client.get(reverse(page))
+
+                self.assertContains(response, 'Google sign-in not configured')
+                self.assertContains(response, 'Apple sign-in not configured')
+                self.assertContains(response, 'Social sign-in buttons activate after their provider credentials are added in Render.')
         
     def test_ownership(self):
         # User 1 should not see User 2's account
@@ -564,5 +575,11 @@ class TrackerTests(TestCase):
         self.assertNotContains(response, 'To use your phone, choose')
         self.assertContains(response, 'id="passkey-status"')
         self.assertContains(response, 'spendwise-features.')
-        self.assertNotContains(response, '>Google</button>')
-        self.assertNotContains(response, '>Apple</button>')
+
+    def test_signup_page_keeps_passkey_registration_and_shows_social_buttons(self):
+        response = Client().get(reverse('signup'))
+
+        self.assertContains(response, 'Create account with Passkey')
+        self.assertContains(response, 'id="passkey-status"')
+        self.assertContains(response, 'Google sign-in not configured')
+        self.assertContains(response, 'Apple sign-in not configured')
