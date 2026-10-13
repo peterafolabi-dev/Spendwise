@@ -9,7 +9,7 @@ import random
 class Command(BaseCommand):
     help = 'Seeds the database with demo user and realistic data'
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *_args, **_kwargs):
         # Create Demo User
         if User.objects.filter(username='demo').exists():
             self.stdout.write(self.style.WARNING('Demo user already exists.'))
@@ -29,9 +29,9 @@ class Command(BaseCommand):
         salary = Category.objects.create(user=user, name='Salary', type='INCOME', icon='💰')
         food = Category.objects.create(user=user, name='Food', type='EXPENSE', icon='🍔')
         transport = Category.objects.create(user=user, name='Transport', type='EXPENSE', icon='🚕')
-        rent = Category.objects.create(user=user, name='Rent', type='EXPENSE', icon='🏠')
+        Category.objects.create(user=user, name='Rent', type='EXPENSE', icon='🏠')
         entertainment = Category.objects.create(user=user, name='Entertainment', type='EXPENSE', icon='🎮')
-        data = Category.objects.create(user=user, name='Data & Airtime', type='EXPENSE', icon='📱')
+        Category.objects.create(user=user, name='Data & Airtime', type='EXPENSE', icon='📱')
         self.stdout.write(self.style.SUCCESS('Created categories'))
 
         # Create Budgets (One over limit)
@@ -67,4 +67,3 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Generated transactions'))
         self.stdout.write(self.style.SUCCESS('Demo data seeding complete!'))
-

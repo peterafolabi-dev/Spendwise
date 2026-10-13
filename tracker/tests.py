@@ -113,9 +113,25 @@ class TrackerTests(TestCase):
         f = StringIO(csv_data)
         f.name = "test.csv"
         
-        response = self.client1.post(reverse('import_csv'), {'csv_file': f})
+        self.client1.post(reverse('import_csv'), {'csv_file': f})
         # bad_amount row should be skipped, so 0 new transactions
         self.assertEqual(Transaction.objects.count(), 0)
+
+    def test_csv_import_creates_valid_transaction(self):
+        csv_data = (
+            "Date,Account,Type,Category,Amount,Note\n"
+            "2025-01-15,Imported cash,EXPENSE,Food,1250.50,Weekly groceries"
+        )
+        f = StringIO(csv_data)
+        f.name = "transactions.csv"
+
+        response = self.client1.post(reverse('import_csv'), {'csv_file': f}, follow=True)
+
+        imported = Transaction.objects.get(user=self.user1, note='Weekly groceries')
+        self.assertEqual(imported.date.isoformat(), '2025-01-15')
+        self.assertEqual(imported.amount, Decimal('1250.50'))
+        self.assertEqual(imported.account.name, 'Imported cash')
+        self.assertContains(response, 'Imported 1 transaction.')
 
     def test_category_deletion_fallback(self):
         Transaction.objects.create(user=self.user1, account=self.acc1, amount=Decimal('10.00'), type='EXPENSE', category=self.cat1, date=timezone.now().date())

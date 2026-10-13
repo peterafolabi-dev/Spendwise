@@ -571,7 +571,7 @@ class CategoryUpdateView(UserOwnedMixin, UpdateView):
 def category_delete_view(request, pk):
     category = get_object_or_404(Category, pk=pk, user=request.user)
     if request.method == 'POST':
-        uncategorised, created = Category.objects.get_or_create(
+        uncategorised, _ = Category.objects.get_or_create(
             user=request.user, 
             name='Uncategorised',
             defaults={'type': category.type}
@@ -667,7 +667,7 @@ class TransactionDeleteView(UserOwnedMixin, DeleteView):
     template_name = 'tracker/generic_confirm_delete.html'
     success_url = reverse_lazy('transaction_list')
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, *_args, **_kwargs):
         self.object = self.get_object()
         tx_id = self.object.id
         self.object.delete()
@@ -918,7 +918,6 @@ class RecurringListView(UserOwnedMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
         qs = self.get_queryset()
         
         monthly_commitments = Decimal('0.00')
@@ -1033,38 +1032,71 @@ def export_json(request):
 def import_csv(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
-        if not csv_file.name.endswith('.csv'):
+        if not csv_file.name.lower().endswith('.csv'):
             return HttpResponse('Not a CSV file', status=400)
         
-        data = csv_file.read().decode('utf-8').splitlines()
+        try:
+            data = csv_file.read().decode('utf-8-sig').splitlines()
+        except UnicodeDecodeError:
+            messages.error(request, 'The CSV file must use UTF-8 encoding.')
+            return redirect('transaction_list')
         reader = csv.reader(data)
         
-        # Skip header if exists
-        header = next(reader, None)
+        next(reader, None)
+        imported = 0
+        skipped = 0
         
         for row in reader:
             try:
                 date_str, acc_name, type_val, cat_name, amount, note = row
-                
-                account, _ = Account.objects.get_or_create(user=request.user, name=acc_name, defaults={'type': 'CASH'})
-                category = None
-                if cat_name and cat_name != 'None':
-                    category, _ = Category.objects.get_or_create(user=request.user, name=cat_name, defaults={'type': type_val})
-                
-                t = Transaction(
-                    user=request.user,
-                    account=account,
-                    type=type_val,
-                    category=category,
-                    amount=Decimal(amount),
-                    date=date_str,
-                    note=note
-                )
-                t.clean() # validate
-                t.save()
-            except Exception as e:
-                # Skip bad rows
+                transaction_date = parse_date(date_str.strip())
+                transaction_type = type_val.strip()
+                account_name = acc_name.strip()
+                category_name = cat_name.strip()
+                transaction_amount = Decimal(amount.strip())
+                if (
+                    transaction_date is None
+                    or transaction_type not in {'INCOME', 'EXPENSE'}
+                    or not account_name
+                    or transaction_amount <= Decimal('0.00')
+                ):
+                    skipped += 1
+                    continue
+
+                with transaction.atomic():
+                    account, _ = Account.objects.get_or_create(
+                        user=request.user,
+                        name=account_name,
+                        defaults={'type': 'CASH'},
+                    )
+                    category = None
+                    if category_name and category_name != 'None':
+                        category, _ = Category.objects.get_or_create(
+                            user=request.user,
+                            name=category_name,
+                            defaults={'type': transaction_type},
+                        )
+                        if category.type != transaction_type:
+                            skipped += 1
+                            continue
+
+                    Transaction.objects.create(
+                        user=request.user,
+                        account=account,
+                        type=transaction_type,
+                        category=category,
+                        amount=transaction_amount,
+                        date=transaction_date,
+                        note=note,
+                    )
+                imported += 1
+            except (ValueError, InvalidOperation, ValidationError, csv.Error):
+                skipped += 1
                 continue
+        if imported:
+            messages.success(request, f'Imported {imported} transaction{"s" if imported != 1 else ""}.')
+        if skipped:
+            messages.warning(request, f'Skipped {skipped} invalid CSV row{"s" if skipped != 1 else ""}.')
         return redirect('transaction_list')
     return render(request, 'tracker/import_csv.html')
 

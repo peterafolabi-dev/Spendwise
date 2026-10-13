@@ -585,12 +585,6 @@
         }, 2800);
     };
 
-    function escapeHtml(string) {
-        const div = document.createElement('div');
-        div.innerText = string;
-        return div.innerHTML;
-    }
-
     // ── INITIALIZATION ──────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         initPrivacyMode();
