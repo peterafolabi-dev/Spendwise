@@ -118,6 +118,25 @@ class TrackerTests(TestCase):
         self.assertEqual(reset_done.status_code, 200)
         self.assertEqual(reset_complete.status_code, 200)
 
+    @override_settings(
+        DEBUG=False,
+        EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend',
+        EMAIL_HOST='',
+        EMAIL_HOST_USER='',
+        EMAIL_HOST_PASSWORD='',
+    )
+    def test_password_reset_does_not_claim_email_was_sent_when_smtp_is_unconfigured(self):
+        User.objects.create_user(username='reset-user', email='reset@example.com', password='StrongPassword!846')
+
+        response = Client().post(
+            reverse('password_reset'),
+            {'email': 'reset@example.com'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Password reset email is not configured yet')
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_social_login_buttons_only_appear_when_provider_credentials_are_configured(self):
         with override_settings(
             GOOGLE_OAUTH_CLIENT_ID='google-client-id',

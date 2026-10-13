@@ -29,7 +29,7 @@ services:
       - key: GROQ_MODEL
         value: openai/gpt-oss-120b
       - key: EMAIL_HOST
-        value: ""
+        value: smtp.gmail.com
       - key: EMAIL_PORT
         value: "587"
       - key: EMAIL_USE_TLS
@@ -43,7 +43,7 @@ services:
       - key: EMAIL_HOST_PASSWORD
         sync: false
       - key: DEFAULT_FROM_EMAIL
-        value: ""
+        sync: false
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_SECRET

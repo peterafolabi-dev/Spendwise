@@ -282,6 +282,12 @@ Receipt uploads are stored on the web service's local media directory. They are 
 
 Password reset uses Django's built-in one-time reset tokens. To send reset emails through Gmail, create a Google App Password (with 2-Step Verification enabled), then set `EMAIL_HOST=smtp.gmail.com`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=True`, `EMAIL_USE_SSL=False`, `EMAIL_HOST_USER` to your Gmail address, `EMAIL_HOST_PASSWORD` to the 16-character App Password, and `DEFAULT_FROM_EMAIL` to that Gmail address. Do not use your normal Gmail password or commit the App Password. Locally, add these to `.env`; in Render, add them under the web service's Environment settings. Until SMTP credentials are configured, development prints email to its console and production does not send or log reset emails.
 
+Google and Apple sign-in use django-allauth and only appear on the login page after the matching provider credentials are configured. For Google, create a Web OAuth client in Google Cloud Console, add your deployed origin to Authorized JavaScript origins, and add `https://YOUR-SERVICE.onrender.com/oauth/google/login/callback/` to Authorized redirect URIs. Set `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` in Render.
+
+For Apple, create a Sign in with Apple Services ID and a Sign in with Apple key in the Apple Developer account. Register the domain and return URL `https://YOUR-SERVICE.onrender.com/oauth/apple/login/callback/` for the Services ID. Set `APPLE_OAUTH_CLIENT_ID` to the Services ID, plus `APPLE_OAUTH_KEY_ID`, `APPLE_OAUTH_TEAM_ID`, and `APPLE_OAUTH_PRIVATE_KEY` (the downloaded `.p8` key contents) in Render. Apple web sign-in requires an eligible Apple Developer account and a verified HTTPS domain. The private key can be entered with literal `\n` line breaks; SpendWise expands them at startup.
+
+For a custom domain, replace the `YOUR-SERVICE.onrender.com` host in the provider callback URLs with your production hostname and include it in `ALLOWED_HOSTS`. Social sign-in callbacks are under `/oauth/` because the built-in `/accounts/login/` path redirects to SpendWise's custom login page. Run database migrations after deploying; the Render build script does this automatically.
+
 ---
 
 ## 🧪 Automated Testing & Verification
