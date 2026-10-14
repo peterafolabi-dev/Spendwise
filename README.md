@@ -290,10 +290,10 @@ For a custom domain, replace the `YOUR-SERVICE.onrender.com` host in the provide
 
 ## Deploying to Vercel
 
-Vercel detects this Django project from `manage.py`, runs the `spendwise.wsgi:application` WSGI entrypoint, and collects Django static files during its build. Configure the Vercel project with this **Build Command**:
+Vercel detects this Django project from `manage.py`, installs Python packages from `requirements.txt`, runs the `spendwise.wsgi:application` WSGI entrypoint, and collects Django static files during its build. Since the Django build does not install this project's Node packages, configure the Vercel project with this **Build Command**:
 
 ```bash
-npm run build
+npm ci && npm run build
 ```
 
 There is no Vercel **Start Command**; Vercel starts the Django application as a serverless function. To run it locally, use `python manage.py runserver 0.0.0.0:8000` (or `vercel dev` after linking the project).
