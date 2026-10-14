@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 db.sqlite3
 .env
+Spendwise-Vercel-Environment-Variables.pdf
+vercel-production.env
 staticfiles/
 node_modules/
 media/
