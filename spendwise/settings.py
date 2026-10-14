@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.apple',
     'tracker',
 ]
 
@@ -196,10 +195,6 @@ EMAIL_BACKEND = os.environ.get(
 
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '').strip()
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '').strip()
-APPLE_OAUTH_CLIENT_ID = os.environ.get('APPLE_OAUTH_CLIENT_ID', '').strip()
-APPLE_OAUTH_KEY_ID = os.environ.get('APPLE_OAUTH_KEY_ID', '').strip()
-APPLE_OAUTH_TEAM_ID = os.environ.get('APPLE_OAUTH_TEAM_ID', '').strip()
-APPLE_OAUTH_PRIVATE_KEY = os.environ.get('APPLE_OAUTH_PRIVATE_KEY', '').replace('\\n', '\n').strip()
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -215,23 +210,6 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'OAUTH_PKCE_ENABLED': True,
-    },
-    'apple': {
-        'APPS': (
-            [{
-                'client_id': APPLE_OAUTH_CLIENT_ID,
-                'secret': APPLE_OAUTH_KEY_ID,
-                'key': APPLE_OAUTH_TEAM_ID,
-                'settings': {'certificate_key': APPLE_OAUTH_PRIVATE_KEY},
-            }]
-            if all((
-                APPLE_OAUTH_CLIENT_ID,
-                APPLE_OAUTH_KEY_ID,
-                APPLE_OAUTH_TEAM_ID,
-                APPLE_OAUTH_PRIVATE_KEY,
-            ))
-            else []
-        ),
     },
 }
 SOCIALACCOUNT_AUTO_SIGNUP = True

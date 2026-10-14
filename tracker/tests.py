@@ -141,14 +141,10 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'Password reset email is not configured yet')
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_social_login_buttons_work_on_login_and_signup_when_configured(self):
+    def test_google_login_buttons_work_on_login_and_signup_when_configured(self):
         with override_settings(
             GOOGLE_OAUTH_CLIENT_ID='google-client-id',
             GOOGLE_OAUTH_CLIENT_SECRET='google-client-secret',
-            APPLE_OAUTH_CLIENT_ID='apple-service-id',
-            APPLE_OAUTH_KEY_ID='apple-key-id',
-            APPLE_OAUTH_TEAM_ID='apple-team-id',
-            APPLE_OAUTH_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
             SOCIALACCOUNT_PROVIDERS={
                 'google': {
                     'APPS': [{
@@ -160,34 +156,19 @@ class TrackerTests(TestCase):
                     'AUTH_PARAMS': {'access_type': 'online'},
                     'OAUTH_PKCE_ENABLED': True,
                 },
-                'apple': {
-                    'APPS': [{
-                        'client_id': 'apple-service-id',
-                        'secret': 'apple-key-id',
-                        'key': 'apple-team-id',
-                        'settings': {
-                            'certificate_key': '-----BEGIN PRIVATE KEY-----\\nexample\\n-----END PRIVATE KEY-----',
-                        },
-                    }],
-                },
             },
         ):
             for page in ('login', 'signup'):
                 with self.subTest(page=page):
                     response = Client().get(reverse(page))
                     self.assertContains(response, 'Continue with Google')
-                    self.assertContains(response, 'Continue with Apple')
+                    self.assertNotContains(response, 'Apple')
                     self.assertContains(response, f'action="{reverse("google_login")}"')
-                    self.assertContains(response, f'action="{reverse("apple_login")}"')
                     self.assertContains(response, 'data-brand="google"')
-                    self.assertContains(response, 'data-brand="apple"')
             google_start = Client().post(reverse('google_login'))
-            apple_start = Client().post(reverse('apple_login'))
 
         self.assertEqual(google_start.status_code, 302)
         self.assertIn('accounts.google.com', google_start['Location'])
-        self.assertEqual(apple_start.status_code, 302)
-        self.assertIn('appleid.apple.com', apple_start['Location'])
 
     def test_social_buttons_remain_visible_but_disabled_until_credentials_are_configured(self):
         client = Client()
@@ -196,10 +177,9 @@ class TrackerTests(TestCase):
                 response = client.get(reverse(page))
 
                 self.assertContains(response, 'Google sign-in not configured')
-                self.assertContains(response, 'Apple sign-in not configured')
+                self.assertNotContains(response, 'Apple')
                 self.assertContains(response, 'Social sign-in buttons activate after their provider credentials are added to your deployment environment.')
                 self.assertContains(response, 'data-brand="google"')
-                self.assertContains(response, 'data-brand="apple"')
         
     def test_ownership(self):
         # User 1 should not see User 2's account
@@ -703,4 +683,4 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'Create account with Passkey')
         self.assertContains(response, 'id="passkey-status"')
         self.assertContains(response, 'Google sign-in not configured')
-        self.assertContains(response, 'Apple sign-in not configured')
+        self.assertNotContains(response, 'Apple')

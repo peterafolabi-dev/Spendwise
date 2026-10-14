@@ -48,11 +48,3 @@ services:
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_SECRET
         sync: false
-      - key: APPLE_OAUTH_CLIENT_ID
-        sync: false
-      - key: APPLE_OAUTH_KEY_ID
-        sync: false
-      - key: APPLE_OAUTH_TEAM_ID
-        sync: false
-      - key: APPLE_OAUTH_PRIVATE_KEY
-        sync: false
