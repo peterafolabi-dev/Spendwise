@@ -29,12 +29,21 @@ ALLOWED_HOSTS = [
 render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
+for vercel_variable in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+    vercel_hostname = os.environ.get(vercel_variable, '').strip()
+    if vercel_hostname and vercel_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(vercel_hostname)
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
     if origin.strip()
 ]
+for vercel_variable in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+    vercel_hostname = os.environ.get(vercel_variable, '').strip()
+    vercel_origin = f'https://{vercel_hostname}'
+    if vercel_hostname and vercel_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(vercel_origin)
 WEBAUTHN_RP_ID = os.environ.get('WEBAUTHN_RP_ID', '')
 WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN', '')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '').strip()

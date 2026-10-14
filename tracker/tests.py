@@ -179,6 +179,8 @@ class TrackerTests(TestCase):
                     self.assertContains(response, 'Continue with Apple')
                     self.assertContains(response, f'action="{reverse("google_login")}"')
                     self.assertContains(response, f'action="{reverse("apple_login")}"')
+                    self.assertContains(response, 'data-brand="google"')
+                    self.assertContains(response, 'data-brand="apple"')
             google_start = Client().post(reverse('google_login'))
             apple_start = Client().post(reverse('apple_login'))
 
@@ -195,7 +197,9 @@ class TrackerTests(TestCase):
 
                 self.assertContains(response, 'Google sign-in not configured')
                 self.assertContains(response, 'Apple sign-in not configured')
-                self.assertContains(response, 'Social sign-in buttons activate after their provider credentials are added in Render.')
+                self.assertContains(response, 'Social sign-in buttons activate after their provider credentials are added to your deployment environment.')
+                self.assertContains(response, 'data-brand="google"')
+                self.assertContains(response, 'data-brand="apple"')
         
     def test_ownership(self):
         # User 1 should not see User 2's account

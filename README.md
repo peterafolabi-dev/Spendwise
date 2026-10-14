@@ -288,6 +288,31 @@ For Apple, create a Sign in with Apple Services ID and a Sign in with Apple key 
 
 For a custom domain, replace the `YOUR-SERVICE.onrender.com` host in the provider callback URLs with your production hostname and include it in `ALLOWED_HOSTS`. Social sign-in callbacks are under `/oauth/` because the built-in `/accounts/login/` path redirects to SpendWise's custom login page. Run database migrations after deploying; the Render build script does this automatically.
 
+## Deploying to Vercel
+
+Vercel detects this Django project from `manage.py`, runs the `spendwise.wsgi:application` WSGI entrypoint, and collects Django static files during its build. Configure the Vercel project with this **Build Command**:
+
+```bash
+npm run build
+```
+
+There is no Vercel **Start Command**; Vercel starts the Django application as a serverless function. To run it locally, use `python manage.py runserver 0.0.0.0:8000` (or `vercel dev` after linking the project).
+
+Add these environment variables in Vercel Project Settings. Use your stable Vercel domain or custom domain in the host/origin values:
+
+```text
+DEBUG=False
+SECRET_KEY=<a-long-random-secret>
+DATABASE_URL=<your-managed-PostgreSQL-connection-string>
+ALLOWED_HOSTS=your-project.vercel.app,your-custom-domain.com
+CSRF_TRUSTED_ORIGINS=https://your-project.vercel.app,https://your-custom-domain.com
+SECURE_SSL_REDIRECT=True
+```
+
+The app automatically allows the current Vercel deployment, branch, and production hostnames from Vercel's system environment variables. `DATABASE_URL` must point to persistent PostgreSQL; the local SQLite database is not suitable for Vercel's serverless filesystem. Run `python manage.py migrate` against the production database after setting the Vercel environment variables and before relying on the deployment. Vercel's function filesystem is also ephemeral, so receipt uploads need external persistent media storage.
+
+Optional integrations can be configured with `GROQ_API_KEY` and `GROQ_MODEL` (money coach), `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` (Google sign-in), and `APPLE_OAUTH_CLIENT_ID`, `APPLE_OAUTH_KEY_ID`, `APPLE_OAUTH_TEAM_ID`, and `APPLE_OAUTH_PRIVATE_KEY` (Apple sign-in). Use `https://your-project.vercel.app/oauth/google/login/callback/` and `https://your-project.vercel.app/oauth/apple/login/callback/` as the corresponding provider callback URLs, substituting your production domain. To enable password-reset email, also configure the `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_USE_SSL`, `EMAIL_TIMEOUT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, and `DEFAULT_FROM_EMAIL` settings. For passkeys on a custom domain, set `WEBAUTHN_RP_ID` to the bare domain and `WEBAUTHN_ORIGIN` to its HTTPS origin.
+
 ---
 
 ## 🧪 Automated Testing & Verification
