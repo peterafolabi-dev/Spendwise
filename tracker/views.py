@@ -5,7 +5,6 @@ import json
 import base64
 import logging
 import secrets
-import secrets
 import time
 import urllib.request
 from decimal import Decimal, InvalidOperation
@@ -1216,6 +1215,9 @@ def import_csv(request):
             messages.success(request, f'Imported {imported} transaction{"s" if imported != 1 else ""}.')
         if duplicates:
             messages.warning(request, f'Skipped {duplicates} likely duplicate transaction{"s" if duplicates != 1 else ""}.')
+        if preview.get('skipped'):
+            invalid = preview['skipped']
+            messages.warning(request, f'Skipped {invalid} invalid CSV row{"s" if invalid != 1 else ""}.')
         if skipped:
             messages.warning(request, f'Skipped {skipped} rows because their category conflicts with the transaction type.')
         return redirect('transaction_list')
@@ -1235,7 +1237,7 @@ def import_csv(request):
 
         reader = csv.reader(io.StringIO(text))
         next(reader, None)
-        rows, skipped, duplicates, seen = [], 0, 0, set()
+        rows, skipped, duplicates, seen, processed_rows = [], 0, 0, set(), 0
         existing = set()
         for date_value, account_name, kind, category_name, amount_value, note in Transaction.objects.filter(
             user=request.user,
@@ -1248,7 +1250,8 @@ def import_csv(request):
             for line_number, row in enumerate(reader, start=2):
                 if not row or not any(cell.strip() for cell in row):
                     continue
-                if line_number > 5002:
+                processed_rows += 1
+                if processed_rows > 5000:
                     messages.error(request, 'CSV files can contain at most 5,000 transaction rows.')
                     return redirect('import_csv')
                 if len(row) != 6:

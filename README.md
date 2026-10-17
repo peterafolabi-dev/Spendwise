@@ -97,7 +97,15 @@ SpendWise Architecture
 ### 13. 🛡️ Data Sovereignty & Audit Tools
 - **Sanitized CSV Export**: Automatically escapes dangerous formula characters (`=`, `+`, `-`, `@`) to protect against Excel CSV injection attacks.
 - **JSON transaction export**: Download the user's transaction records.
-- **CSV transaction importer**: Import compatible transaction rows; invalid rows are skipped.
+- **CSV transaction importer**: Preview compatible rows, flag likely duplicates, skip invalid rows, and explicitly choose whether to include duplicates.
+- **Account removal**: Users can permanently erase their account after typing a confirmation phrase and, for password accounts, re-entering their current password.
+- **Budget alerts**: Users can opt into persistent in-app alerts at a selected 70%, 80%, 90%, or 100% monthly spend threshold.
+
+### 14. Reliability, Backups & Monitoring
+- `python manage.py backup_data` creates a timestamped ZIP containing database fixtures and uploaded receipts. Set `BACKUP_DIR` to a protected persistent location and `BACKUP_RETENTION_DAYS` to control local retention. Keep a separate off-site copy; backups contain sensitive personal and financial data.
+- `python manage.py restore_data <backup.zip> --confirm` loads a backup into the current database. Add `--replace` only when intentionally replacing current database records; the command first creates a safety backup. Review the target database and backup before restoring.
+- `/healthz/` checks that Django can query the database and is configured as Render's service health check.
+- Error details are logged to the service console. Set `SENTRY_DSN` to enable Sentry error reporting; `send_default_pii` is disabled. Sentry is optional and no events are sent until a DSN is configured.
 
 ---
 
