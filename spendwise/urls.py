@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.views.generic import RedirectView
+from tracker.admin_views import user_overview
 
 
 class ConfiguredPasswordResetView(auth_views.PasswordResetView):
@@ -38,6 +39,7 @@ class ConfiguredPasswordResetView(auth_views.PasswordResetView):
 
 
 urlpatterns = [
+    path('admin/user-overview/', user_overview, name='admin_user_overview'),
     path('admin/', admin.site.urls),
     path('accounts/login/', RedirectView.as_view(pattern_name='login', permanent=False, query_string=True)),
     path('', include('tracker.urls')),

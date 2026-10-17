@@ -1,0 +1,8 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="module" style="margin-bottom: 16px; padding: 12px 16px;">
+  <a href="{% url 'admin_user_overview' %}"><strong>User overview</strong></a>
+  <p style="margin: 6px 0 0;">See registered, active, online, inactive, and staff accounts with last-seen times.</p>
+</div>
+{{ block.super }}
+{% endblock %}

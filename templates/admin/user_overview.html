@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="module" style="padding: 16px; margin-bottom: 20px;">
+  <h2>User overview</h2>
+  <p>Online means an active account made a request in the last five minutes. Presence updates when the user loads or uses a page.</p>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+    <div><strong>{{ total_users|intcomma }}</strong><br>Total users</div>
+    <div><strong>{{ active_users|intcomma }}</strong><br>Active accounts</div>
+    <div><strong>{{ online_users|intcomma }}</strong><br>Online now</div>
+    <div><strong>{{ inactive_users|intcomma }}</strong><br>Inactive accounts</div>
+    <div><strong>{{ staff_users|intcomma }}</strong><br>Staff accounts</div>
+  </div>
+</div>
+<div class="module">
+  <table style="width: 100%;">
+    <thead><tr><th>Username</th><th>Email</th><th>Account</th><th>Presence</th><th>Last seen</th><th>Joined</th></tr></thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <th>{{ user.username }}</th>
+        <td>{{ user.email|default:"—" }}</td>
+        <td>{% if user.is_active %}Active{% else %}Inactive{% endif %}{% if user.is_staff %} · Staff{% endif %}</td>
+        <td>{% if user.is_active and user.presence.last_seen >= online_cutoff %}Online{% else %}Offline{% endif %}</td>
+        <td>{% if user.presence %}{{ user.presence.last_seen|naturaltime }}{% else %}Never{% endif %}</td>
+        <td>{{ user.date_joined|date:"M j, Y" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="6">No users found.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% if total_users > 100 %}<p>Showing the 100 most recently joined users.</p>{% endif %}
+</div>
+{% endblock %}

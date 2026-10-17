@@ -151,6 +151,15 @@ class PasskeyCredential(models.Model):
         return f"{self.device_name} ({self.user.username})"
 
 
+class UserPresence(models.Model):
+    """Durable last-seen timestamp for admin presence reporting."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='presence')
+    last_seen = models.DateTimeField(db_index=True)
+
+    def __str__(self):
+        return f"{self.user.username} last seen {self.last_seen}"
+
+
 def seed_user_defaults(user):
     """Auto-seeds default account and categories for a user."""
     # Seed default account if none exists
