@@ -9,3 +9,4 @@ django-environ
 whitenoise
 Pillow
 webauthn>=2.0,<3
+sentry-sdk[django]>=2.0,<3.0

@@ -1,7 +1,10 @@
 import csv
+import hashlib
+import io
 import json
 import base64
 import logging
+import secrets
 import secrets
 import time
 import urllib.request
@@ -25,7 +28,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, PasskeyCredential
+from .models import Account, Category, Transaction, Budget, BudgetAlert, RecurringTransaction, SavingsGoal, PasskeyCredential
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
 from webauthn import (
@@ -102,6 +105,57 @@ def logout_view(request):
         logout(request)
         messages.success(request, 'You have been logged out.')
     return redirect('landing')
+
+
+def collect_budget_alerts(user):
+    """Create one in-app alert per opted-in budget threshold and month."""
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    budgets = Budget.objects.filter(user=user, alerts_enabled=True).select_related('category')
+    spent = dict(
+        Transaction.objects.filter(
+            user=user, type='EXPENSE', date__gte=month_start,
+            date__lt=(month_start + timezone.timedelta(days=32)).replace(day=1),
+            category_id__in=budgets.values('category_id'),
+        ).values('category_id').annotate(total=Sum('amount')).values_list('category_id', 'total')
+    )
+    for budget in budgets:
+        total = spent.get(budget.category_id, Decimal('0.00'))
+        percentage = total * 100 / budget.limit
+        thresholds = {budget.alert_threshold, 100}
+        for threshold in thresholds:
+            if percentage >= threshold:
+                BudgetAlert.objects.get_or_create(
+                    budget=budget, period_start=month_start, threshold=threshold,
+                )
+    return BudgetAlert.objects.filter(
+        budget__user=user, dismissed_at__isnull=True,
+        period_start=month_start,
+    ).select_related('budget__category')
+
+
+@login_required
+def dismiss_budget_alert(request, alert_id):
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    BudgetAlert.objects.filter(
+        pk=alert_id, budget__user=request.user, dismissed_at__isnull=True,
+    ).update(dismissed_at=timezone.now())
+    destination = 'budget_list' if request.POST.get('next') == 'budget_list' else 'dashboard'
+    return redirect(destination)
+
+
+def health_check(request):
+    """Small deployment probe that returns unhealthy when the database is unavailable."""
+    from django.db import connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            cursor.fetchone()
+    except Exception:
+        logger.exception('Health check database probe failed')
+        return JsonResponse({'status': 'unhealthy'}, status=503)
+    return JsonResponse({'status': 'ok'})
 
 @login_required
 def dashboard_view(request):
@@ -239,6 +293,7 @@ def dashboard_view(request):
     recurring_bills = RecurringTransaction.objects.filter(user=user).order_by('next_due_date')[:4]
 
     context = {
+        'budget_alerts': collect_budget_alerts(user),
         'total_balance': total_balance,
         'monthly_income': income,
         'monthly_expenses': expenses,
@@ -539,6 +594,12 @@ def profile_view(request):
             return redirect('profile')
             
         elif action == 'delete_account':
+            if request.POST.get('confirm_delete', '').strip() != 'DELETE':
+                messages.error(request, 'Type DELETE to confirm account removal.')
+                return redirect('profile')
+            if user.has_usable_password() and not user.check_password(request.POST.get('current_password', '')):
+                messages.error(request, 'Your current password is required to delete this account.')
+                return redirect('profile')
             user.delete()
             logout(request)
             return redirect('landing')
@@ -889,6 +950,11 @@ class BudgetListView(UserOwnedMixin, ListView):
     model = Budget
     template_name = 'tracker/budgets.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['budget_alerts'] = collect_budget_alerts(self.request.user)
+        return context
+
     def get_queryset(self):
         budgets = list(super().get_queryset().select_related('category'))
         today = timezone.localdate()
@@ -1096,82 +1162,154 @@ def export_json(request):
 
 @login_required
 def import_csv(request):
+    preview_key_prefix = f'csv-import-preview:{request.user.pk}:'
+    if request.method == 'POST' and request.POST.get('action') == 'confirm':
+        token = request.POST.get('preview_token', '')
+        if not token.isalnum() or len(token) != 32:
+            messages.error(request, 'That import preview expired. Please upload the CSV again.')
+            return redirect('import_csv')
+        preview = cache.get(preview_key_prefix + token)
+        if preview is None:
+            messages.error(request, 'That import preview expired. Please upload the CSV again.')
+            return redirect('import_csv')
+        cache.delete(preview_key_prefix + token)
+
+        allow_duplicates = request.POST.get('import_duplicates') == 'on'
+        existing = set()
+        for date_value, account_name, kind, category_name, amount_value, note in Transaction.objects.filter(
+            user=request.user,
+        ).values_list('date', 'account__name', 'type', 'category__name', 'amount', 'note'):
+            existing.add(_csv_transaction_fingerprint(
+                date_value.isoformat(), account_name, kind, category_name or '', amount_value, note or '',
+            ))
+
+        imported = skipped = duplicates = 0
+        with transaction.atomic():
+            for row in preview['rows']:
+                fingerprint = _csv_transaction_fingerprint(
+                    row['date'], row['account'], row['type'], row['category'], row['amount'], row['note'],
+                )
+                is_duplicate = fingerprint in existing
+                if is_duplicate and not allow_duplicates:
+                    duplicates += 1
+                    continue
+                category = None
+                if row['category']:
+                    category = Category.objects.filter(user=request.user, name=row['category']).first()
+                    if category and category.type != row['type']:
+                        skipped += 1
+                        continue
+                    if category is None:
+                        category = Category.objects.create(
+                            user=request.user, name=row['category'], type=row['type'],
+                        )
+                account, _ = Account.objects.get_or_create(
+                    user=request.user, name=row['account'], defaults={'type': 'CASH'},
+                )
+                Transaction.objects.create(
+                    user=request.user, account=account, type=row['type'], category=category,
+                    amount=Decimal(row['amount']), date=parse_date(row['date']), note=row['note'],
+                )
+                imported += 1
+                existing.add(fingerprint)
+        if imported:
+            messages.success(request, f'Imported {imported} transaction{"s" if imported != 1 else ""}.')
+        if duplicates:
+            messages.warning(request, f'Skipped {duplicates} likely duplicate transaction{"s" if duplicates != 1 else ""}.')
+        if skipped:
+            messages.warning(request, f'Skipped {skipped} rows because their category conflicts with the transaction type.')
+        return redirect('transaction_list')
+
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
         if not csv_file.name.lower().endswith('.csv'):
             return HttpResponse('Not a CSV file', status=400)
-        
+        if csv_file.size > 5 * 1024 * 1024:
+            messages.error(request, 'CSV files must be 5 MB or smaller.')
+            return redirect('import_csv')
         try:
-            data = csv_file.read().decode('utf-8-sig').splitlines()
+            text = csv_file.read(5 * 1024 * 1024 + 1).decode('utf-8-sig')
         except UnicodeDecodeError:
             messages.error(request, 'The CSV file must use UTF-8 encoding.')
-            return redirect('transaction_list')
-        reader = csv.reader(data)
-        
+            return redirect('import_csv')
+
+        reader = csv.reader(io.StringIO(text))
         next(reader, None)
-        imported = 0
-        skipped = 0
-        
-        for row in reader:
-            try:
-                date_str, acc_name, type_val, cat_name, amount, note = row
-                transaction_date = parse_date(date_str.strip())
-                transaction_type = type_val.strip()
-                account_name = acc_name.strip()
-                category_name = cat_name.strip()
-                transaction_amount = Decimal(amount.strip())
+        rows, skipped, duplicates, seen = [], 0, 0, set()
+        existing = set()
+        for date_value, account_name, kind, category_name, amount_value, note in Transaction.objects.filter(
+            user=request.user,
+        ).values_list('date', 'account__name', 'type', 'category__name', 'amount', 'note'):
+            existing.add(_csv_transaction_fingerprint(
+                date_value.isoformat(), account_name, kind, category_name or '', amount_value, note or '',
+            ))
+
+        try:
+            for line_number, row in enumerate(reader, start=2):
+                if not row or not any(cell.strip() for cell in row):
+                    continue
+                if line_number > 5002:
+                    messages.error(request, 'CSV files can contain at most 5,000 transaction rows.')
+                    return redirect('import_csv')
+                if len(row) != 6:
+                    skipped += 1
+                    continue
+                date_text, account_name, kind, category_name, amount_text, note = [cell.strip() for cell in row]
+                transaction_date = parse_date(date_text)
+                try:
+                    amount_value = Decimal(amount_text)
+                except InvalidOperation:
+                    skipped += 1
+                    continue
                 if (
-                    transaction_date is None
-                    or transaction_type not in {'INCOME', 'EXPENSE'}
-                    or not account_name
-                    or not transaction_amount.is_finite()
-                    or transaction_amount <= Decimal('0.00')
-                    or transaction_date > timezone.now().date() + timezone.timedelta(days=7)
+                    transaction_date is None or kind not in {'INCOME', 'EXPENSE'}
+                    or not account_name or not amount_value.is_finite()
+                    or amount_value <= 0 or amount_value > Decimal('9999999999.99')
+                    or amount_value.as_tuple().exponent < -2
+                    or transaction_date > timezone.localdate() + timezone.timedelta(days=7)
                 ):
                     skipped += 1
                     continue
-
-                with transaction.atomic():
-                    category = None
-                    if category_name and category_name != 'None':
-                        category = Category.objects.filter(
-                            user=request.user,
-                            name=category_name,
-                        ).first()
-                        if category and category.type != transaction_type:
-                            skipped += 1
-                            continue
-                        if category is None:
-                            category = Category.objects.create(
-                                user=request.user,
-                                name=category_name,
-                                type=transaction_type,
-                            )
-                    account, _ = Account.objects.get_or_create(
-                        user=request.user,
-                        name=account_name,
-                        defaults={'type': 'CASH'},
-                    )
-
-                    Transaction.objects.create(
-                        user=request.user,
-                        account=account,
-                        type=transaction_type,
-                        category=category,
-                        amount=transaction_amount,
-                        date=transaction_date,
-                        note=note,
-                    )
-                imported += 1
-            except (ValueError, InvalidOperation, ValidationError, csv.Error):
-                skipped += 1
-                continue
-        if imported:
-            messages.success(request, f'Imported {imported} transaction{"s" if imported != 1 else ""}.')
-        if skipped:
-            messages.warning(request, f'Skipped {skipped} invalid CSV row{"s" if skipped != 1 else ""}.')
-        return redirect('transaction_list')
+                if category_name == 'None':
+                    category_name = ''
+                category = Category.objects.filter(user=request.user, name=category_name).first() if category_name else None
+                if category and category.type != kind:
+                    skipped += 1
+                    continue
+                normalized_amount = str(amount_value.quantize(Decimal('0.01')))
+                fingerprint = _csv_transaction_fingerprint(
+                    transaction_date.isoformat(), account_name, kind, category_name, normalized_amount, note,
+                )
+                is_duplicate = fingerprint in existing or fingerprint in seen
+                duplicates += int(is_duplicate)
+                seen.add(fingerprint)
+                rows.append({
+                    'date': transaction_date.isoformat(), 'account': account_name, 'type': kind,
+                    'category': category_name, 'amount': normalized_amount, 'note': note,
+                    'duplicate': is_duplicate,
+                })
+        except csv.Error:
+            messages.error(request, 'The CSV file has invalid formatting.')
+            return redirect('import_csv')
+        if not rows:
+            messages.error(request, 'No valid transaction rows were found in that CSV.')
+            return redirect('import_csv')
+        token = secrets.token_hex(16)
+        cache.set(preview_key_prefix + token, {'rows': rows, 'skipped': skipped}, timeout=15 * 60)
+        return render(request, 'tracker/import_csv_preview.html', {
+            'rows': rows, 'skipped': skipped, 'duplicates': duplicates,
+            'preview_token': token,
+        })
     return render(request, 'tracker/import_csv.html')
+
+
+def _csv_transaction_fingerprint(date_value, account_name, kind, category_name, amount_value, note):
+    amount = Decimal(str(amount_value)).quantize(Decimal('0.01'))
+    payload = '\x1f'.join((
+        str(date_value), str(account_name), str(kind), str(category_name or ''),
+        f'{amount:.2f}', str(note or ''),
+    ))
+    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
 def _webauthn_rp_and_origin(request):
     origin = (

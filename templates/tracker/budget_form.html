@@ -105,14 +105,18 @@
                         <div class="text-xs font-bold text-white flex items-center gap-1.5">
                             <span>🔔</span> Alert Threshold
                         </div>
-                        <span id="threshold-badge" class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">80% Limit</span>
+                        <span id="threshold-badge" class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">{{ form.alert_threshold.value|default:80 }}% Limit</span>
                     </div>
                     <div class="grid grid-cols-4 gap-1.5 text-xs font-semibold" id="threshold-pills">
-                        <button type="button" data-val="70" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">70%</button>
-                        <button type="button" data-val="80" class="thresh-btn py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all font-bold">80%</button>
-                        <button type="button" data-val="90" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">90%</button>
-                        <button type="button" data-val="100" class="thresh-btn py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">100%</button>
+                        {% for value,label in form.fields.alert_threshold.choices %}
+                        <button type="button" data-val="{{ value }}" class="thresh-btn py-1.5 rounded-lg border transition-all {% if form.alert_threshold.value|stringformat:'s' == value|stringformat:'s' or not form.alert_threshold.value and value == 80 %}bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold{% else %}bg-slate-800 text-slate-400 hover:text-white border-slate-700/60{% endif %}">{{ label }}</button>
+                        {% endfor %}
                     </div>
+                    <input type="hidden" name="alert_threshold" id="id_alert_threshold" value="{{ form.alert_threshold.value|default:80 }}">
+                    <label class="mt-4 flex items-start gap-3 text-xs text-slate-300">
+                        <input type="checkbox" name="alerts_enabled" id="id_alerts_enabled" class="mt-0.5 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500" {% if form.alerts_enabled.value %}checked{% endif %}>
+                        <span><strong class="text-white">Enable in-app alerts</strong><br>Show a dashboard notification when spending reaches this threshold or the full limit.</span>
+                    </label>
                 </div>
             </div>
 
@@ -136,6 +140,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const insightTitle = document.getElementById('insight-title');
     const insightDesc = document.getElementById('insight-desc');
     const limitInput = document.getElementById('id_limit');
+    const thresholdInput = document.getElementById('id_alert_threshold');
+    const thresholdBadge = document.getElementById('threshold-badge');
+    document.querySelectorAll('.thresh-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            thresholdInput.value = button.dataset.val;
+            thresholdBadge.textContent = button.dataset.val + '% Limit';
+            document.querySelectorAll('.thresh-btn').forEach(item => {
+                item.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/30', 'font-bold');
+                item.classList.add('bg-slate-800', 'text-slate-400', 'border-slate-700/60');
+            });
+            button.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/30', 'font-bold');
+            button.classList.remove('bg-slate-800', 'text-slate-400', 'border-slate-700/60');
+        });
+    });
 
     // Parse category spend JSON passed from backend
     let categorySpendMap = {};

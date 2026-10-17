@@ -1,0 +1,13 @@
+{% if budget_alerts %}
+<section class="mb-6 space-y-2" aria-label="Budget alerts">
+  {% for alert in budget_alerts %}
+  <div class="flex items-center justify-between gap-4 rounded-xl border {% if alert.threshold == 100 %}border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300{% else %}border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200{% endif %} px-4 py-3 text-sm">
+    <p><strong>{{ alert.budget.category.name }}</strong> has reached {{ alert.threshold }}% of its monthly budget.</p>
+    <form method="post" action="{% url 'dismiss_budget_alert' alert.id %}">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ alert_return }}">
+      <button type="submit" class="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/10" aria-label="Dismiss {{ alert.budget.category.name }} alert">Dismiss</button>
+    </form>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}

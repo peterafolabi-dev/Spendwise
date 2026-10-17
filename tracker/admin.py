@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
-from .models import Account, Category, Transaction, Budget, RecurringTransaction, SavingsGoal, UserPresence
+from .models import Account, Category, Transaction, Budget, BudgetAlert, RecurringTransaction, SavingsGoal, UserPresence
 
 
 admin.site.unregister(User)
@@ -37,6 +37,14 @@ class UserPresenceAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
     ordering = ('-last_seen',)
     readonly_fields = ('user', 'last_seen')
+
+
+@admin.register(BudgetAlert)
+class BudgetAlertAdmin(admin.ModelAdmin):
+    list_display = ('budget', 'period_start', 'threshold', 'triggered_at', 'dismissed_at')
+    list_filter = ('threshold', 'period_start')
+    search_fields = ('budget__user__username', 'budget__category__name')
+    readonly_fields = ('budget', 'period_start', 'threshold', 'triggered_at', 'dismissed_at')
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):

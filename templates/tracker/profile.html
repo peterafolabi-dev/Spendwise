@@ -440,9 +440,17 @@
         <input type="text" id="delete-confirm-input" placeholder="DELETE"
                class="w-full text-center font-mono font-bold rounded-xl border border-rose-900/60 bg-slate-800/80 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
 
+        {% if user.has_usable_password %}
+        <label class="block text-xs font-semibold text-slate-300" for="delete-current-password">Confirm with your current password</label>
+        <input type="password" id="delete-current-password" autocomplete="current-password" required
+               class="w-full rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+        {% endif %}
+
         <form method="POST" action="{% url 'profile' %}" id="delete-account-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="delete_account">
+            <input type="hidden" name="confirm_delete" id="confirm-delete-value">
+            {% if user.has_usable_password %}<input type="hidden" name="current_password" id="delete-current-password-value">{% endif %}
             <div class="grid grid-cols-2 gap-3">
                 <button type="button" onclick="closeDeleteAccountModal()"
                         class="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-4 py-2.5 text-xs font-semibold text-white transition-colors">
@@ -506,6 +514,24 @@ document.getElementById('delete-confirm-input')?.addEventListener('input', (e) =
     const btn = document.getElementById('delete-account-confirm-btn');
     if (btn) {
         btn.disabled = e.target.value.trim() !== 'DELETE';
+    }
+});
+
+document.getElementById('delete-account-form')?.addEventListener('submit', (event) => {
+    const confirmation = document.getElementById('delete-confirm-input')?.value.trim() || '';
+    if (confirmation !== 'DELETE') {
+        event.preventDefault();
+        return;
+    }
+    document.getElementById('confirm-delete-value').value = confirmation;
+    const passwordInput = document.getElementById('delete-current-password');
+    if (passwordInput) {
+        if (!passwordInput.value) {
+            event.preventDefault();
+            passwordInput.focus();
+            return;
+        }
+        document.getElementById('delete-current-password-value').value = passwordInput.value;
     }
 });
 

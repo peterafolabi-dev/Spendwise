@@ -54,6 +54,8 @@ urlpatterns = [
     path('export/csv/', views.export_csv, name='export_csv'),
     path('export/json/', views.export_json, name='export_json'),
     path('import/csv/', views.import_csv, name='import_csv'),
+    path('budget-alerts/<int:alert_id>/dismiss/', views.dismiss_budget_alert, name='dismiss_budget_alert'),
+    path('healthz/', views.health_check, name='health_check'),
     
     path('profile/', views.profile_view, name='profile'),
     

@@ -8,3 +8,4 @@ vercel-production.env
 staticfiles/
 node_modules/
 media/
+backups/
