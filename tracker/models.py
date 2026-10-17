@@ -86,6 +86,11 @@ class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
     category = models.OneToOneField(Category, on_delete=models.CASCADE, related_name='budget')
     limit = models.DecimalField(max_digits=12, decimal_places=2)
+    alerts_enabled = models.BooleanField(default=False)
+    alert_threshold = models.PositiveSmallIntegerField(
+        choices=[(70, '70%'), (80, '80%'), (90, '90%'), (100, '100%')],
+        default=80,
+    )
 
     def clean(self):
         if self.limit <= Decimal('0.00'):
@@ -99,6 +104,23 @@ class Budget(models.Model):
 
     def __str__(self):
         return f"Budget for {self.category.name}: {self.limit}"
+
+
+class BudgetAlert(models.Model):
+    budget = models.ForeignKey(Budget, on_delete=models.CASCADE, related_name='alerts')
+    period_start = models.DateField()
+    threshold = models.PositiveSmallIntegerField()
+    triggered_at = models.DateTimeField(auto_now_add=True)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['budget', 'period_start', 'threshold'], name='unique_budget_alert_per_period')
+        ]
+        ordering = ['-triggered_at']
+
+    def __str__(self):
+        return f"{self.budget.category.name} reached {self.threshold}%"
 
 
 class RecurringTransaction(models.Model):

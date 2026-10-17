@@ -29,7 +29,7 @@ class TransactionForm(forms.ModelForm):
 class BudgetForm(forms.ModelForm):
     class Meta:
         model = Budget
-        fields = ['category', 'limit']
+        fields = ['category', 'limit', 'alerts_enabled', 'alert_threshold']
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
