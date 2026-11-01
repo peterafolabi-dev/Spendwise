@@ -224,8 +224,9 @@ class TrackerTests(TestCase):
         f.name = "test.csv"
         
         response = self.client1.post(reverse('import_csv'), {'csv_file': f}, follow=True)
-        # bad_amount row should be skipped, so 0 new transactions
+        # bad_amount row should be skipped, so 0 new transactions and no preview
         self.assertEqual(Transaction.objects.count(), 0)
+        self.assertContains(response, 'No valid transaction rows were found in that CSV.')
         self.assertContains(response, 'Skipped 1 invalid CSV row.')
 
     def test_csv_import_creates_valid_transaction(self):
@@ -236,7 +237,16 @@ class TrackerTests(TestCase):
         f = StringIO(csv_data)
         f.name = "transactions.csv"
 
-        response = self.client1.post(reverse('import_csv'), {'csv_file': f}, follow=True)
+        # Step 1: upload shows a preview and saves nothing yet.
+        preview = self.client1.post(reverse('import_csv'), {'csv_file': f})
+        self.assertEqual(preview.status_code, 200)
+        self.assertFalse(Transaction.objects.filter(note='Weekly groceries').exists())
+        token = preview.context['preview_token']
+
+        # Step 2: confirming the preview writes the transaction.
+        response = self.client1.post(
+            reverse('import_csv'), {'action': 'confirm', 'preview_token': token}, follow=True,
+        )
 
         imported = Transaction.objects.get(user=self.user1, note='Weekly groceries')
         self.assertEqual(imported.date.isoformat(), '2025-01-15')

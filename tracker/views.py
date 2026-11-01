@@ -1295,7 +1295,8 @@ def import_csv(request):
             messages.error(request, 'The CSV file has invalid formatting.')
             return redirect('import_csv')
         if not rows:
-            messages.error(request, 'No valid transaction rows were found in that CSV.')
+            detail = f' Skipped {skipped} invalid CSV row{"s" if skipped != 1 else ""}.' if skipped else ''
+            messages.error(request, f'No valid transaction rows were found in that CSV.{detail}')
             return redirect('import_csv')
         token = secrets.token_hex(16)
         cache.set(preview_key_prefix + token, {'rows': rows, 'skipped': skipped}, timeout=15 * 60)

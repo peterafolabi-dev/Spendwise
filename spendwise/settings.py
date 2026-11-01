@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
@@ -161,6 +162,12 @@ STORAGES = {
         "BACKEND": "tracker.storage.LenientCompressedManifestStaticFilesStorage",
     },
 }
+
+# The manifest storage only knows files that `collectstatic` has processed, so
+# on a fresh checkout every page render failed under `manage.py test`. Tests
+# don't serve hashed assets, so they use the plain storage instead.
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
