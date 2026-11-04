@@ -3,6 +3,8 @@
 > **Portfolio project**  
 > A Django personal-finance tracker focused on NGN budgeting, account balances, spending history, and passkey authentication.
 
+[![CI](https://github.com/peterafolabi-dev/Spendwise/actions/workflows/ci.yml/badge.svg)](https://github.com/peterafolabi-dev/Spendwise/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-33%20passing-1F8A4C)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![Django 6.1](https://img.shields.io/badge/Django-6.1-092E20?style=flat&logo=django&logoColor=white)](https://djangoproject.com)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
