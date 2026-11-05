@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from tracker.models import Account, Category, Transaction, Budget, SavingsGoal
+from tracker.models import Account, Category, Transaction, Budget, SavingsGoal, category_for
 from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
@@ -26,12 +26,12 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Created accounts'))
 
         # Create Categories
-        salary = Category.objects.create(user=user, name='Salary', type='INCOME', icon='💰')
-        food = Category.objects.create(user=user, name='Food', type='EXPENSE', icon='🍔')
-        transport = Category.objects.create(user=user, name='Transport', type='EXPENSE', icon='🚕')
-        Category.objects.create(user=user, name='Rent', type='EXPENSE', icon='🏠')
-        entertainment = Category.objects.create(user=user, name='Entertainment', type='EXPENSE', icon='🎮')
-        Category.objects.create(user=user, name='Data & Airtime', type='EXPENSE', icon='📱')
+        salary = category_for(user, 'Salary', 'INCOME', '💰')
+        food = category_for(user, 'Food', 'EXPENSE', '🍔')
+        transport = category_for(user, 'Transport', 'EXPENSE', '🚕')
+        category_for(user, 'Rent', 'EXPENSE', '🏠')
+        entertainment = category_for(user, 'Entertainment', 'EXPENSE', '🎮')
+        category_for(user, 'Data & Airtime', 'EXPENSE', '📱')
         self.stdout.write(self.style.SUCCESS('Created categories'))
 
         # Create Budgets (One over limit)

@@ -694,3 +694,29 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'id="passkey-status"')
         self.assertContains(response, 'Google sign-in not configured')
         self.assertNotContains(response, 'Apple')
+
+
+class DuplicateCategoryTests(TestCase):
+    """Accounts with two categories of the same name used to 500 on every form."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('dup', password='pw-12345-x')
+        Category.objects.create(user=self.user, name='Salary', type='INCOME')  # second "Salary"
+        self.client.force_login(self.user)
+
+    def test_forms_still_open(self):
+        for name in ['transaction_create', 'budget_create', 'savings_create', 'recurring_create']:
+            try:
+                url = reverse(name)
+            except Exception:  # noqa: BLE001 - only check the forms this project has
+                continue
+            self.assertEqual(self.client.get(url).status_code, 200, name)
+
+    def test_seed_demo_twice_is_safe(self):
+        from django.core.management import call_command
+        call_command('seed_demo', stdout=StringIO())
+        call_command('seed_demo', stdout=StringIO())
+        demo = User.objects.get(username='demo')
+        self.client.force_login(demo)
+        tx = Transaction.objects.filter(user=demo).first()
+        self.assertEqual(self.client.get(reverse('transaction_update', args=[tx.pk])).status_code, 200)

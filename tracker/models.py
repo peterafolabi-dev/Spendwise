@@ -182,6 +182,19 @@ class UserPresence(models.Model):
         return f"{self.user.username} last seen {self.last_seen}"
 
 
+def category_for(user, name, cat_type, icon=""):
+    """Return the user's category with this name, creating it if needed.
+
+    Older accounts can hold two categories with the same name (the demo seed and the
+    defaults both made "Salary"), so get_or_create would crash with
+    MultipleObjectsReturned. Take the oldest one instead.
+    """
+    existing = Category.objects.filter(user=user, name=name).order_by("pk").first()
+    if existing:
+        return existing
+    return Category.objects.create(user=user, name=name, type=cat_type, icon=icon)
+
+
 def seed_user_defaults(user):
     """Auto-seeds default account and categories for a user."""
     # Seed default account if none exists
@@ -213,11 +226,7 @@ def seed_user_defaults(user):
     ]
 
     for name, cat_type, icon in default_categories:
-        Category.objects.get_or_create(
-            user=user,
-            name=name,
-            defaults={"type": cat_type, "icon": icon}
-        )
+        category_for(user, name, cat_type, icon)
 
 
 @receiver(post_save, sender=User)

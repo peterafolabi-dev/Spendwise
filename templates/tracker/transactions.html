@@ -187,8 +187,10 @@
 <div id="tx-drawer-backdrop" onclick="closeTxDrawer()"
      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
+{# Clipping wrapper: the closed drawer sits off-screen, and without this it made phones scroll sideways #}
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-50">
 <div id="tx-detail-drawer"
-     class="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900/95 border-l border-slate-800 backdrop-blur-2xl p-6 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between overflow-y-auto">
+     class="absolute inset-y-0 right-0 w-full max-w-md pointer-events-auto bg-slate-900/95 border-l border-slate-800 backdrop-blur-2xl p-6 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between overflow-y-auto">
     
     <div>
         {# Drawer Header #}
@@ -316,6 +318,7 @@
             Delete Transaction
         </button>
     </div>
+</div>
 </div>
 
 {# ══════════════════════════════════════════════════════════════════════════════ #}

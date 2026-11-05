@@ -27,7 +27,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Account, Category, Transaction, Budget, BudgetAlert, RecurringTransaction, SavingsGoal, PasskeyCredential
+from .models import Account, Category, Transaction, Budget, BudgetAlert, RecurringTransaction, SavingsGoal, PasskeyCredential, category_for
 from .forms import (AccountForm, CategoryForm, TransactionForm, BudgetForm, 
                    RecurringTransactionForm, SavingsGoalForm)
 from webauthn import (
@@ -697,11 +697,7 @@ class CategoryUpdateView(UserOwnedMixin, UpdateView):
 def category_delete_view(request, pk):
     category = get_object_or_404(Category, pk=pk, user=request.user)
     if request.method == 'POST':
-        uncategorised, _ = Category.objects.get_or_create(
-            user=request.user, 
-            name='Uncategorised',
-            defaults={'type': category.type}
-        )
+        uncategorised = category_for(request.user, 'Uncategorised', category.type)
         Transaction.objects.filter(category=category).update(category=uncategorised)
         RecurringTransaction.objects.filter(category=category).update(category=uncategorised)
         category.delete()
@@ -888,11 +884,7 @@ def split_transaction_save(request, pk):
             participants = data.get('participants', 'Friends')
             
             # Find or create IOU / Reimbursement category
-            iou_cat, _ = Category.objects.get_or_create(
-                user=request.user,
-                name='IOU & Reimbursements',
-                defaults={'type': 'EXPENSE', 'icon': '🤝'}
-            )
+            iou_cat = category_for(request.user, 'IOU & Reimbursements', 'EXPENSE', '🤝')
             
             orig_amount = tx.amount
             orig_note = tx.note or (tx.category.name if tx.category else 'Expense')
