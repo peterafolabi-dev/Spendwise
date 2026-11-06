@@ -141,46 +141,15 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'Password reset email is not configured yet')
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_google_login_buttons_work_on_login_and_signup_when_configured(self):
-        with override_settings(
-            GOOGLE_OAUTH_CLIENT_ID='google-client-id',
-            GOOGLE_OAUTH_CLIENT_SECRET='google-client-secret',
-            SOCIALACCOUNT_PROVIDERS={
-                'google': {
-                    'APPS': [{
-                        'client_id': 'google-client-id',
-                        'secret': 'google-client-secret',
-                        'key': '',
-                    }],
-                    'SCOPE': ['profile', 'email'],
-                    'AUTH_PARAMS': {'access_type': 'online'},
-                    'OAUTH_PKCE_ENABLED': True,
-                },
-            },
-        ):
-            for page in ('login', 'signup'):
-                with self.subTest(page=page):
-                    response = Client().get(reverse(page))
-                    self.assertContains(response, 'Continue with Google')
-                    self.assertNotContains(response, 'Apple')
-                    self.assertContains(response, f'action="{reverse("google_login")}"')
-                    self.assertContains(response, 'data-brand="google"')
-            google_start = Client().post(reverse('google_login'))
-
-        self.assertEqual(google_start.status_code, 302)
-        self.assertIn('accounts.google.com', google_start['Location'])
-
-    def test_social_buttons_remain_visible_but_disabled_until_credentials_are_configured(self):
-        client = Client()
+    def test_login_and_signup_do_not_show_a_google_button(self):
+        """Google sign-in is not set up for the live site, so no button is shown."""
         for page in ('login', 'signup'):
             with self.subTest(page=page):
-                response = client.get(reverse(page))
+                response = Client().get(reverse(page))
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, 'data-brand="google"')
+                self.assertNotContains(response, 'Continue with Google')
 
-                self.assertContains(response, 'Google sign-in not configured')
-                self.assertNotContains(response, 'Apple')
-                self.assertContains(response, 'Social sign-in buttons activate after their provider credentials are added to your deployment environment.')
-                self.assertContains(response, 'data-brand="google"')
-        
     def test_ownership(self):
         # User 1 should not see User 2's account
         response = self.client1.get(reverse('account_list'))
@@ -687,13 +656,12 @@ class TrackerTests(TestCase):
         self.assertContains(response, 'id="passkey-status"')
         self.assertContains(response, 'spendwise-features.')
 
-    def test_signup_page_keeps_passkey_registration_and_shows_social_buttons(self):
+    def test_signup_page_keeps_passkey_registration(self):
         response = Client().get(reverse('signup'))
 
         self.assertContains(response, 'Create account with Passkey')
         self.assertContains(response, 'id="passkey-status"')
-        self.assertContains(response, 'Google sign-in not configured')
-        self.assertNotContains(response, 'Apple')
+        self.assertNotContains(response, 'data-brand="google"')
 
 
 class DuplicateCategoryTests(TestCase):
